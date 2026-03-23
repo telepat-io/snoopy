@@ -19,8 +19,43 @@ export interface NewScanItem {
   qualificationReason: string | null;
 }
 
+export interface QualifiedScanItemRow {
+  id: string;
+  jobId: string;
+  runId: string;
+  author: string;
+  title: string | null;
+  body: string;
+  url: string;
+  redditPostedAt: string;
+  qualificationReason: string | null;
+  createdAt: string;
+}
+
 export class ScanItemsRepository {
   private readonly db = getDb();
+
+  listQualifiedByJob(jobId: string): QualifiedScanItemRow[] {
+    return this.db
+      .prepare(
+        `SELECT
+           id,
+           job_id as jobId,
+           run_id as runId,
+           author,
+           title,
+           body,
+           url,
+           reddit_posted_at as redditPostedAt,
+           qualification_reason as qualificationReason,
+           created_at as createdAt
+         FROM scan_items
+         WHERE job_id = ?
+           AND qualified = 1
+         ORDER BY datetime(reddit_posted_at) DESC, datetime(created_at) DESC, id DESC`
+      )
+      .all(jobId) as QualifiedScanItemRow[];
+  }
 
   existsPost(jobId: string, postId: string): boolean {
     const row = this.db

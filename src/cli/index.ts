@@ -5,6 +5,7 @@ import { openSettings } from './commands/settings.js';
 import { daemonRun, daemonStart, daemonStatus, daemonStop } from './commands/daemon.js';
 import { showRunLogs } from './commands/logs.js';
 import { showJobErrors } from './commands/errors.js';
+import { exportCsv } from './commands/export.js';
 import {
   disableStartupCommand,
   enableStartupCommand,
@@ -108,6 +109,15 @@ program
   .option('--hours <count>', 'Look back this many hours', parsePositiveInteger)
   .action((jobRef: string, options: { hours?: number }) => {
     showJobErrors(jobRef, options);
+  });
+
+const exportCommand = program.command('export').description('Export data artifacts');
+exportCommand
+  .command('csv')
+  .argument('[jobRef]', 'Optional job ID or slug')
+  .description('Regenerate CSV qualified results for one job or all jobs')
+  .action((jobRef?: string) => {
+    exportCsv(jobRef);
   });
 
 program.parseAsync(process.argv).catch((error: unknown) => {

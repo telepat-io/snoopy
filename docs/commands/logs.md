@@ -23,3 +23,4 @@ Notes:
 - run logs live under `~/.snoopy/logs/`
 - files are named `run-<runId>.log`
 - older runs may not have a log file if they predate detailed run logging
+- results CSV files are exported separately under `~/.snoopy/results/` via `snoopy export csv`

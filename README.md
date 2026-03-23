@@ -35,6 +35,7 @@ Define what you care about in plain language, let Snoopy create a monitoring job
 - Qualification against your prompt for posts (and comments when enabled).
 - Local SQLite persistence for jobs, runs, and scan items.
 - Built-in daemon for scheduled scanning (cron expressions).
+- On-demand CSV export of qualified results per job.
 - Startup registration for macOS, Linux, and Windows.
 - Health checks via the doctor command.
 
@@ -93,19 +94,26 @@ npm run dev -- job run <jobRef> --limit 5
 npm run dev -- job runs <jobRef>
 ```
 
-5. Inspect one run's detailed log output:
+5. Regenerate results CSV files (all jobs or one job):
+
+```bash
+npm run dev -- export csv
+npm run dev -- export csv <jobRef>
+```
+
+6. Inspect one run's detailed log output:
 
 ```bash
 npm run dev -- logs <runId>
 ```
 
-6. Show recent errors for one job:
+7. Show recent errors for one job:
 
 ```bash
 npm run dev -- errors <jobRef>
 ```
 
-7. Enable daemon mode:
+8. Enable daemon mode:
 
 ```bash
 npm run dev -- daemon start
@@ -117,6 +125,7 @@ npm run dev -- daemon start
 - `job list`
 - `job run <jobRef> --limit <N>`
 - `job runs [jobRef]`
+- `export csv [jobRef]`
 - `logs <runId>`
 - `errors <jobRef> --hours <N>`
 - `start <jobRef>` / `stop <jobRef>`
@@ -132,6 +141,14 @@ npm run dev -- daemon start
 - Logs include full JSON request/response payloads for Reddit and OpenRouter calls, plus run lifecycle events and errors.
 - Run logs older than 5 days are deleted automatically on daemon startup and after each job run.
 - Deleting a job also deletes all associated per-run log files for that job.
+
+## Results CSV Exports
+
+- Export files are generated on demand with `export csv`.
+- Files are written under `~/.snoopy/results/`.
+- Each job gets one file named `<job-slug>.csv`.
+- CSV files are regenerated from database truth on each export command.
+- Deleting a job also deletes that job's CSV file.
 
 ## Live E2E Smoke Test
 

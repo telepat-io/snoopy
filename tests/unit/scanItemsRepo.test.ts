@@ -60,5 +60,76 @@ describe('ScanItemsRepository', () => {
 
     expect(repo.existsPost(jobId, 'post-1')).toBe(true);
     expect(repo.existsComment(jobId, 'post-1', 'comment-1')).toBe(true);
+
+    const qualified = repo.listQualifiedByJob(jobId);
+    expect(qualified).toHaveLength(1);
+    expect(qualified[0]).toEqual(
+      expect.objectContaining({
+        jobId,
+        runId,
+        author: 'author1',
+        title: 'title',
+        url: 'https://reddit.com/post-1',
+        qualificationReason: 'good match'
+      })
+    );
+  });
+
+  it('returns qualified items in newest-first order', () => {
+    const db = getDb();
+    const repo = new ScanItemsRepository();
+
+    const jobId = crypto.randomUUID();
+    const runId = crypto.randomUUID();
+
+    db.prepare(
+      `INSERT INTO jobs (
+        id, slug, name, description, qualification_prompt, subreddits_json,
+        schedule_cron, enabled, monitor_comments, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, 1, 1, datetime('now'), datetime('now'))`
+    ).run(jobId, `job-${Date.now()}-ordering`, `job-${Date.now()}-ordering`, 'desc', 'prompt', JSON.stringify(['askreddit']), '*/30 * * * *');
+
+    db.prepare(
+      `INSERT INTO job_runs (
+        id, job_id, status, started_at, finished_at, created_at
+      ) VALUES (?, ?, 'completed', datetime('now'), datetime('now'), datetime('now'))`
+    ).run(runId, jobId);
+
+    repo.create({
+      jobId,
+      runId,
+      type: 'post',
+      redditPostId: 'post-old',
+      redditCommentId: null,
+      subreddit: 'askreddit',
+      author: 'author-old',
+      title: 'old',
+      body: 'old body',
+      url: 'https://reddit.com/post-old',
+      redditPostedAt: '2026-01-01T00:00:00.000Z',
+      qualified: true,
+      qualificationReason: 'old'
+    });
+
+    repo.create({
+      jobId,
+      runId,
+      type: 'post',
+      redditPostId: 'post-new',
+      redditCommentId: null,
+      subreddit: 'askreddit',
+      author: 'author-new',
+      title: 'new',
+      body: 'new body',
+      url: 'https://reddit.com/post-new',
+      redditPostedAt: '2026-02-01T00:00:00.000Z',
+      qualified: true,
+      qualificationReason: 'new'
+    });
+
+    const qualified = repo.listQualifiedByJob(jobId);
+    expect(qualified).toHaveLength(2);
+    expect(qualified[0]?.url).toBe('https://reddit.com/post-new');
+    expect(qualified[1]?.url).toBe('https://reddit.com/post-old');
   });
 });

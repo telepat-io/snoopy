@@ -40,7 +40,7 @@ describe('utils paths and logger', () => {
 
     expect(paths.rootDir).toBeTruthy();
     expect(existsSpy).toHaveBeenCalled();
-    expect(mkdirSpy).toHaveBeenCalledTimes(2);
+    expect(mkdirSpy).toHaveBeenCalledTimes(3);
   });
 
   it('writes info, warn, and error log entries', () => {

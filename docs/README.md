@@ -41,6 +41,7 @@ Define what you care about in plain language, let Snoopy create a monitoring job
 - Qualification against your prompt for posts (and comments when enabled).
 - Local SQLite persistence for jobs, runs, and scan items.
 - Built-in daemon for scheduled scanning (cron expressions).
+- On-demand CSV export of qualified results per job.
 - Startup registration for macOS, Linux, and Windows.
 - Health checks via the doctor command.
 
@@ -95,7 +96,14 @@ npm run dev -- job run <jobRef> --limit 5
 npm run dev -- job runs <jobRef>
 ```
 
-5. Enable daemon mode:
+5. Regenerate results CSV files (all jobs or one job):
+
+```bash
+npm run dev -- export csv
+npm run dev -- export csv <jobRef>
+```
+
+6. Enable daemon mode:
 
 ```bash
 npm run dev -- daemon start
@@ -107,6 +115,7 @@ npm run dev -- daemon start
 - `job list`
 - `job run <jobRef> --limit <N>`
 - `job runs [jobRef]`
+- `export csv [jobRef]`
 - `start <jobRef>` / `stop <jobRef>`
 - `delete <jobRef>`
 - `daemon start|stop|status`

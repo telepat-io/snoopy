@@ -6,6 +6,7 @@ export interface AppPaths {
   rootDir: string;
   dbPath: string;
   logsDir: string;
+  resultsDir: string;
   pidFilePath: string;
   startupDir: string;
 }
@@ -16,6 +17,7 @@ export function getAppPaths(): AppPaths {
     rootDir,
     dbPath: path.join(rootDir, 'snoopy.db'),
     logsDir: path.join(rootDir, 'logs'),
+    resultsDir: path.join(rootDir, 'results'),
     pidFilePath: path.join(rootDir, 'daemon.pid'),
     startupDir: path.join(rootDir, 'startup')
   };
@@ -23,7 +25,7 @@ export function getAppPaths(): AppPaths {
 
 export function ensureAppDirs(): AppPaths {
   const paths = getAppPaths();
-  [paths.rootDir, paths.logsDir, paths.startupDir].forEach((dir) => {
+  [paths.rootDir, paths.logsDir, paths.resultsDir, paths.startupDir].forEach((dir) => {
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }

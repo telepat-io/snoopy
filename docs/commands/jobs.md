@@ -26,3 +26,10 @@ snoopy jobs delete my-job
 ```
 
 Use `jobs` when you prefer a plural group for operational commands. Behavior matches the corresponding `job` commands.
+
+For results file generation, use the top-level export command:
+
+```bash
+snoopy export csv
+snoopy export csv <jobRef>
+```

@@ -36,13 +36,15 @@ snoopy job list
 ### `job remove <jobRef>`
 ### `job delete <jobRef>`
 
-Deletes a job and cascades cleanup of related runs, scan items, and run log files.
+Deletes a job and cascades cleanup of related runs, scan items, run log files, and exported CSV files.
 
 ```bash
 snoopy job delete <jobRef>
 ```
 
 When detailed run logging is enabled, deleting a job also removes the corresponding `run-<runId>.log` files under `~/.snoopy/logs/`.
+
+Deleting a job also removes its results file under `~/.snoopy/results/<job-slug>.csv` when present.
 
 ### `job enable <jobRef>`
 ### `job disable <jobRef>`
@@ -80,4 +82,11 @@ If `jobRef` is omitted, this command returns recent runs across jobs.
 ```bash
 snoopy job runs
 snoopy job runs <jobRef>
+```
+
+`job runs` only shows run history. To regenerate per-job result files, run:
+
+```bash
+snoopy export csv
+snoopy export csv <jobRef>
 ```

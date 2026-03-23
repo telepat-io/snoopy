@@ -20,6 +20,7 @@ This section documents the Snoopy CLI one command group at a time.
 - `daemon`
 - `startup`
 - `reboot`
+- `export`
 - `logs <runId>`
 - `errors <jobRef>`
 - `doctor`
@@ -34,6 +35,7 @@ This section documents the Snoopy CLI one command group at a time.
 - [Daemon](daemon.md)
 - [Startup](startup.md)
 - [Reboot Alias Group](reboot.md)
+- [Export](export.md)
 - [Logs](logs.md)
 - [Errors](errors.md)
 - [Doctor](doctor.md)
@@ -88,6 +90,7 @@ snoopy stop <jobRef>
 snoopy job add
 snoopy job run <jobRef> --limit 5
 snoopy job runs <jobRef>
+snoopy export csv <jobRef>
 snoopy logs <runId>
 snoopy errors <jobRef>
 snoopy daemon start

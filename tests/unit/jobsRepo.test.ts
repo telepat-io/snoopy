@@ -95,7 +95,9 @@ describe('JobsRepository', () => {
 
     const paths = ensureAppDirs();
     const logFilePath = path.join(paths.logsDir, `run-delete-cascade-${Date.now()}.log`);
+    const csvPath = path.join(paths.resultsDir, `${created.slug}.csv`);
     fs.writeFileSync(logFilePath, 'test run log');
+    fs.writeFileSync(csvPath, 'URL,Title,Truncated Content,Author,Justification,Date\n', 'utf8');
 
     const runId = runsRepo.startRun(created.id, logFilePath);
     runsRepo.completeRun(runId, {
@@ -131,6 +133,7 @@ describe('JobsRepository', () => {
     expect(jobsRepo.getById(created.id)).toBeNull();
     expect(runsRepo.listByJob(created.id)).toHaveLength(0);
     expect(fs.existsSync(logFilePath)).toBe(false);
+    expect(fs.existsSync(csvPath)).toBe(false);
 
     const remainingScanItems = db
       .prepare('SELECT COUNT(*) as count FROM scan_items WHERE job_id = ?')
