@@ -1,0 +1,171 @@
+import crypto from 'node:crypto';
+import { getDb } from '../sqlite.js';
+
+export interface RunStats {
+  itemsDiscovered: number;
+  itemsNew: number;
+  itemsQualified: number;
+  promptTokens: number;
+  completionTokens: number;
+  estimatedCostUsd: number | null;
+}
+
+export interface RunRow {
+  id: string;
+  jobId: string;
+  jobName: string | null;
+  status: string;
+  message: string | null;
+  startedAt: string | null;
+  finishedAt: string | null;
+  createdAt: string;
+  itemsDiscovered: number;
+  itemsNew: number;
+  itemsQualified: number;
+  promptTokens: number;
+  completionTokens: number;
+  estimatedCostUsd: number | null;
+}
+    logFilePath?: string;
+
+export class RunsRepository {
+  private readonly db = getDb();
+
+  addRun(jobId: string, status: string, message: string): void {
+    this.db
+      .prepare(
+        `INSERT INTO job_runs (id, job_id, status, message, created_at)
+         VALUES (?, ?, ?, ?, datetime('now'))`
+      )
+      .run(crypto.randomUUID(), jobId, status, message);
+  }
+
+  startRun(jobId: string): string {
+    startRun(jobId: string, logFilePath?: string): string {
+      const id = crypto.randomUUID();
+    this.db
+      .prepare(
+        `INSERT INTO job_runs (
+          id,
+          job_id,
+          status,
+          started_at,
+          created_at
+        ) VALUES (?, ?, 'running', datetime('now'), datetime('now'))`
+      )
+          `INSERT INTO job_runs (
+            id,
+            job_id,
+            status,
+            started_at,
+            created_at,
+            log_file_path
+          ) VALUES (?, ?, 'running', datetime('now'), datetime('now'), ?)`
+        .run(id, jobId, logFilePath ?? null);
+
+    return id;
+  }
+
+  completeRun(runId: string, stats: RunStats): void {
+    this.db
+      .prepare(
+        `UPDATE job_runs
+         SET status = 'completed',
+             finished_at = datetime('now'),
+             items_discovered = ?,
+             items_new = ?,
+             items_qualified = ?,
+             prompt_tokens = ?,
+             completion_tokens = ?,
+             estimated_cost_usd = ?
+         WHERE id = ?`
+      )
+      .run(
+        stats.itemsDiscovered,
+        stats.itemsNew,
+        stats.itemsQualified,
+        stats.promptTokens,
+        stats.completionTokens,
+        stats.estimatedCostUsd,
+        runId
+      );
+  }
+
+  failRun(runId: string, message: string): void {
+    this.db
+      .prepare(
+        `UPDATE job_runs
+         SET status = 'failed',
+             message = ?,
+             finished_at = datetime('now')
+         WHERE id = ?`
+      )
+      .run(message, runId);
+  }
+
+  latest(limit = 20): Array<{ jobId: string; status: string; message: string; createdAt: string }> {
+    return this.db
+      .prepare(
+        `SELECT job_id as jobId, status, message, created_at as createdAt
+         FROM job_runs
+         ORDER BY created_at DESC
+         LIMIT ?`
+      )
+      .all(limit) as Array<{ jobId: string; status: string; message: string; createdAt: string }>;
+  }
+
+  listByJob(jobId: string, limit = 20): RunRow[] {
+    return this.db
+      .prepare(
+        `SELECT
+           jr.id as id,
+           jr.job_id as jobId,
+           j.name as jobName,
+           jr.status as status,
+           jr.message as message,
+           jr.started_at as startedAt,
+           jr.finished_at as finishedAt,
+           jr.created_at as createdAt,
+           jr.items_discovered as itemsDiscovered,
+           jr.items_new as itemsNew,
+           jr.items_qualified as itemsQualified,
+           jr.prompt_tokens as promptTokens,
+           jr.completion_tokens as completionTokens,
+           jr.estimated_cost_usd as estimatedCostUsd
+            jr.log_file_path as logFilePath
+         FROM job_runs jr
+         LEFT JOIN jobs j ON j.id = jr.job_id
+         WHERE jr.job_id = ?
+         ORDER BY jr.created_at DESC
+         LIMIT ?`
+      )
+      .all(jobId, limit) as RunRow[];
+  }
+
+  latestWithJobNames(limit = 20): RunRow[] {
+    return this.db
+      .prepare(
+        `SELECT
+           jr.id as id,
+           jr.job_id as jobId,
+           j.name as jobName,
+           jr.status as status,
+           jr.message as message,
+           jr.started_at as startedAt,
+           jr.finished_at as finishedAt,
+           jr.created_at as createdAt,
+           jr.items_discovered as itemsDiscovered,
+           jr.items_new as itemsNew,
+           jr.items_qualified as itemsQualified,
+           jr.prompt_tokens as promptTokens,
+           jr.completion_tokens as completionTokens,
+           jr.estimated_cost_usd as estimatedCostUsd
+            jr.log_file_path as logFilePath
+         FROM job_runs jr
+         LEFT JOIN jobs j ON j.id = jr.job_id
+         ORDER BY jr.created_at DESC
+         LIMIT ?`
+      )
+      .all(limit) as RunRow[];
+  }
+}
