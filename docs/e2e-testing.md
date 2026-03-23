@@ -8,8 +8,9 @@ sidebar_position: 6
 Use this guide to verify the core path:
 
 1. create a job
-2. run qualification on 5 new items
-3. delete job and related analytics
+2. run the initial qualification attempt on 5 new items
+3. verify job enablement transitions around that initial run
+4. delete job and related analytics
 
 ## One-Command Smoke Test
 
@@ -20,8 +21,9 @@ npm run e2e:smoke
 The script:
 
 - validates required OpenRouter credentials exist
-- creates a temporary job
-- runs manual execution with item limit
+- creates a temporary job in disabled state
+- runs the same initial-run orchestration used by `job add`
+- verifies the job is enabled after the initial run attempt and that a run row exists
 - deletes the job in cleanup
 
 Implementation path:

@@ -24,6 +24,10 @@ What it does:
 - generates name, slug, description, and qualification prompt
 - prompts for missing credentials/settings when needed
 - saves the job locally
+- runs an immediate first scan with the same progress and summary output as `job run`
+- keeps the job unscheduled while that first run is in progress, then enables scheduled runs when the attempt ends
+
+If you interrupt the initial run with Ctrl+C, Snoopy enables the job before exit so cron scheduling can continue.
 
 ### `job list`
 

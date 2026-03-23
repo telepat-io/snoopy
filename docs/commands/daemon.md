@@ -33,6 +33,14 @@ Shows whether the daemon is running and whether the PID file is healthy.
 snoopy daemon status
 ```
 
+### `daemon reload`
+
+Reloads scheduler registrations in the running daemon without restarting it.
+
+```bash
+snoopy daemon reload
+```
+
 ### `daemon run`
 
 Runs the daemon in the foreground.
@@ -46,4 +54,5 @@ snoopy daemon run
 ```bash
 snoopy daemon start
 snoopy daemon status
+snoopy daemon reload
 ```

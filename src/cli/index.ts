@@ -2,7 +2,7 @@
 import { Command } from 'commander';
 import { addJob, disableJob, enableJob, listJobRuns, listJobs, removeJob, runJobNow } from './commands/job.js';
 import { openSettings } from './commands/settings.js';
-import { daemonRun, daemonStart, daemonStatus, daemonStop } from './commands/daemon.js';
+import { daemonReload, daemonRun, daemonStart, daemonStatus, daemonStop } from './commands/daemon.js';
 import { showRunLogs } from './commands/logs.js';
 import { showJobErrors } from './commands/errors.js';
 import { exportCsv } from './commands/export.js';
@@ -82,6 +82,7 @@ const daemon = program.command('daemon').description('Manage Snoopy daemon');
 daemon.command('start').description('Start daemon in background').action(daemonStart);
 daemon.command('stop').description('Stop daemon').action(daemonStop);
 daemon.command('status').description('Show daemon status').action(daemonStatus);
+daemon.command('reload').description('Reload daemon schedules').action(daemonReload);
 daemon.command('run').description('Run daemon in foreground').action(daemonRun);
 
 const startup = program.command('startup').description('Manage OS startup registration');

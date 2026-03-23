@@ -1,8 +1,12 @@
 import fs from 'node:fs';
-import { spawn } from 'node:child_process';
 import { CronScheduler } from '../../services/scheduler/cronScheduler.js';
 import { cleanupOldLogs } from '../../services/logging/logRotation.js';
 import { ensureAppDirs } from '../../utils/paths.js';
+import {
+  ensureDaemonRunning,
+  isDaemonRunning,
+  requestDaemonReload
+} from '../../services/daemonControl.js';
 import {
   printCliHeader,
   printError,
@@ -14,54 +18,6 @@ import {
 } from '../ui/consoleUi.js';
 
 let scheduler: CronScheduler | null = null;
-
-function getDaemonPid(): number | null {
-  const paths = ensureAppDirs();
-  if (!fs.existsSync(paths.pidFilePath)) {
-    return null;
-  }
-
-  const pid = Number(fs.readFileSync(paths.pidFilePath, 'utf8'));
-  return Number.isFinite(pid) ? pid : null;
-}
-
-export function isDaemonRunning(): { running: boolean; pid: number | null } {
-  const pid = getDaemonPid();
-  if (!pid) {
-    return { running: false, pid: null };
-  }
-
-  try {
-    process.kill(pid, 0);
-    return { running: true, pid };
-  } catch {
-    return { running: false, pid };
-  }
-}
-
-export function ensureDaemonRunning(): { started: boolean; pid: number | null } {
-  const paths = ensureAppDirs();
-  const status = isDaemonRunning();
-  if (status.running) {
-    return { started: false, pid: status.pid };
-  }
-
-  if (fs.existsSync(paths.pidFilePath)) {
-    fs.unlinkSync(paths.pidFilePath);
-  }
-
-  const child = spawn(process.execPath, [process.argv[1]!, 'daemon', 'run'], {
-    detached: true,
-    stdio: 'ignore'
-  });
-
-  child.unref();
-  const pid = child.pid ?? null;
-  if (pid !== null) {
-    fs.writeFileSync(paths.pidFilePath, String(pid));
-  }
-  return { started: true, pid };
-}
 
 export function daemonRun(): void {
   ensureAppDirs();
@@ -81,12 +37,35 @@ export function daemonRun(): void {
     process.exit(0);
   });
 
+  process.on('SIGUSR2', () => {
+    scheduler?.reload();
+  });
+
   setInterval(() => {
     // Keep event loop alive for cron tasks.
   }, 60_000);
 
   printSuccess('Snoopy daemon is running.');
   printMuted('Press Ctrl+C to stop.');
+}
+
+export function daemonReload(): void {
+  printCliHeader('Daemon control');
+  printSection('Daemon Reload');
+
+  const result = requestDaemonReload();
+  if (!result.pid) {
+    printWarning('Daemon is not running.');
+    return;
+  }
+
+  if (!result.reloaded) {
+    printError(`Could not reload daemon schedules for pid ${result.pid}.`);
+    printMuted('If this persists, restart the daemon with snoopy daemon stop && snoopy daemon start.');
+    return;
+  }
+
+  printSuccess(`Reloaded daemon schedules (pid ${result.pid}).`);
 }
 
 export function daemonStart(): void {

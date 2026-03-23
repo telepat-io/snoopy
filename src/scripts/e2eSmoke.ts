@@ -1,6 +1,7 @@
 import { JobsRepository } from '../services/db/repositories/jobsRepo.js';
+import { RunsRepository } from '../services/db/repositories/runsRepo.js';
 import { getOpenRouterApiKey } from '../services/security/secretStore.js';
-import { removeJob, runJobNow } from '../cli/commands/job.js';
+import { removeJob, runInitialJobAndEnable } from '../cli/commands/job.js';
 
 function parsePositiveInt(value: string | undefined, fallback: number): number {
   if (!value) {
@@ -57,6 +58,7 @@ async function main(): Promise<void> {
   }
 
   const jobsRepo = new JobsRepository();
+  const runsRepo = new RunsRepository();
   const runLimit = parsePositiveInt(process.env.SNOOPY_E2E_LIMIT, 5);
   const keepJob = parseBoolean(process.env.SNOOPY_E2E_KEEP_JOB, false);
   const subreddits = parseSubreddits(process.env.SNOOPY_E2E_SUBREDDITS);
@@ -72,15 +74,39 @@ async function main(): Promise<void> {
       'Qualify content when the author is actively building or operating a startup, SaaS, or online business and is asking for concrete help, feedback, users, growth, hiring, product validation, or operations support. Return unqualified for broad news, memes, or non-builder chatter.',
     subreddits,
     scheduleCron: '*/30 * * * *',
-    enabled: true,
+    enabled: false,
     monitorComments: false
   });
 
   let deleted = false;
-  console.log(`[e2e-smoke] Created job ${job.slug} (${job.id}) with subreddits: ${subreddits.join(', ')}`);
+  console.log(
+    `[e2e-smoke] Created disabled job ${job.slug} (${job.id}) with subreddits: ${subreddits.join(', ')}`
+  );
+
+  if (job.enabled) {
+    throw new Error('Expected smoke test job to start disabled before initial run attempt.');
+  }
 
   try {
-    await runJobNow(job.slug, { limit: runLimit });
+    await runInitialJobAndEnable(job.id, {
+      limit: runLimit,
+      installSignalHandlers: false,
+      printLifecycleMessages: false
+    });
+
+    const refreshed = jobsRepo.getById(job.id);
+    if (!refreshed || !refreshed.enabled) {
+      throw new Error('Expected smoke test job to be enabled after initial run attempt.');
+    }
+
+    const latestRun = runsRepo.listByJob(job.id, 1)[0];
+    if (!latestRun) {
+      throw new Error('Expected smoke test to create a run record for the initial run attempt.');
+    }
+
+    console.log(
+      `[e2e-smoke] Initial run status=${latestRun.status}, discovered=${latestRun.itemsDiscovered}, new=${latestRun.itemsNew}, qualified=${latestRun.itemsQualified}`
+    );
   } finally {
     if (!keepJob) {
       removeJob(job.slug);

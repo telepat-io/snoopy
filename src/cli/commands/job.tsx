@@ -10,7 +10,7 @@ import {
   setOpenRouterApiKey
 } from '../../services/security/secretStore.js';
 import { getStartupStatus, installStartup } from '../../services/startup/index.js';
-import { ensureDaemonRunning } from './daemon.js';
+import { ensureDaemonRunning, requestDaemonReload } from '../../services/daemonControl.js';
 import { type JobRunProgressEvent, JobRunner } from '../../services/scheduler/jobRunner.js';
 import { intervalToCron } from '../../types/settings.js';
 import {
@@ -86,6 +86,78 @@ async function runAddFlow(
   await app.waitUntilExit();
   return result;
 }
+
+function installInitialRunSignalHandlers(jobId: string, jobsRepo: JobsRepository): () => void {
+  let handled = false;
+
+  const cleanup = (): void => {
+    process.off('SIGINT', onSignal);
+    process.off('SIGTERM', onSignal);
+  };
+
+  const onSignal = (signal: NodeJS.Signals): void => {
+    if (handled) {
+      return;
+    }
+
+    handled = true;
+    jobsRepo.setEnabled(jobId, true);
+    refreshDaemonSchedulesAfterEnable();
+    printWarning('Initial run interrupted. Job was enabled before exit so scheduled runs can continue.');
+    cleanup();
+    process.exit(signal === 'SIGINT' ? 130 : 143);
+  };
+
+  process.on('SIGINT', onSignal);
+  process.on('SIGTERM', onSignal);
+
+  return cleanup;
+}
+
+function refreshDaemonSchedulesAfterEnable(): void {
+  const reloadStatus = requestDaemonReload();
+  if (!reloadStatus.pid || reloadStatus.reloaded) {
+    return;
+  }
+
+  printWarning('Job was enabled, but daemon schedules could not be reloaded automatically.');
+  printInfo('Run snoopy daemon reload (or restart the daemon) to pick up this job schedule immediately.');
+}
+
+interface InitialRunOptions {
+  limit?: number;
+  installSignalHandlers?: boolean;
+  printLifecycleMessages?: boolean;
+}
+
+export async function runInitialJobAndEnable(jobRef: string, options: InitialRunOptions = {}): Promise<void> {
+  const jobsRepo = new JobsRepository();
+  const job = jobsRepo.getByRef(jobRef);
+  if (!job) {
+    throw new Error(`Job not found: ${jobRef}`);
+  }
+
+  const shouldPrintLifecycleMessages = options.printLifecycleMessages ?? true;
+  if (shouldPrintLifecycleMessages) {
+    printInfo('Running an initial scan now so you can see immediate results.');
+    printInfo('Scheduled runs are paused for this job until the initial run attempt finishes.');
+  }
+
+  const shouldInstallSignalHandlers = options.installSignalHandlers ?? true;
+  const cleanupSignalHandlers = shouldInstallSignalHandlers ? installInitialRunSignalHandlers(job.id, jobsRepo) : () => {};
+  try {
+    await runJobNow(job.id, { limit: options.limit });
+  } finally {
+    cleanupSignalHandlers();
+    jobsRepo.setEnabled(job.id, true);
+    refreshDaemonSchedulesAfterEnable();
+  }
+
+  if (shouldPrintLifecycleMessages) {
+    printSuccess(`Enabled job ${job.id} (${job.slug}) for scheduled runs.`);
+  }
+}
+
 export async function addJob(): Promise<void> {
   const jobsRepo = new JobsRepository();
   const settingsRepo = new SettingsRepository();
@@ -116,7 +188,7 @@ export async function addJob(): Promise<void> {
     qualificationPrompt: flowResult.job.qualificationPrompt,
     subreddits: flowResult.job.subreddits,
     scheduleCron: intervalToCron(cronIntervalMinutes),
-    enabled: true,
+    enabled: false,
     monitorComments: flowResult.job.monitorComments
   });
 
@@ -137,6 +209,8 @@ export async function addJob(): Promise<void> {
   } else {
     printInfo(`Daemon already running${daemonStatus.pid ? ` (pid ${daemonStatus.pid})` : ''}.`);
   }
+
+  await runInitialJobAndEnable(job.id);
 }
 
 export function listJobs(): void {

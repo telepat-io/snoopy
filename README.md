@@ -76,6 +76,9 @@ Note:
 npm run dev -- job add
 ```
 
+`job add` now runs an immediate first scan after saving the job so you can validate results right away.
+Snoopy pauses scheduled scans for that new job during this first run attempt, then enables scheduling when it ends (including interruption/failure cases).
+
 2. List jobs:
 
 ```bash
@@ -117,6 +120,7 @@ npm run dev -- errors <jobRef>
 
 ```bash
 npm run dev -- daemon start
+npm run dev -- daemon reload
 ```
 
 ## Most Used Commands
@@ -131,6 +135,7 @@ npm run dev -- daemon start
 - `start <jobRef>` / `stop <jobRef>`
 - `delete <jobRef>`
 - `daemon start|stop|status`
+- `daemon reload`
 - `startup status`
 - `doctor`
 
