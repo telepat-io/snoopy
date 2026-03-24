@@ -1,5 +1,6 @@
 import React from 'react';
 import { render } from 'ink';
+import { createInterface } from 'node:readline/promises';
 import { JobAddFlow } from '../flows/jobAddFlow.js';
 import { JobsRepository } from '../../services/db/repositories/jobsRepo.js';
 import { SettingsRepository } from '../../services/db/repositories/settingsRepo.js';
@@ -420,12 +421,18 @@ function logManualRunProgress(event: JobRunProgressEvent): void {
 }
 
 async function promptYesNo(question: string): Promise<boolean> {
-  process.stdout.write(question);
-
-  return await new Promise((resolve) => {
-    process.stdin.setEncoding('utf8');
-    process.stdin.once('data', (chunk) => {
-      resolve(chunk.toString().trim().toLowerCase().startsWith('y'));
-    });
+  const rl = createInterface({
+    input: process.stdin,
+    output: process.stdout,
+    terminal: Boolean(process.stdin.isTTY && process.stdout.isTTY)
   });
+
+  try {
+    const answer = await rl.question(question);
+    return answer.trim().toLowerCase().startsWith('y');
+  } catch {
+    return false;
+  } finally {
+    rl.close();
+  }
 }

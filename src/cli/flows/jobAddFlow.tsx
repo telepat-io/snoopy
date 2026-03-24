@@ -229,7 +229,7 @@ export function JobAddFlow({
     return (
       <FlowFrame transcript={transcript}>
         <Spinner label={loadingLabel} />
-        <Text color="gray">Snoopy is asking OpenRouter for follow-up questions.</Text>
+        <Text color="gray">Snoopy is coming up with follow-up questions.</Text>
       </FlowFrame>
     );
   }
