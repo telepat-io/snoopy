@@ -1,15 +1,19 @@
-import React, { useState } from 'react';
-import { Box, Text, useApp } from 'ink';
+import React, { useMemo, useState } from 'react';
+import { Box, Text, useApp, useInput } from 'ink';
 import { TextPrompt } from '../../ui/components/TextPrompt.js';
 import { CliHeader } from '../../ui/components/CliHeader.js';
 import {
-  DEFAULT_MODEL,
-  DEFAULT_CRON_INTERVAL_MINUTES,
-  DEFAULT_JOB_TIMEOUT_MS,
   type AppSettings,
   type RedditCredentialState,
   type RedditCredentialsUpdate
 } from '../../types/settings.js';
+import {
+  buildSettingsMenuItems,
+  buildSettingsSaveResult,
+  createSettingsDraft,
+  type EditableSettingKey,
+  type SettingsDraftSecrets
+} from './settingsFlowModel.js';
 
 interface SettingsResult {
   apiKey?: string;
@@ -20,22 +24,11 @@ interface SettingsResult {
 interface SettingsFlowProps {
   current: AppSettings;
   currentRedditCredentials: RedditCredentialState;
-  hasApiKey: boolean;
+  currentApiKey: string | null;
   onDone: (result: SettingsResult) => void;
 }
 
-type Stage =
-  | 'apiKey'
-  | 'model'
-  | 'temperature'
-  | 'maxTokens'
-  | 'topP'
-  | 'cronIntervalMinutes'
-  | 'jobTimeoutMinutes'
-  | 'redditAppName'
-  | 'redditClientId'
-  | 'redditClientSecret'
-  | 'confirm';
+type Mode = 'menu' | 'edit' | 'confirmClear';
 
 interface SettingsFrameProps {
   children: React.ReactNode;
@@ -50,235 +43,214 @@ function SettingsFrame({ children }: SettingsFrameProps): React.JSX.Element {
   );
 }
 
-export function SettingsFlow({ current, currentRedditCredentials, hasApiKey, onDone }: SettingsFlowProps): React.JSX.Element {
+function labelForSettingKey(key: EditableSettingKey): string {
+  switch (key) {
+    case 'apiKey':
+      return 'Set new OpenRouter API key (leave blank to keep current)';
+    case 'model':
+      return 'Default model';
+    case 'temperature':
+      return 'Tehey mperature (0.0 - 2.0)';
+    case 'maxTokens':
+      return 'Max tokens';
+    case 'topP':
+      return 'Top P (0.0 - 1.0)';
+    case 'cronIntervalMinutes':
+      return 'Scan interval in minutes (e.g. 30)';
+    case 'jobTimeoutMinutes':
+      return 'Job timeout in minutes (0 = no timeout)';
+    case 'redditAppName':
+      return 'Reddit app name for OAuth fallback';
+    case 'redditClientId':
+      return 'Reddit client ID for OAuth fallback';
+    case 'redditClientSecret':
+      return 'Reddit client secret for OAuth fallback (leave blank to keep current)';
+  }
+}
+
+function keyToDraftField(key: Exclude<EditableSettingKey, 'apiKey' | 'redditClientSecret'>): keyof ReturnType<typeof createSettingsDraft> {
+  switch (key) {
+    case 'model':
+      return 'model';
+    case 'temperature':
+      return 'temperature';
+    case 'maxTokens':
+      return 'maxTokens';
+    case 'topP':
+      return 'topP';
+    case 'cronIntervalMinutes':
+      return 'cronIntervalMinutes';
+    case 'jobTimeoutMinutes':
+      return 'jobTimeoutMinutes';
+    case 'redditAppName':
+      return 'redditAppName';
+    case 'redditClientId':
+      return 'redditClientId';
+  }
+}
+
+export function SettingsFlow({ current, currentRedditCredentials, currentApiKey, onDone }: SettingsFlowProps): React.JSX.Element {
   const { exit } = useApp();
-  const [stage, setStage] = useState<Stage>('apiKey');
-  const [apiKey, setApiKey] = useState<string | undefined>(undefined);
-  const defaultModel = current.model.trim() || DEFAULT_MODEL;
-  const [model, setModel] = useState(defaultModel);
-  const [temperature, setTemperature] = useState(String(current.modelSettings.temperature));
-  const [maxTokens, setMaxTokens] = useState(String(current.modelSettings.maxTokens));
-  const [topP, setTopP] = useState(String(current.modelSettings.topP));
-  const [cronIntervalMinutes, setCronIntervalMinutes] = useState(
-    String(current.cronIntervalMinutes ?? DEFAULT_CRON_INTERVAL_MINUTES)
+  const [mode, setMode] = useState<Mode>('menu');
+  const [cursor, setCursor] = useState(0);
+  const [menuError, setMenuError] = useState<string | null>(null);
+  const [draft, setDraft] = useState(() => createSettingsDraft(current, currentRedditCredentials));
+  const [draftSecrets, setDraftSecrets] = useState<SettingsDraftSecrets>({});
+  const [editingKey, setEditingKey] = useState<EditableSettingKey | null>(null);
+  const [clearedFields, setClearedFields] = useState<Set<EditableSettingKey>>(new Set());
+
+  const menuItems = useMemo(
+    () =>
+      buildSettingsMenuItems({
+        draft,
+        draftSecrets,
+        currentApiKey,
+        hasCurrentRedditClientSecret: currentRedditCredentials.hasClientSecret,
+        clearedFields
+      }),
+    [currentApiKey, currentRedditCredentials.hasClientSecret, draft, draftSecrets, clearedFields]
   );
-  const [jobTimeoutMinutes, setJobTimeoutMinutes] = useState(
-    String(Math.round((current.jobTimeoutMs ?? DEFAULT_JOB_TIMEOUT_MS) / 60000))
-  );
-  const [redditAppName, setRedditAppName] = useState<string | undefined>(undefined);
-  const [redditClientId, setRedditClientId] = useState<string | undefined>(undefined);
-  const [redditClientSecret, setRedditClientSecret] = useState<string | undefined>(undefined);
 
-  if (stage === 'apiKey') {
+  useInput((_, key) => {
+    if (mode !== 'menu') {
+      return;
+    }
+
+    if (key.upArrow) {
+      setCursor((prev) => (prev - 1 + menuItems.length) % menuItems.length);
+      return;
+    }
+
+    if (key.downArrow) {
+      setCursor((prev) => (prev + 1) % menuItems.length);
+      return;
+    }
+
+    if (key.escape) {
+      exit();
+      return;
+    }
+
+    if (!key.return) {
+      return;
+    }
+
+    const selected = menuItems[cursor];
+    if (!selected) {
+      return;
+    }
+
+    if (selected.key === 'cancel') {
+      exit();
+      return;
+    }
+
+    if (selected.key === 'save') {
+      const saveResult = buildSettingsSaveResult(draft, draftSecrets, currentRedditCredentials, clearedFields);
+      if (!saveResult.ok) {
+        setMenuError(saveResult.error);
+        return;
+      }
+
+      onDone(saveResult.result);
+      exit();
+      return;
+    }
+
+    setMenuError(null);
+    setEditingKey(selected.key);
+    setMode('edit');
+  });
+
+  if (mode === 'menu') {
     return (
       <SettingsFrame>
-        <Text color="cyan">Current API key: {hasApiKey ? 'Configured' : 'Missing'}</Text>
+        <Text color="cyan">Choose a setting to edit. Press Enter to select.</Text>
+        <Text color="gray">Use Up/Down arrows to navigate. Esc or Cancel exits without saving.</Text>
+        <Box flexDirection="column" marginTop={1}>
+          {menuItems.map((item, index) => {
+            const isCursor = index === cursor;
+            const value = item.summary ? `: ${item.summary}` : '';
+            return (
+              <Text key={item.key} color={isCursor ? 'yellow' : 'white'}>
+                {isCursor ? '>' : ' '} {item.label}{value}
+              </Text>
+            );
+          })}
+        </Box>
+        {menuError ? (
+          <Text color="red">{menuError}</Text>
+        ) : null}
+      </SettingsFrame>
+    );
+  }
+
+  if (mode === 'confirmClear' && editingKey) {
+    return (
+      <SettingsFrame>
+        <Text color="yellow">Clear this field? (y/n)</Text>
         <TextPrompt
-          label="Set new OpenRouter API key (leave blank to keep current)"
-          secret
+          label="Confirm"
           onSubmit={(value) => {
-            if (value) {
-              setApiKey(value);
+            if (value.toLowerCase().startsWith('y')) {
+              setClearedFields((prev) => new Set([...prev, editingKey]));
             }
-            setStage('model');
+            setMode('menu');
+            setEditingKey(null);
           }}
         />
       </SettingsFrame>
     );
   }
 
-  if (stage === 'model') {
+  if (!editingKey) {
     return (
       <SettingsFrame>
-        <TextPrompt
-          label="Default model"
-          initialValue={model.trim() || defaultModel}
-          onSubmit={(value) => {
-            setModel(value.trim() || defaultModel);
-            setStage('temperature');
-          }}
-        />
+        <Text color="red">No setting selected. Press Esc to exit.</Text>
       </SettingsFrame>
     );
   }
 
-  if (stage === 'temperature') {
-    return (
-      <SettingsFrame>
-        <TextPrompt
-          label="Temperature (0.0 - 2.0)"
-          initialValue={temperature}
-          onSubmit={(value) => {
-            setTemperature(value || temperature);
-            setStage('maxTokens');
-          }}
-        />
-      </SettingsFrame>
-    );
-  }
+  const isSecret = editingKey === 'apiKey' || editingKey === 'redditClientSecret';
 
-  if (stage === 'maxTokens') {
-    return (
-      <SettingsFrame>
-        <TextPrompt
-          label="Max tokens"
-          initialValue={maxTokens}
-          onSubmit={(value) => {
-            setMaxTokens(value || maxTokens);
-            setStage('topP');
-          }}
-        />
-      </SettingsFrame>
-    );
-  }
+  const initialValue =
+    editingKey === 'apiKey' || editingKey === 'redditClientSecret'
+      ? ''
+      : draft[keyToDraftField(editingKey)];
 
-  if (stage === 'topP') {
-    return (
-      <SettingsFrame>
-        <TextPrompt
-          label="Top P (0.0 - 1.0)"
-          initialValue={topP}
-          onSubmit={(value) => {
-            setTopP(value || topP);
-            setStage('cronIntervalMinutes');
-          }}
-        />
-      </SettingsFrame>
-    );
-  }
-
-  if (stage === 'cronIntervalMinutes') {
-    return (
-      <SettingsFrame>
-        <TextPrompt
-          label="Scan interval in minutes (e.g. 30)"
-          initialValue={cronIntervalMinutes}
-          onSubmit={(value) => {
-            setCronIntervalMinutes(value || cronIntervalMinutes);
-            setStage('jobTimeoutMinutes');
-          }}
-        />
-      </SettingsFrame>
-    );
-  }
-
-  if (stage === 'jobTimeoutMinutes') {
-    return (
-      <SettingsFrame>
-        <TextPrompt
-          label="Job timeout in minutes (0 = no timeout)"
-          initialValue={jobTimeoutMinutes}
-          onSubmit={(value) => {
-            setJobTimeoutMinutes(value !== '' ? value : jobTimeoutMinutes);
-            setStage('redditAppName');
-          }}
-        />
-      </SettingsFrame>
-    );
-  }
-
-  if (stage === 'redditAppName') {
-    return (
-      <SettingsFrame>
-        <Text color="cyan">Reddit fallback app name: {currentRedditCredentials.appName}</Text>
-        <TextPrompt
-          label="Reddit app name for OAuth fallback (leave blank to keep current)"
-          initialValue={currentRedditCredentials.appName}
-          onSubmit={(value) => {
-            if (value) {
-              setRedditAppName(value);
-            }
-            setStage('redditClientId');
-          }}
-        />
-      </SettingsFrame>
-    );
-  }
-
-  if (stage === 'redditClientId') {
-    return (
-      <SettingsFrame>
-        <Text color="cyan">Reddit fallback client ID: {currentRedditCredentials.clientId ? 'Configured' : 'Missing'}</Text>
-        <TextPrompt
-          label="Reddit client ID for OAuth fallback (leave blank to keep current)"
-          initialValue={currentRedditCredentials.clientId}
-          onSubmit={(value) => {
-            if (value) {
-              setRedditClientId(value);
-            }
-            setStage('redditClientSecret');
-          }}
-        />
-      </SettingsFrame>
-    );
-  }
-
-  if (stage === 'redditClientSecret') {
-    return (
-      <SettingsFrame>
-        <Text color="cyan">Reddit fallback client secret: {currentRedditCredentials.hasClientSecret ? 'Configured' : 'Missing'}</Text>
-        <TextPrompt
-          label="Reddit client secret for OAuth fallback (leave blank to keep current)"
-          secret
-          onSubmit={(value) => {
-            if (value) {
-              setRedditClientSecret(value);
-            }
-            setStage('confirm');
-          }}
-        />
-      </SettingsFrame>
-    );
-  }
-
-  const nextRedditCredentials = {
-    appName: redditAppName ?? currentRedditCredentials.appName,
-    clientId: redditClientId ?? currentRedditCredentials.clientId,
-    clientSecret: redditClientSecret
-  };
-
-  const hasCompleteRedditCredentials =
-    Boolean(nextRedditCredentials.appName) &&
-    Boolean(nextRedditCredentials.clientId) &&
-    Boolean(nextRedditCredentials.clientSecret || currentRedditCredentials.hasClientSecret);
+  const fieldHasCurrentValue = Boolean(initialValue);
+  const helpText = fieldHasCurrentValue ? 'Press Enter with empty value to clear' : 'Press Enter to continue';
 
   return (
     <SettingsFrame>
-      <Text bold color="green">Review settings</Text>
-      <Text>Model: {model}</Text>
-      <Text>Temperature: {temperature}</Text>
-      <Text>Max tokens: {maxTokens}</Text>
-      <Text>Top P: {topP}</Text>
-      <Text>Scan interval: {cronIntervalMinutes} minutes</Text>
-      <Text>Job timeout: {jobTimeoutMinutes === '0' ? 'No timeout' : `${jobTimeoutMinutes} minutes`}</Text>
-      <Text>Reddit OAuth fallback: {hasCompleteRedditCredentials ? 'configured' : 'missing fields'}</Text>
       <TextPrompt
-        label="Save settings? (y/n)"
-        initialValue="y"
+        label={labelForSettingKey(editingKey)}
+        initialValue={initialValue}
+        secret={isSecret}
         onSubmit={(value) => {
-          if (value.toLowerCase().startsWith('y')) {
-            onDone({
-              apiKey,
-              redditCredentials: {
-                appName: nextRedditCredentials.appName,
-                clientId: nextRedditCredentials.clientId,
-                ...(nextRedditCredentials.clientSecret ? { clientSecret: nextRedditCredentials.clientSecret } : {})
-              },
-              settings: {
-                model,
-                modelSettings: {
-                  temperature: Number(temperature),
-                  maxTokens: Number(maxTokens),
-                  topP: Number(topP)
-                },
-                cronIntervalMinutes: Math.max(1, Number(cronIntervalMinutes) || DEFAULT_CRON_INTERVAL_MINUTES),
-                jobTimeoutMs: Math.max(0, Math.round(Number(jobTimeoutMinutes) * 60000))
-              }
-            });
+          if (value === '' && fieldHasCurrentValue && editingKey !== 'model') {
+            setMode('confirmClear');
+            return;
           }
-          exit();
+
+          if (editingKey === 'apiKey') {
+            if (value) {
+              setDraftSecrets((prev) => ({ ...prev, apiKey: value }));
+            }
+          } else if (editingKey === 'redditClientSecret') {
+            if (value) {
+              setDraftSecrets((prev) => ({ ...prev, redditClientSecret: value }));
+            }
+          } else if (value) {
+            const field = keyToDraftField(editingKey);
+            setDraft((prev) => ({ ...prev, [field]: value }));
+          }
+
+          setMode('menu');
+          setEditingKey(null);
         }}
       />
+      {!isSecret && <Text color="gray">{helpText}</Text>}
     </SettingsFrame>
   );
 }

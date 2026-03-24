@@ -69,6 +69,7 @@ node dist/src/cli/index.js --help
 Note:
 - Snoopy uses Reddit public JSON endpoints by default.
 - Optional Reddit OAuth fallback credentials can be configured in `snoopy settings` for environments where unauthenticated access is blocked.
+- `snoopy settings` shows a full settings menu so you can jump directly to any setting and save once.
 
 1. Start interactive setup and create your first job:
 
@@ -173,6 +174,7 @@ Optional env vars:
 - [Documentation Index](docs/README.md)
 - [Command Reference](docs/commands/index.md)
 - [Database Schema](docs/database-schema.md)
+- [Agent DB Operations](docs/agents-db.md)
 - [Scheduling, Cron, Daemon, and Startup](docs/scheduling-and-startup.md)
 - [Security and Secret Storage](docs/security.md)
 - [E2E Smoke Testing Guide](docs/e2e-testing.md)

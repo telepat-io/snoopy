@@ -33,6 +33,9 @@ describe('CsvResultsExporter', () => {
       body: 'Body',
       url: `https://reddit.com/${id}`,
       redditPostedAt: '2026-02-01T00:00:00.000Z',
+      viewed: false,
+      validated: false,
+      processed: false,
       qualificationReason: 'fit',
       createdAt: '2026-02-01 00:00:00',
       ...overrides

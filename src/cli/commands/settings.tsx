@@ -25,14 +25,14 @@ export async function openSettings(): Promise<void> {
   const settingsRepo = new SettingsRepository();
   const current = settingsRepo.getAppSettings();
   const currentRedditCredentials = await settingsRepo.getRedditCredentialState();
-  const hasApiKey = Boolean(await getOpenRouterApiKey());
+  const currentApiKey = await getOpenRouterApiKey();
 
   let result: SettingsFlowResult | null = null;
   const app = render(
     <SettingsFlow
       current={current}
       currentRedditCredentials={currentRedditCredentials}
-      hasApiKey={hasApiKey}
+      currentApiKey={currentApiKey}
       onDone={(value) => {
         result = value;
       }}

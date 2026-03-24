@@ -9,7 +9,17 @@ Snoopy uses a local SQLite database.
 
 ## Storage Location
 
-Default path:
+Path pattern:
+
+- `<rootDir>/snoopy.db`
+
+Default root directory is `<home>/.snoopy` on all supported OSs:
+
+- macOS example: `~/.snoopy/snoopy.db`
+- Linux example: `~/.snoopy/snoopy.db`
+- Windows example: `C:\Users\<you>\.snoopy\snoopy.db`
+
+Default path (macOS/Linux):
 
 - `~/.snoopy/snoopy.db`
 
@@ -110,6 +120,7 @@ Notes:
 Purpose:
 
 - deduplicated store of scanned posts/comments and qualification outcome
+- supports lightweight result lifecycle tracking for downstream automation
 
 Columns:
 
@@ -126,6 +137,9 @@ Columns:
 - `url TEXT NOT NULL`
 - `reddit_posted_at TEXT NOT NULL`
 - `qualified INTEGER NOT NULL DEFAULT 0`
+- `viewed INTEGER NOT NULL DEFAULT 0`
+- `validated INTEGER NOT NULL DEFAULT 0`
+- `processed INTEGER NOT NULL DEFAULT 0`
 - `qualification_reason TEXT`
 - `created_at TEXT NOT NULL DEFAULT datetime('now')`
 
@@ -137,6 +151,15 @@ Behavior:
 
 - prevents re-processing same post/comment per job
 - stores final qualification reason for auditability
+- lifecycle flag semantics:
+	- `viewed = 1` result has been reviewed by an operator or agent
+	- `validated = 1` result has been quality-checked/accepted
+	- `processed = 1` result has been handed off to downstream workflow
+
+Notes:
+
+- SQLite stores booleans as integers (`0` false, `1` true).
+- Newer runtime versions backfill missing lifecycle columns with `ALTER TABLE` during startup for older local DBs.
 
 ### daemon_state
 
@@ -181,3 +204,45 @@ FROM scan_items
 WHERE run_id = ?
 ORDER BY created_at DESC;
 ```
+
+Unprocessed qualified items for one job:
+
+```sql
+SELECT
+	id,
+	url,
+	author,
+	title,
+	qualification_reason,
+	viewed,
+	validated,
+	processed,
+	reddit_posted_at
+FROM scan_items
+WHERE job_id = ?
+	AND qualified = 1
+	AND processed = 0
+ORDER BY datetime(reddit_posted_at) DESC;
+```
+
+Mark one result as viewed + validated:
+
+```sql
+UPDATE scan_items
+SET viewed = 1,
+		validated = 1
+WHERE id = ?;
+```
+
+Bulk mark qualified results as processed for one run:
+
+```sql
+UPDATE scan_items
+SET processed = 1
+WHERE run_id = ?
+	AND qualified = 1;
+```
+
+## Agent Workflow Reference
+
+For end-to-end direct DB workflows (list jobs, insert jobs, verify daemon/startup state, run jobs, read/update results), see [Agent DB Operations](agents-db.md).

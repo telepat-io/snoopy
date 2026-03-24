@@ -68,6 +68,9 @@ export function getDb(): Database.Database {
       url TEXT NOT NULL,
       reddit_posted_at TEXT NOT NULL,
       qualified INTEGER NOT NULL DEFAULT 0,
+      viewed INTEGER NOT NULL DEFAULT 0,
+      validated INTEGER NOT NULL DEFAULT 0,
+      processed INTEGER NOT NULL DEFAULT 0,
       qualification_reason TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       FOREIGN KEY (job_id) REFERENCES jobs(id),
@@ -146,6 +149,24 @@ export function getDb(): Database.Database {
 
   try {
     db.exec('ALTER TABLE job_runs ADD COLUMN log_file_path TEXT');
+  } catch {
+    // Column already exists.
+  }
+
+  try {
+    db.exec('ALTER TABLE scan_items ADD COLUMN viewed INTEGER NOT NULL DEFAULT 0');
+  } catch {
+    // Column already exists.
+  }
+
+  try {
+    db.exec('ALTER TABLE scan_items ADD COLUMN validated INTEGER NOT NULL DEFAULT 0');
+  } catch {
+    // Column already exists.
+  }
+
+  try {
+    db.exec('ALTER TABLE scan_items ADD COLUMN processed INTEGER NOT NULL DEFAULT 0');
   } catch {
     // Column already exists.
   }

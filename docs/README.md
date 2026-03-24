@@ -139,6 +139,7 @@ Optional env vars:
 
 - [Command Reference](commands/index.md)
 - [Database Schema](database-schema.md)
+- [Agent DB Operations](agents-db.md)
 - [Scheduling, Cron, Daemon, and Startup](scheduling-and-startup.md)
 - [Security and Secret Storage](security.md)
 - [E2E Smoke Testing Guide](e2e-testing.md)

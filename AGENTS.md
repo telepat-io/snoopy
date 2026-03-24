@@ -4,13 +4,23 @@ Scope: concise operating guide for future AI/code agents in this repo.
 
 ## Always Run Before Finishing
 
-- npm run lint
-- npm run build
-- npm test
+These checks **MUST** pass. If any fail, fix the issues before considering work complete:
+
+```bash
+npm run lint     # Catches style/import/usage issues early
+npm run build    # Catches TypeScript type errors
+npm test         # Validates behavior
+```
+
+Run `npm test` individually, as it will have a large output that you should review separately.
 
 If docs/site files changed, also run:
 
-- npm run docs:build
+```bash
+npm run docs:build
+```
+
+**Important:** Run them in order (lint → build → test). Fix any failures immediately—do not skip or bypass checks.
 
 Keep test coverage high. Add tests for all meaningful behavior changes.
 

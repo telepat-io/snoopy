@@ -16,6 +16,9 @@ export interface NewScanItem {
   url: string;
   redditPostedAt: string;
   qualified: boolean;
+  viewed?: boolean;
+  validated?: boolean;
+  processed?: boolean;
   qualificationReason: string | null;
 }
 
@@ -28,6 +31,9 @@ export interface QualifiedScanItemRow {
   body: string;
   url: string;
   redditPostedAt: string;
+  viewed: boolean;
+  validated: boolean;
+  processed: boolean;
   qualificationReason: string | null;
   createdAt: string;
 }
@@ -36,7 +42,7 @@ export class ScanItemsRepository {
   private readonly db = getDb();
 
   listQualifiedByJob(jobId: string): QualifiedScanItemRow[] {
-    return this.db
+    const rows = this.db
       .prepare(
         `SELECT
            id,
@@ -47,6 +53,9 @@ export class ScanItemsRepository {
            body,
            url,
            reddit_posted_at as redditPostedAt,
+           viewed,
+           validated,
+           processed,
            qualification_reason as qualificationReason,
            created_at as createdAt
          FROM scan_items
@@ -54,7 +63,20 @@ export class ScanItemsRepository {
            AND qualified = 1
          ORDER BY datetime(reddit_posted_at) DESC, datetime(created_at) DESC, id DESC`
       )
-      .all(jobId) as QualifiedScanItemRow[];
+      .all(jobId) as Array<
+      Omit<QualifiedScanItemRow, 'viewed' | 'validated' | 'processed'> & {
+          viewed: number;
+          validated: number;
+          processed: number;
+        }
+    >;
+
+    return rows.map((row) => ({
+      ...row,
+      viewed: row.viewed === 1,
+      validated: row.validated === 1,
+      processed: row.processed === 1
+    }));
   }
 
   existsPost(jobId: string, postId: string): boolean {
@@ -106,9 +128,12 @@ export class ScanItemsRepository {
           url,
           reddit_posted_at,
           qualified,
+          viewed,
+          validated,
+          processed,
           qualification_reason,
           created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`
       )
       .run(
         id,
@@ -124,6 +149,9 @@ export class ScanItemsRepository {
         item.url,
         item.redditPostedAt,
         item.qualified ? 1 : 0,
+        item.viewed ? 1 : 0,
+        item.validated ? 1 : 0,
+        item.processed ? 1 : 0,
         item.qualificationReason
       );
 
