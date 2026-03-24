@@ -86,6 +86,22 @@ To refresh coverage locally:
 npm test -- --coverage
 ```
 
+## Releases
+
+Versioning and changelogs are managed automatically by [release-please](https://github.com/googleapis/release-please).
+
+**How it works:**
+1. Merge commits to `main` following [Conventional Commits](https://www.conventionalcommits.org/) (`fix:`, `feat:`, `feat!:`, etc.).
+2. release-please maintains an open "Release PR" that accumulates version bumps and CHANGELOG entries.
+3. Merge the Release PR to cut a release: `package.json` version is bumped, `CHANGELOG.md` is updated, a git tag is created, and the package is published to npm automatically.
+
+**Commit types and semver mapping (while version < 1.0.0):**
+- `fix:` → patch bump
+- `feat:` → patch bump (minor bump is suppressed pre-1.0)
+- `feat!:` or `fix!:` (breaking change) → minor bump (major bump is suppressed pre-1.0)
+
+No manual `git tag` or `npm version` steps are needed.
+
 ## Quick Start
 
 Note:

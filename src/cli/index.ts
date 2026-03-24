@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { createRequire } from 'module';
 import { Command } from 'commander';
 import { addJob, disableJob, enableJob, listJobRuns, listJobs, removeJob, runJobNow } from './commands/job.js';
 import { openSettings } from './commands/settings.js';
@@ -18,6 +19,21 @@ import { ensureAppDirs } from '../utils/paths.js';
 
 ensureAppDirs();
 
+// Resolve the package version from package.json at runtime so the CLI always
+// reports the version that release-please stamped into package.json.
+// Two depths are tried because the source file lives at src/cli/ (2 up) while
+// the compiled output lives at dist/src/cli/ (3 up).
+const _require = createRequire(import.meta.url);
+function readVersion(): string {
+  for (const rel of ['../../../package.json', '../../package.json']) {
+    try {
+      const pkg = _require(rel) as { name?: string; version?: string };
+      if (pkg.name === 'snoopy-cli') return pkg.version ?? '0.0.0';
+    } catch { /* try next depth */ }
+  }
+  return '0.0.0';
+}
+
 function parsePositiveInteger(value: string): number {
   const parsed = Number.parseInt(value, 10);
   if (!Number.isInteger(parsed) || parsed <= 0) {
@@ -28,7 +44,7 @@ function parsePositiveInteger(value: string): number {
 }
 
 const program = new Command();
-program.name('snoopy').description('Monitor Reddit conversations with natural language job definitions.').version('0.1.0');
+program.name('snoopy').description('Monitor Reddit conversations with natural language job definitions.').version(readVersion());
 
 const job = program.command('job').description('Manage monitoring jobs');
 job.command('add').description('Add a monitoring job').action(async () => {
