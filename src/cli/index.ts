@@ -7,6 +7,7 @@ import { daemonReload, daemonRun, daemonStart, daemonStatus, daemonStop } from '
 import { showRunLogs } from './commands/logs.js';
 import { showJobErrors } from './commands/errors.js';
 import { exportCsv } from './commands/export.js';
+import { showAnalytics } from './commands/analytics.js';
 import {
   disableStartupCommand,
   enableStartupCommand,
@@ -126,6 +127,15 @@ program
   .option('--hours <count>', 'Look back this many hours', parsePositiveInteger)
   .action((jobRef: string, options: { hours?: number }) => {
     showJobErrors(jobRef, options);
+  });
+
+program
+  .command('analytics')
+  .argument('[jobRef]', 'Optional job ID or slug')
+  .description('Show analytics for all jobs or a single job')
+  .option('-d, --days <count>', 'Look back this many days', parsePositiveInteger)
+  .action((jobRef: string | undefined, options: { days?: number }) => {
+    showAnalytics(jobRef, options);
   });
 
 const exportCommand = program.command('export').description('Export data artifacts');

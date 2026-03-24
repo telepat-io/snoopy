@@ -126,26 +126,34 @@ snoopy job run <jobRef> --limit 5
 snoopy job runs <jobRef>
 ```
 
-5. Regenerate results CSV files (all jobs or one job):
+5. View analytics globally or for one job:
+
+```bash
+snoopy analytics
+snoopy analytics <jobRef>
+snoopy analytics --days 7
+```
+
+6. Regenerate results CSV files (all jobs or one job):
 
 ```bash
 snoopy export csv
 snoopy export csv <jobRef>
 ```
 
-6. Inspect one run's detailed log output:
+7. Inspect one run's detailed log output:
 
 ```bash
 snoopy logs <runId>
 ```
 
-7. Show recent errors for one job:
+8. Show recent errors for one job:
 
 ```bash
 snoopy errors <jobRef>
 ```
 
-8. Enable daemon mode:
+9. Enable daemon mode:
 
 ```bash
 snoopy daemon start
@@ -164,6 +172,7 @@ npm run dev -- --help
 - `job list`
 - `job run <jobRef> --limit <N>`
 - `job runs [jobRef]`
+- `analytics [jobRef] --days <N>`
 - `export csv [jobRef]`
 - `logs <runId>`
 - `errors <jobRef> --hours <N>`

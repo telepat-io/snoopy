@@ -71,6 +71,9 @@ export function getDb(): Database.Database {
       viewed INTEGER NOT NULL DEFAULT 0,
       validated INTEGER NOT NULL DEFAULT 0,
       processed INTEGER NOT NULL DEFAULT 0,
+      prompt_tokens INTEGER NOT NULL DEFAULT 0,
+      completion_tokens INTEGER NOT NULL DEFAULT 0,
+      estimated_cost_usd REAL,
       qualification_reason TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       FOREIGN KEY (job_id) REFERENCES jobs(id),
@@ -167,6 +170,24 @@ export function getDb(): Database.Database {
 
   try {
     db.exec('ALTER TABLE scan_items ADD COLUMN processed INTEGER NOT NULL DEFAULT 0');
+  } catch {
+    // Column already exists.
+  }
+
+  try {
+    db.exec('ALTER TABLE scan_items ADD COLUMN prompt_tokens INTEGER NOT NULL DEFAULT 0');
+  } catch {
+    // Column already exists.
+  }
+
+  try {
+    db.exec('ALTER TABLE scan_items ADD COLUMN completion_tokens INTEGER NOT NULL DEFAULT 0');
+  } catch {
+    // Column already exists.
+  }
+
+  try {
+    db.exec('ALTER TABLE scan_items ADD COLUMN estimated_cost_usd REAL');
   } catch {
     // Column already exists.
   }

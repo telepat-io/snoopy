@@ -122,6 +122,34 @@ describe('JobRunner', () => {
       })
     );
 
+    const itemRow = getDb()
+      .prepare(
+        `SELECT
+           prompt_tokens as promptTokens,
+           completion_tokens as completionTokens,
+           estimated_cost_usd as estimatedCostUsd
+         FROM scan_items
+         WHERE job_id = ?
+           AND type = 'post'
+         ORDER BY created_at DESC
+         LIMIT 1`
+      )
+      .get(job.id) as
+      | {
+          promptTokens: number;
+          completionTokens: number;
+          estimatedCostUsd: number | null;
+        }
+      | undefined;
+
+    expect(itemRow).toEqual(
+      expect.objectContaining({
+        promptTokens: 100,
+        completionTokens: 20,
+        estimatedCostUsd: expect.any(Number)
+      })
+    );
+
     const latestRun = new RunsRepository().listByJob(job.id, 1)[0];
     expect(latestRun?.logFilePath).toBeTruthy();
     expect(fs.existsSync(latestRun!.logFilePath!)).toBe(true);

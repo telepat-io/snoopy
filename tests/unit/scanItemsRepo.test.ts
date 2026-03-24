@@ -185,4 +185,196 @@ describe('ScanItemsRepository', () => {
       })
     );
   });
+
+  it('persists token and cost analytics fields for scan items', () => {
+    const db = getDb();
+    const repo = new ScanItemsRepository();
+
+    const jobId = crypto.randomUUID();
+    const runId = crypto.randomUUID();
+
+    db.prepare(
+      `INSERT INTO jobs (
+        id, slug, name, description, qualification_prompt, subreddits_json,
+        schedule_cron, enabled, monitor_comments, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, 1, 1, datetime('now'), datetime('now'))`
+    ).run(jobId, `job-${Date.now()}-tokens`, `job-${Date.now()}-tokens`, 'desc', 'prompt', JSON.stringify(['askreddit']), '*/30 * * * *');
+
+    db.prepare(
+      `INSERT INTO job_runs (
+        id, job_id, status, started_at, finished_at, created_at
+      ) VALUES (?, ?, 'completed', datetime('now'), datetime('now'), datetime('now'))`
+    ).run(runId, jobId);
+
+    repo.create({
+      jobId,
+      runId,
+      type: 'post',
+      redditPostId: 'post-tokens',
+      redditCommentId: null,
+      subreddit: 'askreddit',
+      author: 'author',
+      title: 'title',
+      body: 'body',
+      url: 'https://reddit.com/post-tokens',
+      redditPostedAt: '2026-03-02T00:00:00.000Z',
+      qualified: true,
+      promptTokens: 123,
+      completionTokens: 45,
+      estimatedCostUsd: 0.001234,
+      qualificationReason: 'match'
+    });
+
+    const row = db
+      .prepare(
+        `SELECT
+           prompt_tokens as promptTokens,
+           completion_tokens as completionTokens,
+           estimated_cost_usd as estimatedCostUsd
+         FROM scan_items
+         WHERE run_id = ?
+         LIMIT 1`
+      )
+      .get(runId) as
+      | {
+          promptTokens: number;
+          completionTokens: number;
+          estimatedCostUsd: number | null;
+        }
+      | undefined;
+
+    expect(row).toEqual(
+      expect.objectContaining({
+        promptTokens: 123,
+        completionTokens: 45,
+        estimatedCostUsd: 0.001234
+      })
+    );
+  });
+
+  it('aggregates analytics by scope and respects day windows', () => {
+    const db = getDb();
+    const repo = new ScanItemsRepository();
+
+    const jobId = crypto.randomUUID();
+    const runId = crypto.randomUUID();
+
+    db.prepare(
+      `INSERT INTO jobs (
+        id, slug, name, description, qualification_prompt, subreddits_json,
+        schedule_cron, enabled, monitor_comments, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, 1, 1, datetime('now'), datetime('now'))`
+    ).run(jobId, `job-${Date.now()}-agg`, `job-${Date.now()}-agg`, 'desc', 'prompt', JSON.stringify(['askreddit']), '*/30 * * * *');
+
+    db.prepare(
+      `INSERT INTO job_runs (
+        id, job_id, status, started_at, finished_at, created_at
+      ) VALUES (?, ?, 'completed', datetime('now'), datetime('now'), datetime('now'))`
+    ).run(runId, jobId);
+
+    repo.create({
+      jobId,
+      runId,
+      type: 'post',
+      redditPostId: 'post-agg',
+      redditCommentId: null,
+      subreddit: 'askreddit',
+      author: 'author',
+      title: 'title',
+      body: 'body',
+      url: 'https://reddit.com/post-agg',
+      redditPostedAt: '2026-03-02T00:00:00.000Z',
+      qualified: true,
+      promptTokens: 100,
+      completionTokens: 20,
+      estimatedCostUsd: 0.0008,
+      qualificationReason: 'match'
+    });
+
+    repo.create({
+      jobId,
+      runId,
+      type: 'comment',
+      redditPostId: 'post-agg',
+      redditCommentId: 'comment-agg',
+      subreddit: 'typescript',
+      author: 'commenter',
+      title: 'title',
+      body: 'comment body',
+      url: 'https://reddit.com/post-agg',
+      redditPostedAt: '2026-03-02T00:00:00.000Z',
+      qualified: false,
+      promptTokens: 50,
+      completionTokens: 10,
+      estimatedCostUsd: 0.00045,
+      qualificationReason: 'no'
+    });
+
+    db.prepare(
+      `INSERT INTO scan_items (
+        id,
+        job_id,
+        run_id,
+        type,
+        reddit_post_id,
+        reddit_comment_id,
+        subreddit,
+        author,
+        title,
+        body,
+        url,
+        reddit_posted_at,
+        qualified,
+        viewed,
+        validated,
+        processed,
+        prompt_tokens,
+        completion_tokens,
+        estimated_cost_usd,
+        qualification_reason,
+        created_at
+      ) VALUES (?, ?, ?, 'post', ?, NULL, ?, ?, ?, ?, ?, ?, 0, 0, 0, 0, ?, ?, ?, ?, datetime('now', '-40 days'))`
+    ).run(
+      `old-item-${Date.now()}`,
+      jobId,
+      runId,
+      'post-old',
+      'oldsub',
+      'author-old',
+      'old',
+      'old body',
+      'https://reddit.com/old',
+      '2026-01-01T00:00:00.000Z',
+      999,
+      999,
+      0.1,
+      'old'
+    );
+
+    const totals = repo.getAnalyticsTotals({ jobId, days: 30 });
+    expect(totals).toEqual({
+      newPosts: 1,
+      newComments: 1,
+      promptTokens: 150,
+      completionTokens: 30,
+      estimatedCostUsd: 0.00125
+    });
+
+    const subredditRows = repo.listAnalyticsBySubreddit({ jobId, days: 30 });
+    expect(subredditRows).toHaveLength(2);
+    expect(subredditRows.map((row) => row.subreddit)).toEqual(expect.arrayContaining(['askreddit', 'typescript']));
+
+    const byJob = repo.listAnalyticsByJob(30);
+    const jobSummary = byJob.find((row) => row.jobId === jobId);
+    expect(jobSummary).toEqual(
+      expect.objectContaining({
+        jobId,
+        newPosts: 1,
+        newComments: 1,
+        promptTokens: 150,
+        completionTokens: 30,
+        estimatedCostUsd: 0.00125
+      })
+    );
+  });
 });

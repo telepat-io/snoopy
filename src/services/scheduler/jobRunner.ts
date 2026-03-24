@@ -300,6 +300,9 @@ export class JobRunner {
             url: post.url,
             redditPostedAt: post.postedAt,
             qualified: result.qualified,
+            promptTokens: result.promptTokens,
+            completionTokens: result.completionTokens,
+            estimatedCostUsd: this.estimateCost(result.promptTokens, result.completionTokens),
             qualificationReason: result.reason
           });
 
@@ -461,6 +464,9 @@ export class JobRunner {
               url: post.url,
               redditPostedAt: post.postedAt,
               qualified: result.qualified,
+              promptTokens: result.promptTokens,
+              completionTokens: result.completionTokens,
+              estimatedCostUsd: this.estimateCost(result.promptTokens, result.completionTokens),
               qualificationReason: result.reason
             });
 

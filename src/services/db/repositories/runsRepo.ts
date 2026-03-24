@@ -28,8 +28,34 @@ export interface RunRow {
   logFilePath: string | null;
 }
 
+export interface RunAnalyticsRow extends RunRow {
+  newPosts: number;
+  newComments: number;
+}
+
+interface RunAnalyticsFilter {
+  jobId?: string;
+  days: number;
+  limit?: number;
+}
+
 export class RunsRepository {
   private readonly db = getDb();
+
+  private buildRunFilter(filter: { jobId?: string; days: number }): { clause: string; params: Array<string | number> } {
+    const params: Array<string | number> = [`-${filter.days} days`];
+    const conditions = ["datetime(jr.created_at) >= datetime('now', ?)"];
+
+    if (filter.jobId) {
+      conditions.push('jr.job_id = ?');
+      params.push(filter.jobId);
+    }
+
+    return {
+      clause: `WHERE ${conditions.join(' AND ')}`,
+      params
+    };
+  }
 
   addRun(jobId: string, status: string, message: string): void {
     this.db
@@ -198,5 +224,53 @@ export class RunsRepository {
          LIMIT ?`
       )
       .all(limit) as RunRow[];
+  }
+
+  listAnalyticsRuns(filter: RunAnalyticsFilter): RunAnalyticsRow[] {
+    const { clause, params } = this.buildRunFilter(filter);
+    const limit = filter.limit ?? 20;
+
+    return this.db
+      .prepare(
+        `SELECT
+           jr.id as id,
+           jr.job_id as jobId,
+           j.name as jobName,
+           jr.status as status,
+           jr.message as message,
+           jr.started_at as startedAt,
+           jr.finished_at as finishedAt,
+           jr.created_at as createdAt,
+           jr.items_discovered as itemsDiscovered,
+           jr.items_new as itemsNew,
+           jr.items_qualified as itemsQualified,
+           jr.prompt_tokens as promptTokens,
+           jr.completion_tokens as completionTokens,
+           jr.estimated_cost_usd as estimatedCostUsd,
+           jr.log_file_path as logFilePath,
+           COALESCE(SUM(CASE WHEN si.type = 'post' THEN 1 ELSE 0 END), 0) as newPosts,
+           COALESCE(SUM(CASE WHEN si.type = 'comment' THEN 1 ELSE 0 END), 0) as newComments
+         FROM job_runs jr
+         LEFT JOIN jobs j ON j.id = jr.job_id
+         LEFT JOIN scan_items si ON si.run_id = jr.id
+         ${clause}
+         GROUP BY jr.id
+         ORDER BY datetime(jr.created_at) DESC
+         LIMIT ?`
+      )
+      .all(...params, limit) as RunAnalyticsRow[];
+  }
+
+  countRuns(filter: { jobId?: string; days: number }): number {
+    const { clause, params } = this.buildRunFilter(filter);
+    const row = this.db
+      .prepare(
+        `SELECT COUNT(*) as runCount
+         FROM job_runs jr
+         ${clause}`
+      )
+      .get(...params) as { runCount: number } | undefined;
+
+    return Number(row?.runCount ?? 0);
   }
 }
