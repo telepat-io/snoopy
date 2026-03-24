@@ -18,6 +18,7 @@ export interface AppSettings {
   modelSettings: ModelSettings;
   cronIntervalMinutes: number;
   jobTimeoutMs: number;
+  notificationsEnabled: boolean;
 }
 
 export interface RedditCredentials {

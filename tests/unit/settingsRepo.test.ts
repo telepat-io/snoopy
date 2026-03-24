@@ -16,7 +16,8 @@ describe('SettingsRepository', () => {
         topP: 1
       },
       cronIntervalMinutes: 15,
-      jobTimeoutMs: 300000
+      jobTimeoutMs: 300000,
+      notificationsEnabled: true
     });
 
     const result = repo.getAppSettings();

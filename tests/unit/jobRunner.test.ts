@@ -7,6 +7,7 @@ import { getDb } from '../../src/services/db/sqlite.js';
 import { RunsRepository } from '../../src/services/db/repositories/runsRepo.js';
 import * as redditClient from '../../src/services/reddit/client.js';
 import * as secretStore from '../../src/services/security/secretStore.js';
+import * as notify from '../../src/utils/notify.js';
 
 describe('JobRunner', () => {
   beforeEach(() => {
@@ -21,7 +22,8 @@ describe('JobRunner', () => {
         topP: 1
       },
       cronIntervalMinutes: 30,
-      jobTimeoutMs: 600000
+      jobTimeoutMs: 600000,
+      notificationsEnabled: true
     });
   });
 
@@ -482,5 +484,73 @@ describe('JobRunner', () => {
     });
 
     expect(events).toContain('limit_reached');
+  });
+
+  it('sends a notification when notificationsEnabled is true', async () => {
+    const settingsRepo = new SettingsRepository();
+    settingsRepo.setAppSettings({
+      model: 'moonshotai/kimi-k2.5',
+      modelSettings: { temperature: 0.2, maxTokens: 500, topP: 1 },
+      cronIntervalMinutes: 30,
+      jobTimeoutMs: 600000,
+      notificationsEnabled: true
+    });
+
+    const jobsRepo = new JobsRepository();
+    const job = jobsRepo.create({
+      name: `notify-enabled-${Date.now()}`,
+      description: 'desc',
+      qualificationPrompt: 'prompt',
+      subreddits: ['askreddit'],
+      monitorComments: false
+    });
+
+    jest.spyOn(secretStore, 'getOpenRouterApiKey').mockResolvedValue('openrouter-key');
+    jest.spyOn(redditClient, 'getRecentSubredditPosts').mockResolvedValue([
+      { id: 'post-n1', subreddit: 'askreddit', title: 'title', body: 'body', author: 'author', url: 'https://reddit.com/n1', postedAt: '2026-01-01T00:00:00.000Z' }
+    ]);
+    jest.spyOn(OpenRouterClient.prototype, 'qualifyPost').mockResolvedValue({ qualified: true, reason: 'matched', promptTokens: 10, completionTokens: 5 });
+    const notifySpy = jest.spyOn(notify, 'sendJobNotification').mockImplementation(() => {});
+
+    const runner = new JobRunner();
+    await runner.run(job);
+
+    expect(notifySpy).toHaveBeenCalledTimes(1);
+    expect(notifySpy).toHaveBeenCalledWith(expect.objectContaining({
+      jobName: job.name,
+      qualifiedCount: 1
+    }));
+  });
+
+  it('does not send a notification when notificationsEnabled is false', async () => {
+    const settingsRepo = new SettingsRepository();
+    settingsRepo.setAppSettings({
+      model: 'moonshotai/kimi-k2.5',
+      modelSettings: { temperature: 0.2, maxTokens: 500, topP: 1 },
+      cronIntervalMinutes: 30,
+      jobTimeoutMs: 600000,
+      notificationsEnabled: false
+    });
+
+    const jobsRepo = new JobsRepository();
+    const job = jobsRepo.create({
+      name: `notify-disabled-${Date.now()}`,
+      description: 'desc',
+      qualificationPrompt: 'prompt',
+      subreddits: ['askreddit'],
+      monitorComments: false
+    });
+
+    jest.spyOn(secretStore, 'getOpenRouterApiKey').mockResolvedValue('openrouter-key');
+    jest.spyOn(redditClient, 'getRecentSubredditPosts').mockResolvedValue([
+      { id: 'post-n2', subreddit: 'askreddit', title: 'title', body: 'body', author: 'author', url: 'https://reddit.com/n2', postedAt: '2026-01-01T00:00:00.000Z' }
+    ]);
+    jest.spyOn(OpenRouterClient.prototype, 'qualifyPost').mockResolvedValue({ qualified: true, reason: 'matched', promptTokens: 10, completionTokens: 5 });
+    const notifySpy = jest.spyOn(notify, 'sendJobNotification').mockImplementation(() => {});
+
+    const runner = new JobRunner();
+    await runner.run(job);
+
+    expect(notifySpy).not.toHaveBeenCalled();
   });
 });

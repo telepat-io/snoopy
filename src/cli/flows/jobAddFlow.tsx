@@ -323,7 +323,8 @@ export function JobAddFlow({
                   model,
                   modelSettings: initialSettings.modelSettings,
                   cronIntervalMinutes: initialSettings.cronIntervalMinutes,
-                  jobTimeoutMs: initialSettings.jobTimeoutMs
+                  jobTimeoutMs: initialSettings.jobTimeoutMs,
+                  notificationsEnabled: initialSettings.notificationsEnabled
                 },
                 job: {
                   slug: spec.slug,

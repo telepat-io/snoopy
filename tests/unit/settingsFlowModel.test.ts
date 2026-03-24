@@ -17,7 +17,8 @@ function createCurrentSettings(): AppSettings {
       topP: 0.9
     },
     cronIntervalMinutes: 30,
-    jobTimeoutMs: 600000
+    jobTimeoutMs: 600000,
+    notificationsEnabled: true
   };
 }
 
@@ -61,7 +62,8 @@ describe('settingsFlowModel', () => {
       cronIntervalMinutes: '15',
       jobTimeoutMinutes: '12',
       redditAppName: 'new-app',
-      redditClientId: 'new-client-id'
+      redditClientId: 'new-client-id',
+      notificationsEnabled: true
     };
 
     const saveResult = buildSettingsSaveResult(
@@ -93,7 +95,8 @@ describe('settingsFlowModel', () => {
         topP: 0.85
       },
       cronIntervalMinutes: 15,
-      jobTimeoutMs: 720000
+      jobTimeoutMs: 720000,
+      notificationsEnabled: true
     });
   });
 

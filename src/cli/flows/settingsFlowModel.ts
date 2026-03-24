@@ -13,6 +13,7 @@ export type EditableSettingKey =
   | 'topP'
   | 'cronIntervalMinutes'
   | 'jobTimeoutMinutes'
+  | 'notificationsEnabled'
   | 'redditAppName'
   | 'redditClientId'
   | 'redditClientSecret';
@@ -24,6 +25,7 @@ export interface SettingsDraft {
   topP: string;
   cronIntervalMinutes: string;
   jobTimeoutMinutes: string;
+  notificationsEnabled: boolean;
   redditAppName: string;
   redditClientId: string;
 }
@@ -97,6 +99,7 @@ export function createSettingsDraft(current: AppSettings, currentRedditCredentia
     topP: String(current.modelSettings.topP),
     cronIntervalMinutes: String(current.cronIntervalMinutes),
     jobTimeoutMinutes: String(Math.round((current.jobTimeoutMs ?? DEFAULT_JOB_TIMEOUT_MS) / 60000)),
+    notificationsEnabled: current.notificationsEnabled ?? true,
     redditAppName: currentRedditCredentials.appName,
     redditClientId: currentRedditCredentials.clientId
   };
@@ -140,6 +143,12 @@ export function buildSettingsMenuItems({
       key: 'jobTimeoutMinutes',
       label: 'Job timeout',
       summary: draft.jobTimeoutMinutes === '0' ? 'No timeout' : `${draft.jobTimeoutMinutes} minutes`,
+      editable: true
+    },
+    {
+      key: 'notificationsEnabled',
+      label: 'Show desktop notifications',
+      summary: draft.notificationsEnabled ? 'Enabled' : 'Disabled',
       editable: true
     },
     { key: 'redditAppName', label: 'Reddit app name', summary: redditAppNameSummary, editable: true },
@@ -219,7 +228,8 @@ export function buildSettingsSaveResult(
           topP
         },
         cronIntervalMinutes,
-        jobTimeoutMs: Math.round(jobTimeoutMinutes * 60000)
+        jobTimeoutMs: Math.round(jobTimeoutMinutes * 60000),
+        notificationsEnabled: !!draft.notificationsEnabled
       }
     }
   };

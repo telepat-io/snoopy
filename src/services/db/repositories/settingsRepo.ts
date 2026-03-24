@@ -73,6 +73,9 @@ export class SettingsRepository {
       ? Math.max(0, Number(rawJobTimeout) || DEFAULT_JOB_TIMEOUT_MS)
       : DEFAULT_JOB_TIMEOUT_MS;
 
+    const rawNotifications = this.get('notifications_enabled');
+    const notificationsEnabled = rawNotifications == null ? true : rawNotifications === 'true';
+
     const settings: AppSettings = {
       model: normalizeModel(rawModel),
       modelSettings: {
@@ -80,7 +83,8 @@ export class SettingsRepository {
         ...parsed
       },
       cronIntervalMinutes,
-      jobTimeoutMs
+      jobTimeoutMs,
+      notificationsEnabled
     };
 
     if (rawModel !== settings.model || modelSettingsRaw === null) {
@@ -101,6 +105,7 @@ export class SettingsRepository {
     );
     this.set('cron_interval_minutes', String(Math.max(1, settings.cronIntervalMinutes ?? DEFAULT_CRON_INTERVAL_MINUTES)));
     this.set('job_timeout_ms', String(Math.max(0, settings.jobTimeoutMs ?? DEFAULT_JOB_TIMEOUT_MS)));
+    this.set('notifications_enabled', settings.notificationsEnabled ? 'true' : 'false');
   }
 
   private getOrCreateRedditAppName(): string {

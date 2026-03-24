@@ -59,6 +59,8 @@ function labelForSettingKey(key: EditableSettingKey): string {
       return 'Scan interval in minutes (e.g. 30)';
     case 'jobTimeoutMinutes':
       return 'Job timeout in minutes (0 = no timeout)';
+    case 'notificationsEnabled':
+      return 'Show desktop notifications';
     case 'redditAppName':
       return 'Reddit app name for OAuth fallback';
     case 'redditClientId':
@@ -82,6 +84,8 @@ function keyToDraftField(key: Exclude<EditableSettingKey, 'apiKey' | 'redditClie
       return 'cronIntervalMinutes';
     case 'jobTimeoutMinutes':
       return 'jobTimeoutMinutes';
+    case 'notificationsEnabled':
+      return 'notificationsEnabled';
     case 'redditAppName':
       return 'redditAppName';
     case 'redditClientId':
@@ -112,6 +116,18 @@ export function SettingsFlow({ current, currentRedditCredentials, currentApiKey,
   );
 
   useInput((_, key) => {
+    if (mode === 'edit' && editingKey === 'notificationsEnabled') {
+      if (key.return) {
+        setDraft((prev) => ({ ...prev, notificationsEnabled: !prev.notificationsEnabled }));
+        setMode('menu');
+        setEditingKey(null);
+      } else if (key.escape) {
+        setMode('menu');
+        setEditingKey(null);
+      }
+      return;
+    }
+
     if (mode !== 'menu') {
       return;
     }
@@ -213,6 +229,17 @@ export function SettingsFlow({ current, currentRedditCredentials, currentApiKey,
 
   const isSecret = editingKey === 'apiKey' || editingKey === 'redditClientSecret';
 
+  if (editingKey === 'notificationsEnabled') {
+    return (
+      <SettingsFrame>
+        <Text>
+          {labelForSettingKey(editingKey)}: {draft.notificationsEnabled ? 'Enabled' : 'Disabled'}
+        </Text>
+        <Text color="gray">Press Enter to toggle, Esc to cancel.</Text>
+      </SettingsFrame>
+    );
+  }
+
   const initialValue =
     editingKey === 'apiKey' || editingKey === 'redditClientSecret'
       ? ''
@@ -225,7 +252,7 @@ export function SettingsFlow({ current, currentRedditCredentials, currentApiKey,
     <SettingsFrame>
       <TextPrompt
         label={labelForSettingKey(editingKey)}
-        initialValue={initialValue}
+        initialValue={initialValue as string}
         secret={isSecret}
         onSubmit={(value) => {
           if (value === '' && fieldHasCurrentValue && editingKey !== 'model') {

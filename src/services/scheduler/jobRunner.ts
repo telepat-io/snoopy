@@ -4,6 +4,7 @@ import { RunsRepository } from '../db/repositories/runsRepo.js';
 import { ScanItemsRepository } from '../db/repositories/scanItemsRepo.js';
 import { getOpenRouterApiKey } from '../security/secretStore.js';
 import { logger } from '../../utils/logger.js';
+import { sendJobNotification } from '../../utils/notify.js';
 import { OpenRouterClient } from '../openrouter/client.js';
 import type { ModelSettings } from '../../types/settings.js';
 import type { RedditComment } from '../reddit/client.js';
@@ -497,6 +498,14 @@ export class JobRunner {
       logger.info(
         `Completed job ${job.name} (${job.id}): discovered=${runStats.itemsDiscovered}, new=${runStats.itemsNew}, qualified=${runStats.itemsQualified}`
       );
+      if (appSettings.notificationsEnabled) {
+        sendJobNotification({
+          jobName: job.name,
+          qualifiedCount: runStats.itemsQualified,
+          discoveredCount: runStats.itemsDiscovered,
+          newCount: runStats.itemsNew
+        });
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       this.runsRepo.failRun(runId, message);

@@ -18,6 +18,7 @@ interface SettingsFlowResult {
     };
     cronIntervalMinutes: number;
     jobTimeoutMs: number;
+    notificationsEnabled: boolean;
   };
 }
 
