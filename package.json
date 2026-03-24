@@ -1,11 +1,19 @@
 {
-  "name": "snoopy",
+  "name": "snoopy-cli",
   "version": "0.1.0",
   "description": "Snoopy CLI for Reddit conversation monitoring jobs.",
   "type": "module",
   "main": "dist/src/index.js",
   "bin": {
     "snoopy": "dist/src/cli/index.js"
+  },
+  "files": [
+    "dist/src",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
   },
   "scripts": {
     "build": "tsc",
@@ -17,9 +25,16 @@
     "e2e:smoke": "tsx src/scripts/e2eSmoke.ts",
     "lint": "eslint src tests --ext .ts,.tsx",
     "test": "jest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run lint && npm run build && npm test"
   },
-  "keywords": [],
+  "keywords": [
+    "reddit",
+    "monitoring",
+    "cli",
+    "scheduler",
+    "ai"
+  ],
   "author": "",
   "repository": {
     "type": "git",
