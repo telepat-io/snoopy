@@ -16,6 +16,10 @@
 
 # Snoopy
 
+[![Build](https://img.shields.io/github/actions/workflow/status/cozymantis/snoopy/ci.yml?branch=main&label=build)](https://github.com/cozymantis/snoopy/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/coverage-94.6%25-brightgreen)](#development)
+[![npm](https://img.shields.io/npm/v/snoopy-cli)](https://www.npmjs.com/package/snoopy-cli)
+
 Snoopy helps you monitor Reddit for high-intent conversations that match your business goals.
 
 Define what you care about in plain language, let Snoopy create a monitoring job, and continuously scan and qualify posts/comments so you can focus on response and outreach.
@@ -45,23 +49,41 @@ Requirements:
 - Node.js 20+
 - npm 10+
 
+From npm:
+
+```bash
+npm install -g snoopy-cli
+snoopy --help
+```
+
 From source:
 
 ```bash
 npm install
 npm run build
+npm link
 ```
 
-Run with dev entrypoint:
+Run the CLI:
 
 ```bash
-npm run dev -- --help
+snoopy --help
 ```
 
-Run built CLI:
+## Development
+
+Core validation commands:
 
 ```bash
-node dist/src/cli/index.js --help
+npm run lint
+npm run build
+npm test
+```
+
+To refresh coverage locally:
+
+```bash
+npm test -- --coverage
 ```
 
 ## Quick Start
@@ -74,7 +96,7 @@ Note:
 1. Start interactive setup and create your first job:
 
 ```bash
-npm run dev -- job add
+snoopy job add
 ```
 
 `job add` now runs an immediate first scan after saving the job so you can validate results right away.
@@ -83,45 +105,51 @@ Snoopy pauses scheduled scans for that new job during this first run attempt, th
 2. List jobs:
 
 ```bash
-npm run dev -- jobs list
+snoopy jobs list
 ```
 
 3. Run one job immediately (limit to 5 new items while testing):
 
 ```bash
-npm run dev -- job run <jobRef> --limit 5
+snoopy job run <jobRef> --limit 5
 ```
 
 4. View run history:
 
 ```bash
-npm run dev -- job runs <jobRef>
+snoopy job runs <jobRef>
 ```
 
 5. Regenerate results CSV files (all jobs or one job):
 
 ```bash
-npm run dev -- export csv
-npm run dev -- export csv <jobRef>
+snoopy export csv
+snoopy export csv <jobRef>
 ```
 
 6. Inspect one run's detailed log output:
 
 ```bash
-npm run dev -- logs <runId>
+snoopy logs <runId>
 ```
 
 7. Show recent errors for one job:
 
 ```bash
-npm run dev -- errors <jobRef>
+snoopy errors <jobRef>
 ```
 
 8. Enable daemon mode:
 
 ```bash
-npm run dev -- daemon start
-npm run dev -- daemon reload
+snoopy daemon start
+snoopy daemon reload
+```
+
+For local development without linking the package globally:
+
+```bash
+npm run dev -- --help
 ```
 
 ## Most Used Commands
