@@ -1,20 +1,10 @@
 ```text
-⠀⠀⠀⠀⠀⠀⠰⡊⣿⣷⣂⠄⠀⠀⠀⠀⠀⠀⠀⠀
-⠀⠀⣀⣴⢶⠀⠀⠈⣉⣽⣯⠃⠀⠀⠀⠀⠀⠀⠀⠀
-⢀⢴⡿⡷⠁⣠⠊⠉⠂⠀⠀⠙⠒⠒⠒⠒⠢⢀⠀⠀
-⡜⣿⣿⣵⣶⡃⠀⠀⢀⡤⠂⠈⠉⠀⣀⡀⠀⠀⢆⠀
-⠙⠾⠿⠃⢹⠀⠀⠀⠀⠀⠀⠀⠀⠈⠋⠀⡀⠀⡞⠀
-⠀⠀⠀⠀⠘⢆⠀⠀⠀⠣⣀⠀⠀⠀⢀⡴⠵⠊⠀⠀
-⠀⠀⠀⠀⠀⠀⠑⣆⡤⠤⢬⠙⠉⡽⠋⢐⡲⢲⠀⠀
-⠀⠀⠀⠀⠀⢰⡓⠃⠷⠤⠴⠗⠈⠉⠈⠁⣀⢰⠃⠀
-⠀⠀⠀⠀⠀⠀⠥⣆⠖⠒⠢⡀⠀⠀⠈⢏⠈⠁⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⠀⠀⢗⣤⠁⠀⠀⠀⠀⠃⠀⠀⠀
-⠀⠀⠀⠀⠀⠀⠀⢠⠊⢢⣇⠀⠀⠀⣀⢐⠗⡲⡰⢢
-⠀⠀⠀⠀⠀⠀⠀⠘⡆⠀⠉⠠⢏⡁⢸⢇⠄⢆⠔⡸
-⠀⠀⠀⠀⠀⠀⠀⠀⠈⠳⢤⣆⣂⡹⠸⣀⣃⡫⠞⠁
+┌─┐┌┐┌┌─┐┌─┐┌─┐┬ ┬
+└─┐││││ ││ │├─┘└┬┘
+└─┘┘└┘└─┘└─┘┴   ┴ 
 ```
 
-# Snoopy
+# Monitor Reddit Conversations With AI
 
 [![Build](https://img.shields.io/github/actions/workflow/status/cozymantis/snoopy/ci.yml?branch=main&label=build)](https://github.com/cozymantis/snoopy/actions/workflows/ci.yml)
 [![Coverage](https://img.shields.io/badge/coverage-94.6%25-brightgreen)](#development)
@@ -243,3 +233,5 @@ Deploy to GitHub Pages:
 ```bash
 GITHUB_OWNER=cozymantis GITHUB_REPO=snoopy npm run docs:deploy
 ```
+
+Docs changes pushed to `main` under `docs/` or `website/` are also rebuilt and published to GitHub Pages automatically via GitHub Actions.

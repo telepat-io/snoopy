@@ -1,7 +1,7 @@
 import React from 'react';
 import { Box, Text } from 'ink';
 
-export const SNOOPY_WORDMARK = '❨･¨⬮    ꜱ ɴ ᴏ ᴏ ᴘ ʏ';
+export const SNOOPY_WORDMARK = '❨･¨⬮';
 
 interface CliHeaderProps {
   subtitle?: string;
