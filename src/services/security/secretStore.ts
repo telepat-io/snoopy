@@ -1,7 +1,6 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import keytar from 'keytar';
 import { ensureAppDirs } from '../../utils/paths.js';
 
 const SERVICE_NAME = 'snoopy';
@@ -12,6 +11,43 @@ const FILE_NAME = 'secrets.enc';
 interface FallbackSecrets {
   openrouter_api_key?: string;
   reddit_client_secret?: string;
+}
+
+interface KeytarClient {
+  setPassword(service: string, account: string, password: string): Promise<void>;
+  getPassword(service: string, account: string): Promise<string | null>;
+  deletePassword(service: string, account: string): Promise<boolean>;
+}
+
+let keytarClientPromise: Promise<KeytarClient | null> | undefined;
+
+async function getKeytarClient(): Promise<KeytarClient | null> {
+  if (keytarClientPromise) {
+    return keytarClientPromise;
+  }
+
+  keytarClientPromise = (async () => {
+    try {
+      const imported = (await import('keytar')) as { default?: unknown };
+      const candidate = imported.default;
+
+      if (
+        candidate &&
+        typeof candidate === 'object' &&
+        typeof (candidate as KeytarClient).setPassword === 'function' &&
+        typeof (candidate as KeytarClient).getPassword === 'function' &&
+        typeof (candidate as KeytarClient).deletePassword === 'function'
+      ) {
+        return candidate as KeytarClient;
+      }
+    } catch {
+      // Keytar can fail to load on systems missing native dependencies.
+    }
+
+    return null;
+  })();
+
+  return keytarClientPromise;
 }
 
 function getFallbackPath(): string {
@@ -106,64 +142,86 @@ function deleteFallbackSecret(key: keyof FallbackSecrets): void {
 }
 
 export async function setOpenRouterApiKey(apiKey: string): Promise<void> {
-  try {
-    await keytar.setPassword(SERVICE_NAME, OPENROUTER_ACCOUNT_NAME, apiKey);
-    return;
-  } catch {
-    setFallbackSecret('openrouter_api_key', apiKey);
+  const keytarClient = await getKeytarClient();
+  if (keytarClient) {
+    try {
+      await keytarClient.setPassword(SERVICE_NAME, OPENROUTER_ACCOUNT_NAME, apiKey);
+      return;
+    } catch {
+      // Fall through to encrypted file fallback.
+    }
   }
+
+  setFallbackSecret('openrouter_api_key', apiKey);
 }
 
 export async function deleteOpenRouterApiKey(): Promise<void> {
-  try {
-    await keytar.deletePassword(SERVICE_NAME, OPENROUTER_ACCOUNT_NAME);
-  } catch {
-    // Ignore keychain deletion failures and continue with file cleanup.
+  const keytarClient = await getKeytarClient();
+  if (keytarClient) {
+    try {
+      await keytarClient.deletePassword(SERVICE_NAME, OPENROUTER_ACCOUNT_NAME);
+    } catch {
+      // Ignore keychain deletion failures and continue with file cleanup.
+    }
   }
 
   deleteFallbackSecret('openrouter_api_key');
 }
 
 export async function getOpenRouterApiKey(): Promise<string | null> {
-  try {
-    const fromKeytar = await keytar.getPassword(SERVICE_NAME, OPENROUTER_ACCOUNT_NAME);
-    if (fromKeytar) {
-      return fromKeytar;
+  const keytarClient = await getKeytarClient();
+  if (keytarClient) {
+    try {
+      const fromKeytar = await keytarClient.getPassword(SERVICE_NAME, OPENROUTER_ACCOUNT_NAME);
+      if (fromKeytar) {
+        return fromKeytar;
+      }
+    } catch {
+      // Fallback to encrypted file when keytar is unavailable.
     }
-  } catch {
-    // Fallback to encrypted file when keytar is unavailable.
   }
 
   return getFallbackSecret('openrouter_api_key');
 }
 
 export async function setRedditClientSecret(secret: string): Promise<void> {
-  try {
-    await keytar.setPassword(SERVICE_NAME, REDDIT_CLIENT_SECRET_ACCOUNT_NAME, secret);
-    return;
-  } catch {
-    setFallbackSecret('reddit_client_secret', secret);
+  const keytarClient = await getKeytarClient();
+  if (keytarClient) {
+    try {
+      await keytarClient.setPassword(SERVICE_NAME, REDDIT_CLIENT_SECRET_ACCOUNT_NAME, secret);
+      return;
+    } catch {
+      // Fall through to encrypted file fallback.
+    }
   }
+
+  setFallbackSecret('reddit_client_secret', secret);
 }
 
 export async function getRedditClientSecret(): Promise<string | null> {
-  try {
-    const fromKeytar = await keytar.getPassword(SERVICE_NAME, REDDIT_CLIENT_SECRET_ACCOUNT_NAME);
-    if (fromKeytar) {
-      return fromKeytar;
+  const keytarClient = await getKeytarClient();
+  if (keytarClient) {
+    try {
+      const fromKeytar = await keytarClient.getPassword(SERVICE_NAME, REDDIT_CLIENT_SECRET_ACCOUNT_NAME);
+      if (fromKeytar) {
+        return fromKeytar;
+      }
+    } catch {
+      // Fallback to encrypted file when keytar is unavailable.
     }
-  } catch {
-    // Fallback to encrypted file when keytar is unavailable.
   }
 
   return getFallbackSecret('reddit_client_secret');
 }
 
 export async function deleteRedditClientSecret(): Promise<void> {
-  try {
-    await keytar.deletePassword(SERVICE_NAME, REDDIT_CLIENT_SECRET_ACCOUNT_NAME);
-  } catch {
-    // Ignore keychain deletion failures and continue with file cleanup.
+  const keytarClient = await getKeytarClient();
+  if (keytarClient) {
+    try {
+      await keytarClient.deletePassword(SERVICE_NAME, REDDIT_CLIENT_SECRET_ACCOUNT_NAME);
+    } catch {
+      // Ignore keychain deletion failures and continue with file cleanup.
+    }
   }
 
   deleteFallbackSecret('reddit_client_secret');
