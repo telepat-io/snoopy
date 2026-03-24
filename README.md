@@ -10,6 +10,8 @@
 [![Coverage](https://img.shields.io/badge/coverage-94.6%25-brightgreen)](#development)
 [![npm](https://img.shields.io/npm/v/snoopy-cli)](https://www.npmjs.com/package/snoopy-cli)
 
+📖 [Full documentation](https://cozymantis.github.io/snoopy/)
+
 Snoopy helps you monitor Reddit for high-intent conversations that match your business goals.
 
 Define what you care about in plain language, let Snoopy create a monitoring job, and continuously scan and qualify posts/comments so you can focus on response and outreach.
@@ -54,13 +56,13 @@ npm run build
 npm link
 ```
 
-Run the CLI:
+## Development
+
+Run without a global install (contributors):
 
 ```bash
-snoopy --help
+npm run dev -- --help
 ```
-
-## Development
 
 Core validation commands:
 
@@ -158,12 +160,6 @@ snoopy errors <jobRef>
 ```bash
 snoopy daemon start
 snoopy daemon reload
-```
-
-For local development without linking the package globally:
-
-```bash
-npm run dev -- --help
 ```
 
 ## Most Used Commands

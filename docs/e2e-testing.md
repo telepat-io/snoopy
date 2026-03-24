@@ -40,7 +40,7 @@ Before running smoke test:
 Check quickly:
 
 ```bash
-npm run dev -- doctor
+snoopy doctor
 ```
 
 ## Optional Environment Variables
@@ -68,25 +68,25 @@ If you need full manual control:
 1. Create job:
 
 ```bash
-npm run dev -- job add
+snoopy job add
 ```
 
 2. Run 5-item test:
 
 ```bash
-npm run dev -- job run <jobRef> --limit 5
+snoopy job run <jobRef> --limit 5
 ```
 
 3. Inspect history:
 
 ```bash
-npm run dev -- job runs <jobRef>
+snoopy job runs <jobRef>
 ```
 
 4. Delete and cascade cleanup:
 
 ```bash
-npm run dev -- delete <jobRef>
+snoopy delete <jobRef>
 ```
 
 ## What Good Output Looks Like
@@ -100,7 +100,7 @@ npm run dev -- delete <jobRef>
 
 If smoke test fails:
 
-1. Run `npm run dev -- doctor`.
+1. Run `snoopy doctor`.
 2. Verify OpenRouter API key in `settings`.
 3. If Reddit access is denied in your environment, configure Reddit OAuth fallback credentials in `settings`.
 4. Check daemon state if relevant (`daemon status`).
