@@ -1,4 +1,4 @@
-const githubOwner = process.env.GITHUB_OWNER || 'gabidobo';
+const githubOwner = process.env.GITHUB_OWNER || 'cozymantis';
 const githubRepo = process.env.GITHUB_REPO || 'snoopy';
 const localMode = process.env.DOCS_LOCAL === 'true';
 

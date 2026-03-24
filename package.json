@@ -21,6 +21,14 @@
   },
   "keywords": [],
   "author": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cozymantis/snoopy.git"
+  },
+  "bugs": {
+    "url": "https://github.com/cozymantis/snoopy/issues"
+  },
+  "homepage": "https://github.com/cozymantis/snoopy",
   "license": "ISC",
   "dependencies": {
     "@inkjs/ui": "^2.0.0",

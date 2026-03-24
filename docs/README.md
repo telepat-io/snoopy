@@ -162,5 +162,5 @@ npm run docs:serve
 Deploy to GitHub Pages:
 
 ```bash
-GITHUB_OWNER=gabidobo GITHUB_REPO=snoopy npm run docs:deploy
+GITHUB_OWNER=cozymantis GITHUB_REPO=snoopy npm run docs:deploy
 ```
