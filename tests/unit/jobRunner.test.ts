@@ -185,6 +185,8 @@ describe('JobRunner', () => {
         id: 'comment-progress-1',
         author: 'commenter',
         body: 'comment body',
+        permalink: '/r/askreddit/comments/post-progress-1/topic/comment-progress-1/',
+        url: 'https://www.reddit.com/r/askreddit/comments/post-progress-1/topic/comment-progress-1/',
         replies: []
       }
     ]);
@@ -201,20 +203,51 @@ describe('JobRunner', () => {
       completionTokens: 5
     });
 
-    const events: string[] = [];
+    const events: Array<Record<string, unknown>> = [];
     const runner = new JobRunner();
     await runner.run(job, {
       onProgress: (event) => {
-        events.push(event.type);
+        events.push(event as unknown as Record<string, unknown>);
       }
     });
 
-    expect(events).toContain('run_start');
-    expect(events).toContain('subreddit_fetched');
-    expect(events).toContain('post_scanned');
-    expect(events).toContain('comments_loaded');
-    expect(events).toContain('comment_scanned');
-    expect(events).toContain('run_complete');
+    const eventTypes = events.map((event) => event.type);
+    expect(eventTypes).toContain('run_start');
+    expect(eventTypes).toContain('subreddit_fetched');
+    expect(eventTypes).toContain('post_scanned');
+    expect(eventTypes).toContain('comments_loaded');
+    expect(eventTypes).toContain('comment_scanned');
+    expect(eventTypes).toContain('run_complete');
+
+    const postScannedEvent = events.find(
+      (event) => event.type === 'post_scanned' && event.status === 'new'
+    );
+    expect(postScannedEvent).toEqual(
+      expect.objectContaining({
+        postId: 'post-progress-1',
+        title: 'first',
+        bodySnippet: 'body 1',
+        qualified: true,
+        qualificationReason: 'matched',
+        postUrl: 'https://reddit.com/post-progress-1'
+      })
+    );
+
+    const commentScannedEvent = events.find(
+      (event) => event.type === 'comment_scanned' && event.status === 'new'
+    );
+    expect(commentScannedEvent).toEqual(
+      expect.objectContaining({
+        postId: 'post-progress-1',
+        commentId: 'comment-progress-1',
+        author: 'commenter',
+        commentSnippet: 'comment body',
+        qualified: false,
+        qualificationReason: 'not matched',
+        postUrl: 'https://reddit.com/post-progress-1',
+        commentUrl: 'https://www.reddit.com/r/askreddit/comments/post-progress-1/topic/comment-progress-1/'
+      })
+    );
   });
 
   it('skips run when OpenRouter API key is missing', async () => {

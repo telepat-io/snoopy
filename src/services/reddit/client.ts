@@ -27,6 +27,8 @@ export interface RedditComment {
   id: string;
   author: string;
   body: string;
+  permalink?: string;
+  url?: string;
   replies: RedditComment[];
 }
 
@@ -231,11 +233,14 @@ async function callRedditApi(
 function parseComment(thing: RedditThing): RedditComment {
   const data = thing.data ?? {};
   const replies = data.replies?.data?.children ?? [];
+  const permalink = typeof data.permalink === 'string' ? data.permalink : undefined;
 
   return {
     id: String(data.id ?? ''),
     author: String(data.author ?? '[deleted]'),
     body: String(data.body ?? data.selftext ?? ''),
+    permalink,
+    url: permalink ? `https://www.reddit.com${permalink}` : undefined,
     replies: replies
       .filter((child) => child.kind === 't1')
       .map((child) => parseComment(child))

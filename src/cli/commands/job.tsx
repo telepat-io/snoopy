@@ -14,6 +14,10 @@ import { ensureDaemonRunning, requestDaemonReload } from '../../services/daemonC
 import { type JobRunProgressEvent, JobRunner } from '../../services/scheduler/jobRunner.js';
 import { intervalToCron } from '../../types/settings.js';
 import {
+  formatCommentScanLine,
+  formatPostScanLine,
+} from '../../utils/scanLogFormatting.js';
+import {
   isRichTty,
   printCliHeader,
   printError,
@@ -387,8 +391,18 @@ function logManualRunProgress(event: JobRunProgressEvent): void {
         return;
       }
 
-      const tag = event.qualified ? 'qualified' : 'not qualified';
-      printInfo(`Post ${event.postId}: ${tag} (new=${event.itemsNew}, qualified=${event.itemsQualified})`);
+      printInfo(
+        formatPostScanLine({
+          postId: event.postId,
+          title: event.title,
+          bodySnippet: event.bodySnippet,
+          qualified: event.qualified,
+          qualificationReason: event.qualificationReason,
+          postUrl: event.postUrl,
+          itemsNew: event.itemsNew,
+          itemsQualified: event.itemsQualified
+        })
+      );
       return;
     }
     case 'comments_loaded': {
@@ -401,8 +415,20 @@ function logManualRunProgress(event: JobRunProgressEvent): void {
         return;
       }
 
-      const tag = event.qualified ? 'qualified' : 'not qualified';
-      printInfo(`Comment ${event.commentId}: ${tag} (new=${event.itemsNew}, qualified=${event.itemsQualified})`);
+      printInfo(
+        formatCommentScanLine({
+          postId: event.postId,
+          commentId: event.commentId,
+          author: event.author,
+          commentSnippet: event.commentSnippet,
+          qualified: event.qualified,
+          qualificationReason: event.qualificationReason,
+          postUrl: event.postUrl,
+          commentUrl: event.commentUrl,
+          itemsNew: event.itemsNew,
+          itemsQualified: event.itemsQualified
+        })
+      );
       return;
     }
     case 'limit_reached': {

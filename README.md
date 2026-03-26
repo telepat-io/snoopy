@@ -147,6 +147,7 @@ snoopy export csv <jobRef>
 
 ```bash
 snoopy logs <runId>
+snoopy logs <runId> --raw
 ```
 
 8. Show recent errors for one job:
@@ -183,7 +184,9 @@ snoopy daemon reload
 
 - Each job run writes a dedicated log file under `~/.snoopy/logs/`.
 - Files are named `run-<runId>.log`.
-- Logs include full JSON request/response payloads for Reddit and OpenRouter calls, plus run lifecycle events and errors.
+- `snoopy logs <runId>` now shows a pretty timeline by default with post/comment text snippets, qualification result + justification, and clickable post/comment links.
+- Use `snoopy logs <runId> --raw` to print the full raw log file content, including full JSON request/response payloads for Reddit and OpenRouter calls.
+- Rich TTY manual runs (`snoopy job run <jobRef>`) also show text-first scan lines with clickable links and qualification justifications.
 - Run logs older than 5 days are deleted automatically on daemon startup and after each job run.
 - Deleting a job also deletes all associated per-run log files for that job.
 

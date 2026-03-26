@@ -118,7 +118,14 @@ program.command('doctor').description('Run health checks').action(async () => {
   await runDoctor();
 });
 
-program.command('logs').argument('<runId>', 'Run ID').description('Show raw logs for a specific run').action(showRunLogs);
+program
+  .command('logs')
+  .argument('<runId>', 'Run ID')
+  .description('Show pretty logs for a specific run')
+  .option('--raw', 'Show raw log file content without pretty formatting')
+  .action((runId: string, options: { raw?: boolean }) => {
+    showRunLogs(runId, options);
+  });
 
 program
   .command('errors')

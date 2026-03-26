@@ -11,6 +11,7 @@ import type { RedditComment } from '../reddit/client.js';
 import { getRecentSubredditPosts, getRedditPostComments } from '../reddit/client.js';
 import { createRunLogger } from '../logging/runLogger.js';
 import { cleanupOldLogs } from '../logging/logRotation.js';
+import { toSnippet } from '../../utils/scanLogFormatting.js';
 
 interface QualifyStats {
   promptTokens: number;
@@ -45,7 +46,11 @@ export type JobRunProgressEvent =
       postId: string;
       subreddit: string;
       status: 'existing' | 'new';
+      title?: string;
+      bodySnippet?: string;
+      postUrl?: string;
       qualified?: boolean;
+      qualificationReason?: string;
       itemsNew: number;
       itemsQualified: number;
     }
@@ -62,7 +67,11 @@ export type JobRunProgressEvent =
       commentId: string;
       author: string;
       status: 'existing' | 'new';
+      commentSnippet?: string;
+      postUrl?: string;
+      commentUrl?: string;
       qualified?: boolean;
+      qualificationReason?: string;
       itemsNew: number;
       itemsQualified: number;
     }
@@ -146,6 +155,15 @@ function getThreadsByAuthor(threads: RedditComment[][], author: string): RedditC
 
 function toCurrency(value: number): number {
   return Number(value.toFixed(6));
+}
+
+function buildCommentUrl(postUrl: string, comment: RedditComment): string {
+  if (comment.url) {
+    return comment.url;
+  }
+
+  const basePostUrl = postUrl.endsWith('/') ? postUrl : `${postUrl}/`;
+  return `${basePostUrl}${comment.id}/`;
 }
 
 export class JobRunner {
@@ -272,7 +290,8 @@ export class JobRunner {
                 postId: post.id,
                 subreddit: post.subreddit,
                 title: post.title,
-                body: post.body
+                body: post.body,
+                url: post.url
               },
               null,
               2
@@ -316,7 +335,11 @@ export class JobRunner {
             postId: post.id,
             subreddit: post.subreddit,
             status: 'new',
+            title: post.title,
+            bodySnippet: toSnippet(post.body),
+            postUrl: post.url,
             qualified: result.qualified,
+            qualificationReason: result.reason,
             itemsNew: runStats.itemsNew,
             itemsQualified: runStats.itemsQualified
           });
@@ -423,6 +446,9 @@ export class JobRunner {
                   postId: post.id,
                   commentId: lastComment.id,
                   author,
+                  postUrl: post.url,
+                  commentUrl: buildCommentUrl(post.url, lastComment),
+                  commentBody: lastComment.body,
                   thread
                 },
                 null,
@@ -461,7 +487,7 @@ export class JobRunner {
               author,
               title: post.title,
               body: lastComment.body,
-              url: post.url,
+              url: buildCommentUrl(post.url, lastComment),
               redditPostedAt: post.postedAt,
               qualified: result.qualified,
               promptTokens: result.promptTokens,
@@ -481,7 +507,11 @@ export class JobRunner {
               commentId: lastComment.id,
               author,
               status: 'new',
+              commentSnippet: toSnippet(lastComment.body),
+              postUrl: post.url,
+              commentUrl: buildCommentUrl(post.url, lastComment),
               qualified: result.qualified,
+              qualificationReason: result.reason,
               itemsNew: runStats.itemsNew,
               itemsQualified: runStats.itemsQualified
             });

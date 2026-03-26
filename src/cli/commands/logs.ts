@@ -1,10 +1,10 @@
 import { RunsRepository } from '../../services/db/repositories/runsRepo.js';
-import { readRunLog } from '../../services/logging/logReader.js';
+import { formatRunLogPretty, readRunLog } from '../../services/logging/logReader.js';
 import { printCliHeader, printError, printInfo, printKeyValue, printSection, printWarning } from '../ui/consoleUi.js';
 
-export function showRunLogs(runId: string): void {
+export function showRunLogs(runId: string, options: { raw?: boolean } = {}): void {
   printCliHeader('Run logs');
-  printSection('Logs');
+  printSection(options.raw ? 'Logs (raw)' : 'Logs (pretty)');
 
   const runsRepo = new RunsRepository();
   const run = runsRepo.getById(runId);
@@ -29,5 +29,6 @@ export function showRunLogs(runId: string): void {
     return;
   }
 
-  process.stdout.write(`${logContent}${logContent.endsWith('\n') ? '' : '\n'}`);
+  const renderedContent = options.raw ? logContent : formatRunLogPretty(logContent);
+  process.stdout.write(`${renderedContent}${renderedContent.endsWith('\n') ? '' : '\n'}`);
 }
