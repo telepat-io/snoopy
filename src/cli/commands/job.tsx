@@ -25,6 +25,8 @@ import {
   printSuccess,
   printWarning
 } from '../ui/consoleUi.js';
+import { formatRunDisplayTimestamp } from '../ui/time.js';
+import { resolveJobFromArgOrPrompt } from './selection.js';
 
 interface JobAddFlowResult {
   apiKey?: string;
@@ -243,53 +245,67 @@ export function listJobs(): void {
   });
 }
 
-export function removeJob(jobRef: string): void {
+export async function removeJob(jobRef?: string): Promise<void> {
   printCliHeader('Jobs');
   printSection('Delete Job');
   const jobsRepo = new JobsRepository();
-  const removed = jobsRepo.removeByRef(jobRef);
+  const job = await resolveJobFromArgOrPrompt(jobsRepo, jobRef, { requiredForMessage: 'job deletion' });
+  if (!job) {
+    return;
+  }
+
+  const removed = jobsRepo.removeByRef(job.id);
   if (!removed) {
-    printError(`Job not found: ${jobRef}`);
+    printError(`Job not found: ${job.id}`);
     return;
   }
 
   printSuccess(`Deleted job ${removed.id} (${removed.slug}) with all runs and scan items.`);
 }
 
-export function enableJob(jobRef: string): void {
+export async function enableJob(jobRef?: string): Promise<void> {
   printCliHeader('Jobs');
   printSection('Enable Job');
   const jobsRepo = new JobsRepository();
-  const updated = jobsRepo.setEnabledByRef(jobRef, true);
+  const job = await resolveJobFromArgOrPrompt(jobsRepo, jobRef, { requiredForMessage: 'job enablement' });
+  if (!job) {
+    return;
+  }
+
+  const updated = jobsRepo.setEnabledByRef(job.id, true);
   if (!updated) {
-    printError(`Job not found: ${jobRef}`);
+    printError(`Job not found: ${job.id}`);
     return;
   }
 
   printSuccess(`Enabled job ${updated.id} (${updated.slug})`);
 }
 
-export function disableJob(jobRef: string): void {
+export async function disableJob(jobRef?: string): Promise<void> {
   printCliHeader('Jobs');
   printSection('Disable Job');
   const jobsRepo = new JobsRepository();
-  const updated = jobsRepo.setEnabledByRef(jobRef, false);
+  const job = await resolveJobFromArgOrPrompt(jobsRepo, jobRef, { requiredForMessage: 'job disablement' });
+  if (!job) {
+    return;
+  }
+
+  const updated = jobsRepo.setEnabledByRef(job.id, false);
   if (!updated) {
-    printError(`Job not found: ${jobRef}`);
+    printError(`Job not found: ${job.id}`);
     return;
   }
 
   printSuccess(`Disabled job ${updated.id} (${updated.slug})`);
 }
 
-export async function runJobNow(jobRef: string, options: { limit?: number }): Promise<void> {
+export async function runJobNow(jobRef: string | undefined, options: { limit?: number }): Promise<void> {
   printCliHeader('Manual run');
   printSection('Run Job Now');
   const jobsRepo = new JobsRepository();
   const runsRepo = new RunsRepository();
-  const job = jobsRepo.getByRef(jobRef);
+  const job = await resolveJobFromArgOrPrompt(jobsRepo, jobRef, { requiredForMessage: 'manual run' });
   if (!job) {
-    printError(`Job not found: ${jobRef}`);
     return;
   }
 
@@ -358,7 +374,7 @@ export function listJobRuns(jobRef?: string): void {
 
   rows.forEach((run) => {
     const cost = run.estimatedCostUsd === null ? '-' : `$${run.estimatedCostUsd.toFixed(6)}`;
-    printInfo(`${run.createdAt} ${run.jobName ?? run.jobId}`);
+    printInfo(`${formatRunDisplayTimestamp(run)} ${run.jobName ?? run.jobId}`);
     printKeyValue('Run ID', run.id);
     printKeyValue('Status', run.status);
     printKeyValue('Duration', formatRunDuration(run.startedAt, run.finishedAt));

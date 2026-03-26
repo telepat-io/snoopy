@@ -9,6 +9,7 @@ import {
   printSection,
   printWarning
 } from '../ui/consoleUi.js';
+import { formatRunDisplayTimestamp } from '../ui/time.js';
 
 function formatInteger(value: number): string {
   return new Intl.NumberFormat('en-US', { maximumFractionDigits: 0 }).format(value);
@@ -49,7 +50,7 @@ function printMetricsBlock(metrics: DerivedAnalyticsMetrics): void {
 }
 
 function printRunCard(run: AnalyticsRunView): void {
-  printInfo(`${run.createdAt} ${run.jobName ?? run.jobId}`);
+  printInfo(`${formatRunDisplayTimestamp(run)} ${run.jobName ?? run.jobId}`);
   printKeyValue('Run ID', run.id);
   printKeyValue('Status', run.status);
   printKeyValue('Duration', run.durationSeconds === null ? '-' : `${run.durationSeconds}s`);

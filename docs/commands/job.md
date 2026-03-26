@@ -14,11 +14,11 @@ The plural `jobs` group is an alias for the same operational commands.
 These commands behave the same as their `job` counterparts:
 
 - `jobs list`
-- `jobs enable <jobRef>`
-- `jobs disable <jobRef>`
-- `jobs remove <jobRef>`
-- `jobs delete <jobRef>`
-- `jobs run <jobRef> [--limit N]`
+- `jobs enable [jobRef]`
+- `jobs disable [jobRef]`
+- `jobs remove [jobRef]`
+- `jobs delete [jobRef]`
+- `jobs run [jobRef] [--limit N]`
 - `jobs runs [jobRef]`
 
 Examples:
@@ -60,45 +60,55 @@ Lists all configured jobs.
 snoopy job list
 ```
 
-### `job remove <jobRef>`
-### `job delete <jobRef>`
+### `job remove [jobRef]`
+### `job delete [jobRef]`
 
 Deletes a job and cascades cleanup of related runs, scan items, run log files, and exported CSV files.
 
 ```bash
+snoopy job delete
 snoopy job delete <jobRef>
 ```
+
+If `jobRef` is omitted, Snoopy shows all jobs and lets you choose one with up/down arrows and Enter.
 
 When detailed run logging is enabled, deleting a job also removes the corresponding `run-<runId>.log` files under `~/.snoopy/logs/`.
 
 Deleting a job also removes its results file under `~/.snoopy/results/<job-slug>.csv` when present.
 
-### `job enable <jobRef>`
-### `job disable <jobRef>`
+### `job enable [jobRef]`
+### `job disable [jobRef]`
 
 Enables or disables scheduled execution.
 
 ```bash
+snoopy job enable
 snoopy job enable <jobRef>
+snoopy job disable
 snoopy job disable <jobRef>
 ```
 
-### `job run <jobRef> [--limit N]`
+If `jobRef` is omitted, Snoopy shows all jobs and lets you choose one with up/down arrows and Enter.
+
+### `job run [jobRef] [--limit N]`
 
 Runs one job immediately.
 
 Arguments:
 
-- `<jobRef>`: job ID or slug
+- `[jobRef]`: optional job ID or slug
 
 Options:
 
 - `-l, --limit <count>`: maximum number of new post/comment items to qualify during the run
 
 ```bash
+snoopy job run
 snoopy job run <jobRef>
 snoopy job run <jobRef> --limit 5
 ```
+
+If `jobRef` is omitted, Snoopy shows all jobs and lets you choose one with up/down arrows and Enter.
 
 Output notes:
 

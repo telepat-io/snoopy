@@ -15,6 +15,7 @@ import {
   printSuccess,
   printWarning
 } from '../ui/consoleUi.js';
+import { formatRunDisplayTimestamp } from '../ui/time.js';
 
 function getDaemonHealth(): { ok: boolean; details: string } {
   const paths = ensureAppDirs();
@@ -116,7 +117,7 @@ export async function runDoctor(): Promise<void> {
 
   printWarning(`Found ${recentProblemRuns.length} recent run(s) with failures or logged errors.`);
   recentProblemRuns.forEach(({ run, errorEntries }) => {
-    printWarning(`${run.createdAt} ${run.jobName ?? run.jobId} (${run.status})`);
+    printWarning(`${formatRunDisplayTimestamp(run)} ${run.jobName ?? run.jobId} (${run.status})`);
     printKeyValue('Run ID', run.id);
     printKeyValue('Message', run.message ?? '-');
     if (errorEntries.length > 0) {

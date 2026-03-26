@@ -1,7 +1,9 @@
 import { JobsRepository } from '../../services/db/repositories/jobsRepo.js';
 import { RunsRepository } from '../../services/db/repositories/runsRepo.js';
 import { extractErrorEntries, readRunLog } from '../../services/logging/logReader.js';
-import { printCliHeader, printError, printInfo, printKeyValue, printSection, printSuccess, printWarning } from '../ui/consoleUi.js';
+import { printCliHeader, printInfo, printKeyValue, printSection, printSuccess, printWarning } from '../ui/consoleUi.js';
+import { formatRunDisplayTimestamp } from '../ui/time.js';
+import { resolveJobFromArgOrPrompt } from './selection.js';
 
 function isWithinHours(createdAt: string, hours: number): boolean {
   const timestamp = Date.parse(createdAt);
@@ -12,7 +14,7 @@ function isWithinHours(createdAt: string, hours: number): boolean {
   return timestamp >= Date.now() - hours * 60 * 60 * 1000;
 }
 
-export function showJobErrors(jobRef: string, options: { hours?: number } = {}): void {
+export async function showJobErrors(jobRef?: string, options: { hours?: number } = {}): Promise<void> {
   const hours = options.hours ?? 24;
 
   printCliHeader('Recent errors');
@@ -20,9 +22,8 @@ export function showJobErrors(jobRef: string, options: { hours?: number } = {}):
 
   const jobsRepo = new JobsRepository();
   const runsRepo = new RunsRepository();
-  const job = jobsRepo.getByRef(jobRef);
+  const job = await resolveJobFromArgOrPrompt(jobsRepo, jobRef, { requiredForMessage: 'error inspection' });
   if (!job) {
-    printError(`Job not found: ${jobRef}`);
     return;
   }
 
@@ -47,7 +48,7 @@ export function showJobErrors(jobRef: string, options: { hours?: number } = {}):
   printWarning(`Found ${errorRuns.length} failed or errored run(s) for ${job.name} in the last ${hours} hour(s).`);
 
   errorRuns.forEach(({ run, errorEntries }) => {
-    printInfo(`${run.createdAt} ${run.status}`);
+    printInfo(`${formatRunDisplayTimestamp(run)} ${run.status}`);
     printKeyValue('Run ID', run.id);
     printKeyValue('Message', run.message ?? '-');
     printKeyValue('Log', run.logFilePath ?? '-');

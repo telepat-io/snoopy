@@ -119,8 +119,11 @@ snoopy jobs list
 3. Run one job immediately (limit to 5 new items while testing):
 
 ```bash
+snoopy job run --limit 5
 snoopy job run <jobRef> --limit 5
 ```
+
+If `<jobRef>` is omitted for `job run`, `job enable`, `job disable`, `job delete`, `start`, `stop`, or `errors`, Snoopy shows your job list and lets you pick with up/down arrows and Enter.
 
 4. View run history:
 
@@ -146,9 +149,12 @@ snoopy export csv <jobRef>
 7. Inspect one run's detailed log output:
 
 ```bash
+snoopy logs
 snoopy logs <runId>
 snoopy logs <runId> --raw
 ```
+
+When `runId` is omitted for `logs`, Snoopy first prompts for a job, then prompts for a run from that job (up/down arrows + Enter).
 
 8. Show recent errors for one job:
 
@@ -167,14 +173,14 @@ snoopy daemon reload
 
 - `job add`
 - `job list`
-- `job run <jobRef> --limit <N>`
+- `job run [jobRef] --limit <N>`
 - `job runs [jobRef]`
 - `analytics [jobRef] --days <N>`
 - `export csv [jobRef]`
-- `logs <runId>`
-- `errors <jobRef> --hours <N>`
-- `start <jobRef>` / `stop <jobRef>`
-- `delete <jobRef>`
+- `logs [runId]`
+- `errors [jobRef] --hours <N>`
+- `start [jobRef]` / `stop [jobRef]`
+- `delete [jobRef]`
 - `daemon start|stop|status`
 - `daemon reload`
 - `startup status`
@@ -184,8 +190,8 @@ snoopy daemon reload
 
 - Each job run writes a dedicated log file under `~/.snoopy/logs/`.
 - Files are named `run-<runId>.log`.
-- `snoopy logs <runId>` now shows a pretty timeline by default with post/comment text snippets, qualification result + justification, and clickable post/comment links.
-- Use `snoopy logs <runId> --raw` to print the full raw log file content, including full JSON request/response payloads for Reddit and OpenRouter calls.
+- `snoopy logs` now supports guided selection (job first, then run) and shows a pretty timeline by default with post/comment text snippets, qualification result + justification, and clickable post/comment links.
+- Use `snoopy logs [runId] --raw` to print the full raw log file content, including full JSON request/response payloads for Reddit and OpenRouter calls.
 - Rich TTY manual runs (`snoopy job run <jobRef>`) show compact multi-line scan blocks with indented fields, clickable links, and qualification justifications.
 - In rich terminals, scan field labels are colorized and qualification status is highlighted (`qualified` in green, `not qualified` in red, `pending` in yellow).
 - Run logs older than 5 days are deleted automatically on daemon startup and after each job run.

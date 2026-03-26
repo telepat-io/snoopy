@@ -60,8 +60,11 @@ snoopy jobs list
 3. Run one job immediately (limit to 5 new items while testing):
 
 ```bash
+snoopy job run --limit 5
 snoopy job run <jobRef> --limit 5
 ```
+
+If `<jobRef>` is omitted for `job run`, `job enable`, `job disable`, `job delete`, `start`, `stop`, or `errors`, Snoopy shows your jobs and prompts you to choose one.
 
 4. View run history:
 
@@ -93,11 +96,11 @@ snoopy daemon start
 
 - `job add`
 - `job list`
-- `job run <jobRef> --limit <N>`
+- `job run [jobRef] --limit <N>`
 - `job runs [jobRef]`
 - `export csv [jobRef]`
-- `start <jobRef>` / `stop <jobRef>`
-- `delete <jobRef>`
+- `start [jobRef]` / `stop [jobRef]`
+- `delete [jobRef]`
 - `daemon start|stop|status`
 - `startup status`
 - `doctor`

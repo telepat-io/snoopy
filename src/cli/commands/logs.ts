@@ -1,20 +1,39 @@
+import { JobsRepository } from '../../services/db/repositories/jobsRepo.js';
 import { RunsRepository } from '../../services/db/repositories/runsRepo.js';
 import { formatRunLogPretty, readRunLog } from '../../services/logging/logReader.js';
 import { printCliHeader, printError, printInfo, printKeyValue, printSection, printWarning } from '../ui/consoleUi.js';
+import { formatRunDisplayTimestamp } from '../ui/time.js';
+import { resolveJobFromArgOrPrompt, resolveRunFromArgOrPrompt } from './selection.js';
 
-export function showRunLogs(runId: string, options: { raw?: boolean } = {}): void {
+export async function showRunLogs(runId?: string, options: { raw?: boolean } = {}): Promise<void> {
   printCliHeader('Run logs');
   printSection(options.raw ? 'Logs (raw)' : 'Logs (pretty)');
 
+  const jobsRepo = new JobsRepository();
   const runsRepo = new RunsRepository();
-  const run = runsRepo.getById(runId);
+
+  const run = runId
+    ? runsRepo.getById(runId)
+    : await (async () => {
+        const selectedJob = await resolveJobFromArgOrPrompt(jobsRepo, undefined, {
+          requiredForMessage: 'run log inspection'
+        });
+        if (!selectedJob) {
+          return null;
+        }
+
+        return resolveRunFromArgOrPrompt(runsRepo, undefined, selectedJob);
+      })();
+
   if (!run) {
-    printError(`Run not found: ${runId}`);
+    if (runId) {
+      printError(`Run not found: ${runId}`);
+    }
     return;
   }
 
   const logContent = readRunLog(run.logFilePath);
-  printInfo(`${run.createdAt} ${run.jobName ?? run.jobId}`);
+  printInfo(`${formatRunDisplayTimestamp(run)} ${run.jobName ?? run.jobId}`);
   printKeyValue('Run ID', run.id);
   printKeyValue('Status', run.status);
   printKeyValue('Log', run.logFilePath ?? '-');

@@ -3,18 +3,19 @@ title: errors
 sidebar_position: 9
 ---
 
-# `errors <jobRef>`
+# `errors [jobRef]`
 
 Use `errors` to show recent failed or errored runs for one job.
 
 ```bash
+snoopy errors
 snoopy errors <jobRef>
 snoopy errors <jobRef> --hours 48
 ```
 
 Arguments:
 
-- `<jobRef>`: job ID or slug
+- `[jobRef]`: optional job ID or slug
 
 Options:
 
@@ -25,6 +26,8 @@ What it shows:
 - runs with `failed` status
 - runs whose log file contains `[ERROR]` entries
 - the latest error block found for each matching run
+
+If `jobRef` is omitted, Snoopy shows all jobs and lets you choose one with up/down arrows and Enter.
 
 Typical use:
 

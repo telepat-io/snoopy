@@ -13,20 +13,22 @@ This section documents the Snoopy CLI one command group at a time.
 - `jobs`
 - `add`
 - `list`
-- `delete <jobRef>`
-- `start <jobRef>`
-- `stop <jobRef>`
+- `delete [jobRef]`
+- `start [jobRef]`
+- `stop [jobRef]`
 - `settings`
 - `daemon`
 - `startup`
 - `reboot`
 - `export`
 - `analytics [jobRef]`
-- `logs <runId>`
-- `errors <jobRef>`
+- `logs [runId]`
+- `errors [jobRef]`
 - `doctor`
 
 `<jobRef>` accepts either a job UUID or a slug.
+
+For commands with `[jobRef]` or `[runId]`, omitting the argument starts an interactive selector in TTY mode.
 
 ## Per-Command Pages
 
@@ -60,27 +62,30 @@ Alias for `jobs list`.
 snoopy list
 ```
 
-### `delete <jobRef>`
+### `delete [jobRef]`
 
-Alias for `job delete <jobRef>`.
+Alias for `job delete [jobRef]`.
 
 ```bash
+snoopy delete
 snoopy delete <jobRef>
 ```
 
-### `start <jobRef>`
+### `start [jobRef]`
 
 Alias for enabling a job.
 
 ```bash
+snoopy start
 snoopy start <jobRef>
 ```
 
-### `stop <jobRef>`
+### `stop [jobRef]`
 
 Alias for disabling a job.
 
 ```bash
+snoopy stop
 snoopy stop <jobRef>
 ```
 
@@ -88,10 +93,12 @@ snoopy stop <jobRef>
 
 ```bash
 snoopy job add
+snoopy job run --limit 5
 snoopy job run <jobRef> --limit 5
 snoopy job runs <jobRef>
 snoopy analytics <jobRef>
 snoopy export csv <jobRef>
+snoopy logs
 snoopy logs <runId>
 snoopy errors <jobRef>
 snoopy daemon start

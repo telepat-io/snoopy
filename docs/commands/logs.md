@@ -3,14 +3,17 @@ title: logs
 sidebar_position: 8
 ---
 
-# `logs <runId>`
+# `logs [runId]`
 
 Use `logs` to inspect one run with a human-friendly timeline by default.
 
 ```bash
+snoopy logs
 snoopy logs <runId>
 snoopy logs <runId> --raw
 ```
+
+If `runId` is omitted, Snoopy first shows the job list and lets you choose a job with up/down arrows and Enter, then shows recent runs for that job and lets you choose a run the same way.
 
 Default (`snoopy logs <runId>`) shows:
 

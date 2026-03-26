@@ -52,32 +52,32 @@ job.command('add').description('Add a monitoring job').action(async () => {
   await addJob();
 });
 job.command('list').description('List monitoring jobs').action(listJobs);
-job.command('remove').argument('<jobRef>', 'Job ID or slug').description('Remove a job').action(removeJob);
-job.command('delete').argument('<jobRef>', 'Job ID or slug').description('Delete a job').action(removeJob);
-job.command('enable').argument('<jobRef>', 'Job ID or slug').description('Enable a job').action(enableJob);
-job.command('disable').argument('<jobRef>', 'Job ID or slug').description('Disable a job').action(disableJob);
+job.command('remove').argument('[jobRef]', 'Job ID or slug').description('Remove a job').action(removeJob);
+job.command('delete').argument('[jobRef]', 'Job ID or slug').description('Delete a job').action(removeJob);
+job.command('enable').argument('[jobRef]', 'Job ID or slug').description('Enable a job').action(enableJob);
+job.command('disable').argument('[jobRef]', 'Job ID or slug').description('Disable a job').action(disableJob);
 job
   .command('run')
-  .argument('<jobRef>', 'Job ID or slug')
+  .argument('[jobRef]', 'Job ID or slug')
   .description('Run a job immediately')
   .option('-l, --limit <count>', 'Maximum number of new post/comment items to qualify', parsePositiveInteger)
-  .action(async (jobRef: string, options: { limit?: number }) => {
+  .action(async (jobRef: string | undefined, options: { limit?: number }) => {
     await runJobNow(jobRef, options);
   });
 job.command('runs').argument('[jobRef]', 'Optional job ID or slug').description('List recent run history').action(listJobRuns);
 
 const jobs = program.command('jobs').description('Alias for job commands');
 jobs.command('list').description('List monitoring jobs').action(listJobs);
-jobs.command('enable').argument('<jobRef>', 'Job ID or slug').description('Enable a job').action(enableJob);
-jobs.command('disable').argument('<jobRef>', 'Job ID or slug').description('Disable a job').action(disableJob);
-jobs.command('remove').argument('<jobRef>', 'Job ID or slug').description('Remove a job').action(removeJob);
-jobs.command('delete').argument('<jobRef>', 'Job ID or slug').description('Delete a job').action(removeJob);
+jobs.command('enable').argument('[jobRef]', 'Job ID or slug').description('Enable a job').action(enableJob);
+jobs.command('disable').argument('[jobRef]', 'Job ID or slug').description('Disable a job').action(disableJob);
+jobs.command('remove').argument('[jobRef]', 'Job ID or slug').description('Remove a job').action(removeJob);
+jobs.command('delete').argument('[jobRef]', 'Job ID or slug').description('Delete a job').action(removeJob);
 jobs
   .command('run')
-  .argument('<jobRef>', 'Job ID or slug')
+  .argument('[jobRef]', 'Job ID or slug')
   .description('Run a job immediately')
   .option('-l, --limit <count>', 'Maximum number of new post/comment items to qualify', parsePositiveInteger)
-  .action(async (jobRef: string, options: { limit?: number }) => {
+  .action(async (jobRef: string | undefined, options: { limit?: number }) => {
     await runJobNow(jobRef, options);
   });
 jobs.command('runs').argument('[jobRef]', 'Optional job ID or slug').description('List recent run history').action(listJobRuns);
@@ -86,10 +86,10 @@ program.command('add').description('Alias for job add').action(async () => {
   await addJob();
 });
 program.command('list').description('Alias for jobs list').action(listJobs);
-program.command('delete').argument('<jobRef>', 'Job ID or slug').description('Alias for job delete').action(removeJob);
+program.command('delete').argument('[jobRef]', 'Job ID or slug').description('Alias for job delete').action(removeJob);
 
-program.command('start').argument('<jobRef>', 'Job ID or slug').description('Enable a job').action(enableJob);
-program.command('stop').argument('<jobRef>', 'Job ID or slug').description('Disable a job').action(disableJob);
+program.command('start').argument('[jobRef]', 'Job ID or slug').description('Enable a job').action(enableJob);
+program.command('stop').argument('[jobRef]', 'Job ID or slug').description('Disable a job').action(disableJob);
 
 program.command('settings').description('Update API key/model/model settings').action(async () => {
   await openSettings();
@@ -120,20 +120,20 @@ program.command('doctor').description('Run health checks').action(async () => {
 
 program
   .command('logs')
-  .argument('<runId>', 'Run ID')
+  .argument('[runId]', 'Run ID')
   .description('Show pretty logs for a specific run')
   .option('--raw', 'Show raw log file content without pretty formatting')
-  .action((runId: string, options: { raw?: boolean }) => {
-    showRunLogs(runId, options);
+  .action(async (runId: string | undefined, options: { raw?: boolean }) => {
+    await showRunLogs(runId, options);
   });
 
 program
   .command('errors')
-  .argument('<jobRef>', 'Job ID or slug')
+  .argument('[jobRef]', 'Job ID or slug')
   .description('Show recent errors for a specific job')
   .option('--hours <count>', 'Look back this many hours', parsePositiveInteger)
-  .action((jobRef: string, options: { hours?: number }) => {
-    showJobErrors(jobRef, options);
+  .action(async (jobRef: string | undefined, options: { hours?: number }) => {
+    await showJobErrors(jobRef, options);
   });
 
 program
