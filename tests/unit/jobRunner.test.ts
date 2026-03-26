@@ -1,3 +1,12 @@
+jest.mock('keytar', () => ({
+  __esModule: true,
+  default: {
+    setPassword: jest.fn(),
+    getPassword: jest.fn().mockResolvedValue(null),
+    deletePassword: jest.fn()
+  }
+}));
+
 import fs from 'node:fs';
 import { JobsRepository } from '../../src/services/db/repositories/jobsRepo.js';
 import { SettingsRepository } from '../../src/services/db/repositories/settingsRepo.js';
@@ -12,6 +21,8 @@ import * as notify from '../../src/utils/notify.js';
 describe('JobRunner', () => {
   beforeEach(() => {
     jest.restoreAllMocks();
+
+    jest.spyOn(notify, 'sendJobNotification').mockImplementation(() => {});
 
     const settingsRepo = new SettingsRepository();
     settingsRepo.setAppSettings({
