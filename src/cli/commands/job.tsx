@@ -1,7 +1,6 @@
 import React from 'react';
-import { render, useApp } from 'ink';
+import { render } from 'ink';
 import { JobAddFlow } from '../flows/jobAddFlow.js';
-import { YesNoSelector } from '../../ui/components/YesNoSelector.js';
 import { JobsRepository } from '../../services/db/repositories/jobsRepo.js';
 import { SettingsRepository } from '../../services/db/repositories/settingsRepo.js';
 import { RunsRepository } from '../../services/db/repositories/runsRepo.js';
@@ -27,6 +26,7 @@ import {
 
 interface JobAddFlowResult {
   apiKey?: string;
+  installStartup?: boolean;
   settings: {
     model: string;
     modelSettings: {
@@ -45,27 +45,6 @@ interface JobAddFlowResult {
   };
 }
 
-interface YesNoPromptProps {
-  question: string;
-  defaultValue: boolean;
-  onDone: (value: boolean) => void;
-}
-
-function YesNoPrompt({ question, defaultValue, onDone }: YesNoPromptProps): React.JSX.Element {
-  const { exit } = useApp();
-
-  return (
-    <YesNoSelector
-      label={question}
-      defaultValue={defaultValue}
-      onSubmit={(value) => {
-        onDone(value);
-        exit();
-      }}
-    />
-  );
-}
-
 function formatRunDuration(startedAt: string | null, finishedAt: string | null): string {
   if (!startedAt || !finishedAt) {
     return '-';
@@ -82,7 +61,8 @@ function formatRunDuration(startedAt: string | null, finishedAt: string | null):
 
 async function runAddFlow(
   hasApiKey: boolean,
-  existingApiKey: string | null
+  existingApiKey: string | null,
+  startupAlreadyEnabled: boolean
 ): Promise<JobAddFlowResult | null> {
   const settingsRepo = new SettingsRepository();
   const initialSettings = settingsRepo.getAppSettings();
@@ -92,6 +72,7 @@ async function runAddFlow(
     <JobAddFlow
       hasApiKey={hasApiKey}
       existingApiKey={existingApiKey}
+      startupAlreadyEnabled={startupAlreadyEnabled}
       initialSettings={initialSettings}
       onApiKeyCaptured={(apiKey) => {
         return setOpenRouterApiKey(apiKey);
@@ -185,7 +166,8 @@ export async function addJob(): Promise<void> {
   const settingsRepo = new SettingsRepository();
   const existingApiKey = await getOpenRouterApiKey();
   const hasApiKey = Boolean(existingApiKey);
-  const flowResult = await runAddFlow(hasApiKey, existingApiKey);
+  const startupStatus = getStartupStatus();
+  const flowResult = await runAddFlow(hasApiKey, existingApiKey, startupStatus.enabled);
   if (!flowResult) {
     printWarning('Job creation cancelled.');
     return;
@@ -216,12 +198,17 @@ export async function addJob(): Promise<void> {
 
   printSuccess(`Created job: ${job.name} (${job.id}, slug: ${job.slug})`);
 
-  const startupStatus = getStartupStatus();
-  if (!startupStatus.enabled) {
-    const prompt = await promptYesNo('Install OS startup registration so daemon survives reboot?', false);
-    if (prompt) {
+  if (!startupStatus.enabled && flowResult.installStartup) {
+    try {
       const result = installStartup(process.argv[1]!);
-      printSuccess(`Startup configured via ${result.method}: ${result.detail}`);
+      if (result.success) {
+        printSuccess(`Startup configured via ${result.method}: ${result.detail}`);
+      } else {
+        printWarning(`Startup registration not configured: ${result.detail}`);
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      printWarning(`Startup registration failed: ${message}`);
     }
   }
 
@@ -441,26 +428,3 @@ function logManualRunProgress(event: JobRunProgressEvent): void {
   }
 }
 
-async function promptYesNo(question: string, defaultValue: boolean): Promise<boolean> {
-  if (!(process.stdin.isTTY && process.stdout.isTTY)) {
-    return false;
-  }
-
-  let selection = defaultValue;
-  const app = render(
-    <YesNoPrompt
-      question={question}
-      defaultValue={defaultValue}
-      onDone={(value) => {
-        selection = value;
-      }}
-    />
-  );
-
-  try {
-    await app.waitUntilExit();
-    return selection;
-  } catch {
-    return false;
-  }
-}

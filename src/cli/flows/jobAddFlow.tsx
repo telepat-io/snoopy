@@ -12,6 +12,7 @@ import { DEFAULT_MODEL } from '../../types/settings.js';
 
 interface JobAddResult {
   apiKey?: string;
+  installStartup?: boolean;
   settings: AppSettings;
   job: {
     slug: string;
@@ -26,6 +27,7 @@ interface JobAddResult {
 interface JobAddFlowProps {
   hasApiKey: boolean;
   existingApiKey: string | null;
+  startupAlreadyEnabled: boolean;
   initialSettings: AppSettings;
   onApiKeyCaptured?: (apiKey: string) => Promise<void> | void;
   onAuthFailure?: () => Promise<void> | void;
@@ -42,6 +44,7 @@ type Stage =
   | 'subreddits'
   | 'monitorComments'
   | 'confirm'
+  | 'startup'
   | 'error';
 
 interface TranscriptEntry {
@@ -77,6 +80,7 @@ function FlowFrame({ transcript, children }: FlowFrameProps): React.JSX.Element 
 export function JobAddFlow({
   hasApiKey,
   existingApiKey,
+  startupAlreadyEnabled,
   initialSettings,
   onApiKeyCaptured,
   onAuthFailure,
@@ -94,6 +98,7 @@ export function JobAddFlow({
   const [spec, setSpec] = useState<GeneratedJobSpec | null>(null);
   const [selectedSubreddits, setSelectedSubreddits] = useState<string[]>([]);
   const [monitorComments, setMonitorComments] = useState(true);
+  const [pendingResult, setPendingResult] = useState<JobAddResult | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [loadingLabel, setLoadingLabel] = useState('Talking to model...');
   const [transcript, setTranscript] = useState<TranscriptEntry[]>([]);
@@ -317,7 +322,7 @@ export function JobAddFlow({
           onSubmit={(shouldSave) => {
             if (shouldSave) {
               appendTranscript('Save job', 'yes');
-              onDone({
+              const result: JobAddResult = {
                 apiKey,
                 settings: {
                   model,
@@ -334,10 +339,39 @@ export function JobAddFlow({
                   subreddits: selectedSubreddits,
                   monitorComments
                 }
-              });
+              };
+
+              if (startupAlreadyEnabled) {
+                onDone(result);
+                exit();
+                return;
+              }
+
+              setPendingResult(result);
+              setStage('startup');
+              return;
             } else {
               appendTranscript('Save job', 'no', true);
             }
+            exit();
+          }}
+        />
+      </FlowFrame>
+    );
+  }
+
+  if (stage === 'startup' && pendingResult) {
+    return (
+      <FlowFrame transcript={transcript}>
+        <YesNoSelector
+          label="Install OS startup registration so daemon survives reboot?"
+          defaultValue={false}
+          onSubmit={(shouldInstallStartup) => {
+            appendTranscript('Install startup registration', shouldInstallStartup ? 'yes' : 'no');
+            onDone({
+              ...pendingResult,
+              installStartup: shouldInstallStartup
+            });
             exit();
           }}
         />
