@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.3](https://github.com/cozymantis/snoopy/compare/snoopy-cli-v0.1.2...snoopy-cli-v0.1.3) (2026-03-26)
+
+
+### Features
+
+* better job add ui ([1f6234c](https://github.com/cozymantis/snoopy/commit/1f6234cc4648ba941a27f1ac8a85b87455b674d7))
+* job analytics support ([40150a8](https://github.com/cozymantis/snoopy/commit/40150a8fc07a154a24a6a80c7ada7f5baed21e6e))
+* rich job run output ([5cd7b33](https://github.com/cozymantis/snoopy/commit/5cd7b3345d5bd021bb03e1bcd7a5f31da489e5e7))
+
+
+### Bug Fixes
+
+* job add exit on startup registration confirmation ([d65bfe2](https://github.com/cozymantis/snoopy/commit/d65bfe253abbcc95ee7c49501e1324513d7ef7f8))
+
 ## [0.1.2](https://github.com/cozymantis/snoopy/compare/snoopy-cli-v0.1.1...snoopy-cli-v0.1.2) (2026-03-24)
 
 
