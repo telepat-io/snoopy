@@ -23,6 +23,7 @@ What it does:
 - asks follow-up questions
 - generates name, slug, description, and qualification prompt
 - prompts for missing credentials/settings when needed
+- asks whether to register OS startup on reboot/login (defaults to Yes)
 - saves the job locally
 - runs an immediate first scan with the same progress and summary output as `job run`
 - keeps the job unscheduled while that first run is in progress, then enables scheduled runs when the attempt ends

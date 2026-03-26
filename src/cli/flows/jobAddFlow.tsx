@@ -365,7 +365,7 @@ export function JobAddFlow({
       <FlowFrame transcript={transcript}>
         <YesNoSelector
           label="Install OS startup registration so daemon survives reboot?"
-          defaultValue={false}
+          defaultValue
           onSubmit={(shouldInstallStartup) => {
             appendTranscript('Install startup registration', shouldInstallStartup ? 'yes' : 'no');
             onDone({
