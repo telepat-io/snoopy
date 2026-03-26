@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { Box, Text, useApp } from 'ink';
 import { Spinner } from '@inkjs/ui';
 import { TextPrompt } from '../../ui/components/TextPrompt.js';
+import { YesNoSelector } from '../../ui/components/YesNoSelector.js';
 import { SubredditMultiSelect } from '../../ui/components/SubredditMultiSelect.js';
 import { CliHeader } from '../../ui/components/CliHeader.js';
 import { OpenRouterClient, OpenRouterClientError } from '../../services/openrouter/client.js';
@@ -162,7 +163,7 @@ export function JobAddFlow({
       const client = new OpenRouterClient(keyToUse);
       const generatedQuestions = await client.generateClarificationQuestions(criteria, model.trim() || defaultModel);
       setQuestions(generatedQuestions);
-      appendTranscript('OpenRouter', `Generated ${generatedQuestions.length} clarification question(s).`, true);
+      appendTranscript('Snoopy', `Generated ${generatedQuestions.length} clarification question(s).`, true);
       setStage('clarifications');
     } catch (error) {
       if (error instanceof OpenRouterClientError && error.kind === 'auth') {
@@ -288,11 +289,10 @@ export function JobAddFlow({
   if (stage === 'monitorComments') {
     return (
       <FlowFrame transcript={transcript}>
-        <TextPrompt
-          label="Also monitor comments in these subreddits? (Y/n)"
-          initialValue="y"
-          onSubmit={(value) => {
-            const shouldMonitorComments = !value.trim().toLowerCase().startsWith('n');
+        <YesNoSelector
+          label="Also monitor comments in these subreddits?"
+          defaultValue
+          onSubmit={(shouldMonitorComments) => {
             setMonitorComments(shouldMonitorComments);
             appendTranscript('Monitor comments', shouldMonitorComments ? 'yes' : 'no');
             setStage('confirm');
@@ -311,11 +311,11 @@ export function JobAddFlow({
         <Text>Description: {spec.description}</Text>
         <Text>Subreddits: {selectedSubreddits.join(', ')}</Text>
         <Text>Monitor comments: {monitorComments ? 'yes' : 'no'}</Text>
-        <TextPrompt
-          label="Save this job? (y/n)"
-          initialValue="y"
-          onSubmit={(value) => {
-            if (value.toLowerCase().startsWith('y')) {
+        <YesNoSelector
+          label="Save this job?"
+          defaultValue
+          onSubmit={(shouldSave) => {
+            if (shouldSave) {
               appendTranscript('Save job', 'yes');
               onDone({
                 apiKey,

@@ -1,9 +1,4 @@
-const mockQuestion = jest.fn<Promise<string>, [string]>();
-const mockClose = jest.fn();
-const mockCreateInterface = jest.fn(() => ({
-  question: mockQuestion,
-  close: mockClose
-}));
+const mockPromptSelections: boolean[] = [];
 
 const mockSetOpenRouterApiKey = jest.fn();
 const mockGetOpenRouterApiKey = jest.fn(async () => 'existing-key');
@@ -88,16 +83,23 @@ const flowResult = {
   }
 };
 
-const mockRender = jest.fn((element: { props?: { onDone?: (value: typeof flowResult) => void } }) => {
-  element.props?.onDone?.(flowResult);
+const mockRender = jest.fn((element: { type?: unknown; props?: { onDone?: (value: unknown) => void } }) => {
+  if (element.type === 'job-add-flow') {
+    element.props?.onDone?.(flowResult);
+    return {
+      waitUntilExit: async () => {}
+    };
+  }
+
+  const nextSelection = mockPromptSelections.length > 0 ? mockPromptSelections.shift() : false;
+  if (typeof nextSelection === 'boolean') {
+    element.props?.onDone?.(nextSelection);
+  }
+
   return {
     waitUntilExit: async () => {}
   };
 });
-
-jest.mock('node:readline/promises', () => ({
-  createInterface: mockCreateInterface
-}));
 
 jest.mock('../../src/services/security/secretStore.js', () => ({
   getOpenRouterApiKey: mockGetOpenRouterApiKey,
@@ -179,7 +181,10 @@ jest.mock('../../src/cli/ui/consoleUi.js', () => ({
 }));
 
 jest.mock('ink', () => ({
-  render: mockRender
+  render: mockRender,
+  useApp: () => ({
+    exit: jest.fn()
+  })
 }));
 
 jest.mock('../../src/cli/flows/jobAddFlow.js', () => ({
@@ -189,6 +194,9 @@ jest.mock('../../src/cli/flows/jobAddFlow.js', () => ({
 import { addJob } from '../../src/cli/commands/job.js';
 
 describe('addJob startup registration prompt', () => {
+  const originalStdinIsTTY = process.stdin.isTTY;
+  const originalStdoutIsTTY = process.stdout.isTTY;
+
   beforeEach(() => {
     store.nextId = 1;
     store.jobsById.clear();
@@ -206,42 +214,48 @@ describe('addJob startup registration prompt', () => {
     };
 
     jest.clearAllMocks();
+    mockPromptSelections.length = 0;
+    Object.defineProperty(process.stdin, 'isTTY', { configurable: true, value: true });
+    Object.defineProperty(process.stdout, 'isTTY', { configurable: true, value: true });
     mockGetStartupStatus.mockReturnValue({ enabled: false, method: 'launchd', detail: 'not configured' });
     mockEnsureDaemonRunning.mockReturnValue({ started: false, pid: 4321 });
     mockInstallStartup.mockReturnValue({ success: true, method: 'launchd', detail: 'installed' });
   });
 
-  it('installs startup registration when user answers yes', async () => {
-    mockQuestion.mockResolvedValueOnce('y');
+  afterAll(() => {
+    Object.defineProperty(process.stdin, 'isTTY', { configurable: true, value: originalStdinIsTTY });
+    Object.defineProperty(process.stdout, 'isTTY', { configurable: true, value: originalStdoutIsTTY });
+  });
+
+  it('installs startup registration when selector choice is yes', async () => {
+    mockPromptSelections.push(true);
 
     await addJob();
 
-    expect(mockCreateInterface).toHaveBeenCalledTimes(1);
-    expect(mockQuestion).toHaveBeenCalledWith('Install OS startup registration so daemon survives reboot? (y/n): ');
-    expect(mockClose).toHaveBeenCalledTimes(1);
+    expect(mockRender).toHaveBeenCalledTimes(2);
     expect(mockInstallStartup).toHaveBeenCalledTimes(1);
     expect(mockEnsureDaemonRunning).toHaveBeenCalledTimes(1);
     expect(mockRunnerRun).toHaveBeenCalledTimes(1);
   });
 
-  it('does not install startup registration when user presses Enter', async () => {
-    mockQuestion.mockResolvedValueOnce('');
+  it('does not install startup registration when selector choice is no', async () => {
+    mockPromptSelections.push(false);
 
     await addJob();
 
-    expect(mockCreateInterface).toHaveBeenCalledTimes(1);
+    expect(mockRender).toHaveBeenCalledTimes(2);
     expect(mockInstallStartup).not.toHaveBeenCalled();
     expect(mockEnsureDaemonRunning).toHaveBeenCalledTimes(1);
     expect(mockRunnerRun).toHaveBeenCalledTimes(1);
   });
 
-  it('continues add flow when startup prompt input fails', async () => {
-    mockQuestion.mockRejectedValueOnce(new Error('stdin closed'));
+  it('continues add flow without startup install in non-interactive terminals', async () => {
+    Object.defineProperty(process.stdin, 'isTTY', { configurable: true, value: false });
+    Object.defineProperty(process.stdout, 'isTTY', { configurable: true, value: false });
 
     await expect(addJob()).resolves.toBeUndefined();
 
-    expect(mockCreateInterface).toHaveBeenCalledTimes(1);
-    expect(mockClose).toHaveBeenCalledTimes(1);
+    expect(mockRender).toHaveBeenCalledTimes(1);
     expect(mockInstallStartup).not.toHaveBeenCalled();
     expect(mockEnsureDaemonRunning).toHaveBeenCalledTimes(1);
     expect(mockRunnerRun).toHaveBeenCalledTimes(1);

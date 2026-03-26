@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { Box, Text, useApp, useInput } from 'ink';
 import { TextPrompt } from '../../ui/components/TextPrompt.js';
+import { YesNoSelector } from '../../ui/components/YesNoSelector.js';
 import { CliHeader } from '../../ui/components/CliHeader.js';
 import {
   type AppSettings,
@@ -204,11 +205,11 @@ export function SettingsFlow({ current, currentRedditCredentials, currentApiKey,
   if (mode === 'confirmClear' && editingKey) {
     return (
       <SettingsFrame>
-        <Text color="yellow">Clear this field? (y/n)</Text>
-        <TextPrompt
-          label="Confirm"
-          onSubmit={(value) => {
-            if (value.toLowerCase().startsWith('y')) {
+        <YesNoSelector
+          label="Clear this field?"
+          defaultValue={false}
+          onSubmit={(shouldClear) => {
+            if (shouldClear) {
               setClearedFields((prev) => new Set([...prev, editingKey]));
             }
             setMode('menu');

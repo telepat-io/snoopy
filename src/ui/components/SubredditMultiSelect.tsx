@@ -1,16 +1,14 @@
 import React, { useState } from 'react';
 import { Box, Text, useInput } from 'ink';
+import { resolveCustomSubreddit } from './subredditOptions.js';
 
 interface SubredditMultiSelectProps {
   options: string[];
   onDone: (subreddits: string[]) => void;
 }
 
-function normalizeSubreddit(value: string): string {
-  return value.replace(/^r\//i, '').replace(/\s+/g, '').trim();
-}
-
 export function SubredditMultiSelect({ options, onDone }: SubredditMultiSelectProps): React.JSX.Element {
+  const [displayOptions, setDisplayOptions] = useState(options);
   const [cursor, setCursor] = useState(0);
   const [selected, setSelected] = useState<Set<string>>(new Set(options.slice(0, 2)));
   const [customMode, setCustomMode] = useState(false);
@@ -19,10 +17,18 @@ export function SubredditMultiSelect({ options, onDone }: SubredditMultiSelectPr
   useInput((input, key) => {
     if (customMode) {
       if (key.return) {
-        const normalized = normalizeSubreddit(customInput);
+        const { normalized, nextOptions } = resolveCustomSubreddit(displayOptions, customInput);
         if (normalized) {
-          selected.add(normalized);
-          setSelected(new Set(selected));
+          setDisplayOptions(nextOptions);
+          setSelected((previous) => {
+            const next = new Set(previous);
+            next.add(normalized);
+            return next;
+          });
+          const nextIndex = nextOptions.indexOf(normalized);
+          if (nextIndex >= 0) {
+            setCursor(nextIndex);
+          }
         }
         setCustomInput('');
         setCustomMode(false);
@@ -47,27 +53,36 @@ export function SubredditMultiSelect({ options, onDone }: SubredditMultiSelectPr
     }
 
     if (key.upArrow) {
-      setCursor((prev) => (prev - 1 + options.length) % options.length);
+      if (displayOptions.length === 0) {
+        return;
+      }
+      setCursor((prev) => (prev - 1 + displayOptions.length) % displayOptions.length);
       return;
     }
 
     if (key.downArrow) {
-      setCursor((prev) => (prev + 1) % options.length);
+      if (displayOptions.length === 0) {
+        return;
+      }
+      setCursor((prev) => (prev + 1) % displayOptions.length);
       return;
     }
 
     if (input === ' ') {
-      const value = options[cursor];
+      const value = displayOptions[cursor];
       if (!value) {
         return;
       }
 
-      if (selected.has(value)) {
-        selected.delete(value);
-      } else {
-        selected.add(value);
-      }
-      setSelected(new Set(selected));
+      setSelected((previous) => {
+        const next = new Set(previous);
+        if (next.has(value)) {
+          next.delete(value);
+        } else {
+          next.add(value);
+        }
+        return next;
+      });
       return;
     }
 
@@ -77,14 +92,14 @@ export function SubredditMultiSelect({ options, onDone }: SubredditMultiSelectPr
     }
 
     if (key.return) {
-      onDone(Array.from(selected));
+      onDone(displayOptions.filter((option) => selected.has(option)));
     }
   });
 
   return (
     <Box flexDirection="column" marginTop={1}>
       <Text color="cyan">Choose subreddits (Up/Down, Space to toggle, A to add custom, Enter to finish)</Text>
-      {options.map((option, index) => {
+      {displayOptions.map((option, index) => {
         const isCursor = index === cursor;
         const isSelected = selected.has(option);
         return (

@@ -1,7 +1,7 @@
 import React from 'react';
-import { render } from 'ink';
-import { createInterface } from 'node:readline/promises';
+import { render, useApp } from 'ink';
 import { JobAddFlow } from '../flows/jobAddFlow.js';
+import { YesNoSelector } from '../../ui/components/YesNoSelector.js';
 import { JobsRepository } from '../../services/db/repositories/jobsRepo.js';
 import { SettingsRepository } from '../../services/db/repositories/settingsRepo.js';
 import { RunsRepository } from '../../services/db/repositories/runsRepo.js';
@@ -43,6 +43,27 @@ interface JobAddFlowResult {
     subreddits: string[];
     monitorComments: boolean;
   };
+}
+
+interface YesNoPromptProps {
+  question: string;
+  defaultValue: boolean;
+  onDone: (value: boolean) => void;
+}
+
+function YesNoPrompt({ question, defaultValue, onDone }: YesNoPromptProps): React.JSX.Element {
+  const { exit } = useApp();
+
+  return (
+    <YesNoSelector
+      label={question}
+      defaultValue={defaultValue}
+      onSubmit={(value) => {
+        onDone(value);
+        exit();
+      }}
+    />
+  );
 }
 
 function formatRunDuration(startedAt: string | null, finishedAt: string | null): string {
@@ -197,7 +218,7 @@ export async function addJob(): Promise<void> {
 
   const startupStatus = getStartupStatus();
   if (!startupStatus.enabled) {
-    const prompt = await promptYesNo('Install OS startup registration so daemon survives reboot? (y/n): ');
+    const prompt = await promptYesNo('Install OS startup registration so daemon survives reboot?', false);
     if (prompt) {
       const result = installStartup(process.argv[1]!);
       printSuccess(`Startup configured via ${result.method}: ${result.detail}`);
@@ -420,19 +441,26 @@ function logManualRunProgress(event: JobRunProgressEvent): void {
   }
 }
 
-async function promptYesNo(question: string): Promise<boolean> {
-  const rl = createInterface({
-    input: process.stdin,
-    output: process.stdout,
-    terminal: Boolean(process.stdin.isTTY && process.stdout.isTTY)
-  });
+async function promptYesNo(question: string, defaultValue: boolean): Promise<boolean> {
+  if (!(process.stdin.isTTY && process.stdout.isTTY)) {
+    return false;
+  }
+
+  let selection = defaultValue;
+  const app = render(
+    <YesNoPrompt
+      question={question}
+      defaultValue={defaultValue}
+      onDone={(value) => {
+        selection = value;
+      }}
+    />
+  );
 
   try {
-    const answer = await rl.question(question);
-    return answer.trim().toLowerCase().startsWith('y');
+    await app.waitUntilExit();
+    return selection;
   } catch {
     return false;
-  } finally {
-    rl.close();
   }
 }
