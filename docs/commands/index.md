@@ -30,12 +30,10 @@ This section documents the Snoopy CLI one command group at a time.
 
 ## Per-Command Pages
 
-- [Job Commands](job.md)
-- [Jobs Alias Group](jobs.md)
+- [Job Commands (`job`, `jobs`)](job.md)
 - [Settings](settings.md)
 - [Daemon](daemon.md)
-- [Startup](startup.md)
-- [Reboot Alias Group](reboot.md)
+- [Startup (`startup`, `reboot`)](startup.md)
 - [Export](export.md)
 - [Analytics](analytics.md)
 - [Logs](logs.md)

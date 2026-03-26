@@ -7,6 +7,28 @@ sidebar_position: 2
 
 Use `job` to create, inspect, run, enable, disable, and delete monitoring jobs.
 
+The plural `jobs` group is an alias for the same operational commands.
+
+## Aliases
+
+These commands behave the same as their `job` counterparts:
+
+- `jobs list`
+- `jobs enable <jobRef>`
+- `jobs disable <jobRef>`
+- `jobs remove <jobRef>`
+- `jobs delete <jobRef>`
+- `jobs run <jobRef> [--limit N]`
+- `jobs runs [jobRef]`
+
+Examples:
+
+```bash
+snoopy jobs list
+snoopy jobs run my-job --limit 5
+snoopy jobs delete my-job
+```
+
 ## Subcommands
 
 ### `job add`

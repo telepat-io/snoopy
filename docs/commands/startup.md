@@ -7,6 +7,23 @@ sidebar_position: 7
 
 The `startup` group manages OS-level registration so Snoopy can start on reboot or login.
 
+The `reboot` group is an alias for the user-facing startup behavior commands.
+
+## Aliases
+
+These commands behave the same as their `startup` counterparts:
+
+- `reboot enable`
+- `reboot disable`
+- `reboot status`
+
+Examples:
+
+```bash
+snoopy reboot enable
+snoopy reboot status
+```
+
 ## Subcommands
 
 ### `startup install`
