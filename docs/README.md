@@ -107,6 +107,7 @@ snoopy daemon start
 
 ## Full Documentation
 
+- [Installation & Setup](installation-and-setup.md)
 - [Command Reference](commands/index.md)
 - [Database Schema](database-schema.md)
 - [Agent Operations](agent-operations.md)

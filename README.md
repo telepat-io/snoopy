@@ -56,6 +56,8 @@ npm run build
 npm link
 ```
 
+For first-time onboarding (OpenRouter key setup, first `job add`, and verification), see [Installation & Setup](docs/installation-and-setup.md).
+
 ## Development
 
 Run without a global install (contributors):
@@ -221,6 +223,7 @@ Optional env vars:
 ## Full Documentation
 
 - [Documentation Index](docs/README.md)
+- [Installation & Setup](docs/installation-and-setup.md)
 - [Command Reference](docs/commands/index.md)
 - [Database Schema](docs/database-schema.md)
 - [Agent DB Operations](docs/agents-db.md)
