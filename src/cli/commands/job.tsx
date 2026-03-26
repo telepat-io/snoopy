@@ -14,10 +14,8 @@ import { ensureDaemonRunning, requestDaemonReload } from '../../services/daemonC
 import { type JobRunProgressEvent, JobRunner } from '../../services/scheduler/jobRunner.js';
 import { intervalToCron } from '../../types/settings.js';
 import {
-  formatCommentScanLine,
-  formatPostScanLine,
-} from '../../utils/scanLogFormatting.js';
-import {
+  formatCommentScanBlock,
+  formatPostScanBlock,
   isRichTty,
   printCliHeader,
   printError,
@@ -392,7 +390,7 @@ function logManualRunProgress(event: JobRunProgressEvent): void {
       }
 
       printInfo(
-        formatPostScanLine({
+        formatPostScanBlock({
           postId: event.postId,
           title: event.title,
           bodySnippet: event.bodySnippet,
@@ -416,7 +414,7 @@ function logManualRunProgress(event: JobRunProgressEvent): void {
       }
 
       printInfo(
-        formatCommentScanLine({
+        formatCommentScanBlock({
           postId: event.postId,
           commentId: event.commentId,
           author: event.author,

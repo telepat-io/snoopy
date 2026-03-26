@@ -1,4 +1,5 @@
 import { SNOOPY_WORDMARK } from '../../ui/components/CliHeader.js';
+import { toSnippet, type CommentScanLineInput, type PostScanLineInput } from '../../utils/scanLogFormatting.js';
 
 const ANSI = {
   reset: '\u001b[0m',
@@ -31,6 +32,105 @@ function bold(value: string): string {
   }
 
   return `${ANSI.bold}${value}${ANSI.reset}`;
+}
+
+function normalizeWhitespace(value: string | null | undefined): string {
+  if (!value) {
+    return '';
+  }
+
+  return value.replace(/\s+/g, ' ').trim();
+}
+
+function formatQualifiedStatus(qualified: boolean | undefined): string {
+  if (qualified === undefined) {
+    return colorize('pending', 'yellow');
+  }
+
+  return qualified ? colorize('qualified', 'green') : colorize('not qualified', 'red');
+}
+
+function formatLabel(label: string): string {
+  return colorize(`${label}:`, 'blue');
+}
+
+function formatScanDetailLine(label: string, value: string): string {
+  return `  ${formatLabel(label)} ${value}`;
+}
+
+function formatQualificationReason(
+  qualified: boolean | undefined,
+  qualificationReason: string | null | undefined
+): string | null {
+  const normalizedReason = normalizeWhitespace(qualificationReason);
+  if (qualified === undefined && !normalizedReason) {
+    return null;
+  }
+
+  return normalizedReason || 'No justification provided.';
+}
+
+export function formatPostScanBlock(input: PostScanLineInput): string {
+  const title = toSnippet(input.title, 80);
+  const snippet = toSnippet(input.bodySnippet);
+  const reason = formatQualificationReason(input.qualified, input.qualificationReason);
+  const lines = ['Post'];
+
+  lines.push(formatScanDetailLine('ID', input.postId));
+  if (title) {
+    lines.push(formatScanDetailLine('Title', title));
+  }
+
+  if (snippet) {
+    lines.push(formatScanDetailLine('Snippet', snippet));
+  }
+
+  lines.push(formatScanDetailLine('Status', formatQualifiedStatus(input.qualified)));
+  if (reason) {
+    lines.push(formatScanDetailLine('Reason', reason));
+  }
+
+  if (input.postUrl) {
+    lines.push(formatScanDetailLine('Post', input.postUrl));
+  }
+
+  if (typeof input.itemsNew === 'number' && typeof input.itemsQualified === 'number') {
+    lines.push(formatScanDetailLine('Totals', `new=${input.itemsNew}, qualified=${input.itemsQualified}`));
+  }
+
+  return lines.join('\n');
+}
+
+export function formatCommentScanBlock(input: CommentScanLineInput): string {
+  const snippet = toSnippet(input.commentSnippet);
+  const reason = formatQualificationReason(input.qualified, input.qualificationReason);
+  const lines = ['Comment'];
+
+  lines.push(formatScanDetailLine('Comment ID', input.commentId));
+  lines.push(formatScanDetailLine('Post ID', input.postId));
+  lines.push(formatScanDetailLine('Author', input.author));
+  if (snippet) {
+    lines.push(formatScanDetailLine('Snippet', snippet));
+  }
+
+  lines.push(formatScanDetailLine('Status', formatQualifiedStatus(input.qualified)));
+  if (reason) {
+    lines.push(formatScanDetailLine('Reason', reason));
+  }
+
+  if (input.commentUrl) {
+    lines.push(formatScanDetailLine('Comment', input.commentUrl));
+  }
+
+  if (input.postUrl) {
+    lines.push(formatScanDetailLine('Post', input.postUrl));
+  }
+
+  if (typeof input.itemsNew === 'number' && typeof input.itemsQualified === 'number') {
+    lines.push(formatScanDetailLine('Totals', `new=${input.itemsNew}, qualified=${input.itemsQualified}`));
+  }
+
+  return lines.join('\n');
 }
 
 export function printCliHeader(subtitle = 'Reddit conversation scanner'): void {

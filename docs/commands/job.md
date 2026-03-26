@@ -78,6 +78,12 @@ snoopy job run <jobRef>
 snoopy job run <jobRef> --limit 5
 ```
 
+Output notes:
+
+- Rich TTY runs render post/comment scan updates as compact multi-line blocks with indented fields.
+- Labels are colorized for readability.
+- Qualification status is color-coded: `qualified` (green), `not qualified` (red), `pending` (yellow).
+
 ### `job runs [jobRef]`
 
 Lists recent run history.

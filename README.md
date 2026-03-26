@@ -186,7 +186,8 @@ snoopy daemon reload
 - Files are named `run-<runId>.log`.
 - `snoopy logs <runId>` now shows a pretty timeline by default with post/comment text snippets, qualification result + justification, and clickable post/comment links.
 - Use `snoopy logs <runId> --raw` to print the full raw log file content, including full JSON request/response payloads for Reddit and OpenRouter calls.
-- Rich TTY manual runs (`snoopy job run <jobRef>`) also show text-first scan lines with clickable links and qualification justifications.
+- Rich TTY manual runs (`snoopy job run <jobRef>`) show compact multi-line scan blocks with indented fields, clickable links, and qualification justifications.
+- In rich terminals, scan field labels are colorized and qualification status is highlighted (`qualified` in green, `not qualified` in red, `pending` in yellow).
 - Run logs older than 5 days are deleted automatically on daemon startup and after each job run.
 - Deleting a job also deletes all associated per-run log files for that job.
 
