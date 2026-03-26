@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.1.4](https://github.com/cozymantis/snoopy/compare/snoopy-cli-v0.1.3...snoopy-cli-v0.1.4) (2026-03-26)
+
+
+### Features
+
+* better scan results display ([9f5700b](https://github.com/cozymantis/snoopy/commit/9f5700bfe1b05b5f693a45dfa51a59df6702ac77))
+* Enhance CLI job and run selection with interactive prompts ([c59d2db](https://github.com/cozymantis/snoopy/commit/c59d2db2633b9503f974ed92ed7116fa34eecc29))
+* startup registration defaults to true ([6f3181c](https://github.com/cozymantis/snoopy/commit/6f3181ce2fa2b63345a4a7293da70b3d4ad5ed4b))
+
+
+### Bug Fixes
+
+* unit test open handles ([aacf2fd](https://github.com/cozymantis/snoopy/commit/aacf2fdd53e19b9f80d7d34945b59460663f24a2))
+
 ## [0.1.3](https://github.com/cozymantis/snoopy/compare/snoopy-cli-v0.1.2...snoopy-cli-v0.1.3) (2026-03-26)
 
 
