@@ -1,14 +1,15 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Box, Text, useApp } from 'ink';
+import { Text, useApp } from 'ink';
 import { Spinner } from '@inkjs/ui';
 import { TextPrompt } from '../../ui/components/TextPrompt.js';
 import { YesNoSelector } from '../../ui/components/YesNoSelector.js';
 import { SubredditMultiSelect } from '../../ui/components/SubredditMultiSelect.js';
-import { CliHeader } from '../../ui/components/CliHeader.js';
+import { AppFrame, Panel } from '../../ui/components/AppFrame.js';
 import { OpenRouterClient, OpenRouterClientError } from '../../services/openrouter/client.js';
 import type { GeneratedJobSpec } from '../../types/job.js';
 import type { AppSettings } from '../../types/settings.js';
 import { DEFAULT_MODEL } from '../../types/settings.js';
+import { uiTheme } from '../../ui/theme.js';
 
 interface JobAddResult {
   apiKey?: string;
@@ -56,24 +57,29 @@ interface TranscriptEntry {
 interface FlowFrameProps {
   transcript: TranscriptEntry[];
   children: React.ReactNode;
+  statusText?: string;
+  statusTone?: 'info' | 'success' | 'warning' | 'danger';
 }
 
-function FlowFrame({ transcript, children }: FlowFrameProps): React.JSX.Element {
+function FlowFrame({ transcript, children, statusText, statusTone = 'info' }: FlowFrameProps): React.JSX.Element {
   return (
-    <Box flexDirection="column">
-      <CliHeader subtitle="Add job wizard" />
+    <AppFrame
+      subtitle="Add job wizard"
+      statusText={statusText}
+      statusTone={statusTone}
+      hints={['Enter: confirm', 'Esc: cancel current step']}
+    >
       {transcript.length > 0 ? (
-        <Box flexDirection="column" marginBottom={1}>
-          <Text color="blueBright">Session transcript</Text>
+        <Panel title="Session Transcript">
           {transcript.map((entry, index) => (
-            <Text key={`${entry.label}-${index}`} color={entry.muted ? 'gray' : 'white'}>
-              <Text color="cyan">{entry.label}:</Text> {entry.value}
+            <Text key={`${entry.label}-${index}`} color={entry.muted ? uiTheme.ink.textMuted : uiTheme.ink.textPrimary}>
+              <Text color={uiTheme.ink.accent}>{entry.label}:</Text> {entry.value}
             </Text>
           ))}
-        </Box>
+        </Panel>
       ) : null}
       {children}
-    </Box>
+    </AppFrame>
   );
 }
 
@@ -182,215 +188,233 @@ export function JobAddFlow({
 
   if (stage === 'criteria') {
     return (
-      <FlowFrame transcript={transcript}>
-        <TextPrompt
-          label="Describe the conversations you want to monitor"
-          onSubmit={(value) => {
-            setCriteria(value);
-            appendTranscript('Criteria', value);
-            setStage(hasApiKey ? 'model' : 'apiKey');
-          }}
-        />
+      <FlowFrame transcript={transcript} statusText="Define monitoring criteria" statusTone="info">
+        <Panel title="Step 1: Criteria">
+          <TextPrompt
+            label="Describe the conversations you want to monitor"
+            onSubmit={(value) => {
+              setCriteria(value);
+              appendTranscript('Criteria', value);
+              setStage(hasApiKey ? 'model' : 'apiKey');
+            }}
+          />
+        </Panel>
       </FlowFrame>
     );
   }
 
   if (stage === 'apiKey') {
     return (
-      <FlowFrame transcript={transcript}>
-        <Text color="yellow">First-time setup: OpenRouter API key required.</Text>
-        <TextPrompt
-          label="Paste OpenRouter API key"
-          secret
-          onSubmit={(value) => {
-            setApiKey(value);
-            appendTranscript('OpenRouter API key', '********');
-            void onApiKeyCaptured?.(value);
-            setStage('model');
-          }}
-        />
+      <FlowFrame transcript={transcript} statusText="First-time setup required" statusTone="warning">
+        <Panel title="Step 2: Authentication">
+          <Text color={uiTheme.ink.warning}>First-time setup: OpenRouter API key required.</Text>
+          <TextPrompt
+            label="Paste OpenRouter API key"
+            secret
+            onSubmit={(value) => {
+              setApiKey(value);
+              appendTranscript('OpenRouter API key', '********');
+              void onApiKeyCaptured?.(value);
+              setStage('model');
+            }}
+          />
+        </Panel>
       </FlowFrame>
     );
   }
 
   if (stage === 'model') {
     return (
-      <FlowFrame transcript={transcript}>
-        <Text color="yellow">Model selection (default moonshotai/kimi-k2.5)</Text>
-        <TextPrompt
-          label="Model ID"
-          initialValue={model.trim() || defaultModel}
-          onSubmit={(value) => {
-            const chosenModel = value.trim() || defaultModel;
-            setModel(chosenModel);
-            appendTranscript('Model', chosenModel);
-            void beginClarification();
-          }}
-        />
+      <FlowFrame transcript={transcript} statusText="Choose model" statusTone="info">
+        <Panel title="Step 3: Model">
+          <Text color={uiTheme.ink.warning}>Model selection (default moonshotai/kimi-k2.5)</Text>
+          <TextPrompt
+            label="Model ID"
+            initialValue={model.trim() || defaultModel}
+            onSubmit={(value) => {
+              const chosenModel = value.trim() || defaultModel;
+              setModel(chosenModel);
+              appendTranscript('Model', chosenModel);
+              void beginClarification();
+            }}
+          />
+        </Panel>
       </FlowFrame>
     );
   }
 
   if (stage === 'clarifying') {
     return (
-      <FlowFrame transcript={transcript}>
+      <FlowFrame transcript={transcript} statusText="Generating clarification questions" statusTone="info">
         <Spinner label={loadingLabel} />
-        <Text color="gray">Snoopy is coming up with follow-up questions.</Text>
+        <Text color={uiTheme.ink.textMuted}>Snoopy is coming up with follow-up questions.</Text>
       </FlowFrame>
     );
   }
 
   if (stage === 'clarifications' && currentQuestion) {
     return (
-      <FlowFrame transcript={transcript}>
-        <Text color="cyan">Clarification {questionIndex + 1}/{questions.length}</Text>
-        <TextPrompt
-          label={currentQuestion.question}
-          onSubmit={(value) => {
-            appendTranscript(`Q${questionIndex + 1}`, `${currentQuestion.question} -> ${value}`);
-            const next = [...answers, { question: currentQuestion.question, answer: value }];
-            setAnswers(next);
-            const nextIndex = questionIndex + 1;
-            if (nextIndex < questions.length) {
-              setQuestionIndex(nextIndex);
-            } else {
-              setLoadingLabel('Generating job artifacts...');
-              setStage('generating');
-            }
-          }}
-        />
+      <FlowFrame transcript={transcript} statusText={`Clarification ${questionIndex + 1}/${questions.length}`} statusTone="info">
+        <Panel title="Step 4: Clarifications">
+          <Text color={uiTheme.ink.accent}>Clarification {questionIndex + 1}/{questions.length}</Text>
+          <TextPrompt
+            label={currentQuestion.question}
+            onSubmit={(value) => {
+              appendTranscript(`Q${questionIndex + 1}`, `${currentQuestion.question} -> ${value}`);
+              const next = [...answers, { question: currentQuestion.question, answer: value }];
+              setAnswers(next);
+              const nextIndex = questionIndex + 1;
+              if (nextIndex < questions.length) {
+                setQuestionIndex(nextIndex);
+              } else {
+                setLoadingLabel('Generating job artifacts...');
+                setStage('generating');
+              }
+            }}
+          />
+        </Panel>
       </FlowFrame>
     );
   }
 
   if (stage === 'generating') {
     return (
-      <FlowFrame transcript={transcript}>
+      <FlowFrame transcript={transcript} statusText="Generating job artifacts" statusTone="info">
         <Spinner label={loadingLabel} />
-        <Text color="gray">Snoopy is generating the job name, slug, prompt, and subreddit suggestions.</Text>
+        <Text color={uiTheme.ink.textMuted}>Snoopy is generating the job name, slug, prompt, and subreddit suggestions.</Text>
       </FlowFrame>
     );
   }
 
   if (stage === 'subreddits' && spec) {
     return (
-      <FlowFrame transcript={transcript}>
-        <Text color="green">Generated name: {spec.name}</Text>
-        <Text color="green">Generated slug: {spec.slug}</Text>
-        <Text color="green">Generated description: {spec.description}</Text>
-        <Text color="gray">Prompt: {spec.qualificationPrompt}</Text>
-        <SubredditMultiSelect
-          options={spec.suggestedSubreddits}
-          onDone={(subreddits) => {
-            setSelectedSubreddits(subreddits);
-            appendTranscript('Subreddits', subreddits.map((subreddit) => `r/${subreddit}`).join(', '));
-            setStage('monitorComments');
-          }}
-        />
+      <FlowFrame transcript={transcript} statusText="Review generated job draft" statusTone="success">
+        <Panel title="Step 5: Subreddits">
+          <Text color={uiTheme.ink.success}>Generated name: {spec.name}</Text>
+          <Text color={uiTheme.ink.success}>Generated slug: {spec.slug}</Text>
+          <Text color={uiTheme.ink.success}>Generated description: {spec.description}</Text>
+          <Text color={uiTheme.ink.textMuted}>Prompt: {spec.qualificationPrompt}</Text>
+          <SubredditMultiSelect
+            options={spec.suggestedSubreddits}
+            onDone={(subreddits) => {
+              setSelectedSubreddits(subreddits);
+              appendTranscript('Subreddits', subreddits.map((subreddit) => `r/${subreddit}`).join(', '));
+              setStage('monitorComments');
+            }}
+          />
+        </Panel>
       </FlowFrame>
     );
   }
 
   if (stage === 'monitorComments') {
     return (
-      <FlowFrame transcript={transcript}>
-        <YesNoSelector
-          label="Also monitor comments in these subreddits?"
-          defaultValue
-          onSubmit={(shouldMonitorComments) => {
-            setMonitorComments(shouldMonitorComments);
-            appendTranscript('Monitor comments', shouldMonitorComments ? 'yes' : 'no');
-            setStage('confirm');
-          }}
-        />
+      <FlowFrame transcript={transcript} statusText="Choose comment monitoring" statusTone="info">
+        <Panel title="Step 6: Comment Coverage">
+          <YesNoSelector
+            label="Also monitor comments in these subreddits?"
+            defaultValue
+            onSubmit={(shouldMonitorComments) => {
+              setMonitorComments(shouldMonitorComments);
+              appendTranscript('Monitor comments', shouldMonitorComments ? 'yes' : 'no');
+              setStage('confirm');
+            }}
+          />
+        </Panel>
       </FlowFrame>
     );
   }
 
   if (stage === 'confirm' && spec) {
     return (
-      <FlowFrame transcript={transcript}>
-        <Text color="green" bold>Review</Text>
-        <Text>Name: {spec.name}</Text>
-        <Text>Slug: {spec.slug}</Text>
-        <Text>Description: {spec.description}</Text>
-        <Text>Subreddits: {selectedSubreddits.join(', ')}</Text>
-        <Text>Monitor comments: {monitorComments ? 'yes' : 'no'}</Text>
-        <YesNoSelector
-          label="Save this job?"
-          defaultValue
-          onSubmit={(shouldSave) => {
-            if (shouldSave) {
-              appendTranscript('Save job', 'yes');
-              const result: JobAddResult = {
-                apiKey,
-                settings: {
-                  model,
-                  modelSettings: initialSettings.modelSettings,
-                  cronIntervalMinutes: initialSettings.cronIntervalMinutes,
-                  jobTimeoutMs: initialSettings.jobTimeoutMs,
-                  notificationsEnabled: initialSettings.notificationsEnabled
-                },
-                job: {
-                  slug: spec.slug,
-                  name: spec.name,
-                  description: spec.description,
-                  qualificationPrompt: spec.qualificationPrompt,
-                  subreddits: selectedSubreddits,
-                  monitorComments
+      <FlowFrame transcript={transcript} statusText="Confirm generated job" statusTone="success">
+        <Panel title="Step 7: Review">
+          <Text color={uiTheme.ink.success} bold>Review</Text>
+          <Text>Name: {spec.name}</Text>
+          <Text>Slug: {spec.slug}</Text>
+          <Text>Description: {spec.description}</Text>
+          <Text>Subreddits: {selectedSubreddits.join(', ')}</Text>
+          <Text>Monitor comments: {monitorComments ? 'yes' : 'no'}</Text>
+          <YesNoSelector
+            label="Save this job?"
+            defaultValue
+            onSubmit={(shouldSave) => {
+              if (shouldSave) {
+                appendTranscript('Save job', 'yes');
+                const result: JobAddResult = {
+                  apiKey,
+                  settings: {
+                    model,
+                    modelSettings: initialSettings.modelSettings,
+                    cronIntervalMinutes: initialSettings.cronIntervalMinutes,
+                    jobTimeoutMs: initialSettings.jobTimeoutMs,
+                    notificationsEnabled: initialSettings.notificationsEnabled
+                  },
+                  job: {
+                    slug: spec.slug,
+                    name: spec.name,
+                    description: spec.description,
+                    qualificationPrompt: spec.qualificationPrompt,
+                    subreddits: selectedSubreddits,
+                    monitorComments
+                  }
+                };
+
+                if (startupAlreadyEnabled) {
+                  onDone(result);
+                  exit();
+                  return;
                 }
-              };
 
-              if (startupAlreadyEnabled) {
-                onDone(result);
-                exit();
+                setPendingResult(result);
+                setStage('startup');
                 return;
+              } else {
+                appendTranscript('Save job', 'no', true);
               }
-
-              setPendingResult(result);
-              setStage('startup');
-              return;
-            } else {
-              appendTranscript('Save job', 'no', true);
-            }
-            exit();
-          }}
-        />
+              exit();
+            }}
+          />
+        </Panel>
       </FlowFrame>
     );
   }
 
   if (stage === 'startup' && pendingResult) {
     return (
-      <FlowFrame transcript={transcript}>
-        <YesNoSelector
-          label="Install OS startup registration so daemon survives reboot?"
-          defaultValue
-          onSubmit={(shouldInstallStartup) => {
-            appendTranscript('Install startup registration', shouldInstallStartup ? 'yes' : 'no');
-            onDone({
-              ...pendingResult,
-              installStartup: shouldInstallStartup
-            });
-            exit();
-          }}
-        />
+      <FlowFrame transcript={transcript} statusText="Startup registration" statusTone="info">
+        <Panel title="Step 8: Startup Behavior">
+          <YesNoSelector
+            label="Install OS startup registration so daemon survives reboot?"
+            defaultValue
+            onSubmit={(shouldInstallStartup) => {
+              appendTranscript('Install startup registration', shouldInstallStartup ? 'yes' : 'no');
+              onDone({
+                ...pendingResult,
+                installStartup: shouldInstallStartup
+              });
+              exit();
+            }}
+          />
+        </Panel>
       </FlowFrame>
     );
   }
 
   if (stage === 'error') {
     return (
-      <FlowFrame transcript={transcript}>
-        <Text color="red" bold>OpenRouter request failed</Text>
-        <Text>{errorMessage ?? 'Unknown error.'}</Text>
-        <Text color="gray">Update your API key or model and try again. Exiting...</Text>
+      <FlowFrame transcript={transcript} statusText="OpenRouter request failed" statusTone="danger">
+        <Panel title="Error">
+          <Text color={uiTheme.ink.danger} bold>OpenRouter request failed</Text>
+          <Text>{errorMessage ?? 'Unknown error.'}</Text>
+          <Text color={uiTheme.ink.textMuted}>Update your API key or model and try again. Exiting...</Text>
+        </Panel>
       </FlowFrame>
     );
   }
 
   return (
-    <FlowFrame transcript={transcript}>
+    <FlowFrame transcript={transcript} statusText="Loading" statusTone="info">
       <Text>Loading...</Text>
     </FlowFrame>
   );

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Box, Text } from 'ink';
 import { PasswordInput, TextInput } from '@inkjs/ui';
+import { uiTheme } from '../theme.js';
 
 interface TextPromptProps {
   label: string;
@@ -21,7 +22,7 @@ export function TextPrompt({
 
   return (
     <Box flexDirection="column" marginTop={1}>
-      <Text color="cyan">{label}</Text>
+      <Text color={uiTheme.ink.accent}>{label}</Text>
       {secret ? (
         <PasswordInput
           key={inputKey}
@@ -40,7 +41,7 @@ export function TextPrompt({
           }}
         />
       )}
-      <Text color="gray">Press Enter to continue</Text>
+      <Text color={uiTheme.ink.textMuted}>Press Enter to continue</Text>
     </Box>
   );
 }

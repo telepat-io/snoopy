@@ -8,11 +8,10 @@ import {
   requestDaemonReload
 } from '../../services/daemonControl.js';
 import {
-  printCliHeader,
+  printCommandScreen,
   printError,
   printInfo,
   printMuted,
-  printSection,
   printSuccess,
   printWarning
 } from '../ui/consoleUi.js';
@@ -22,8 +21,7 @@ let scheduler: CronScheduler | null = null;
 export function daemonRun(): void {
   ensureAppDirs();
   cleanupOldLogs();
-  printCliHeader('Daemon mode');
-  printSection('Daemon');
+  printCommandScreen('Daemon mode', 'Daemon');
   scheduler = new CronScheduler();
   scheduler.start();
 
@@ -50,8 +48,7 @@ export function daemonRun(): void {
 }
 
 export function daemonReload(): void {
-  printCliHeader('Daemon control');
-  printSection('Daemon Reload');
+  printCommandScreen('Daemon control', 'Daemon Reload');
 
   const result = requestDaemonReload();
   if (!result.pid) {
@@ -69,8 +66,7 @@ export function daemonReload(): void {
 }
 
 export function daemonStart(): void {
-  printCliHeader('Daemon control');
-  printSection('Daemon Start');
+  printCommandScreen('Daemon control', 'Daemon Start');
   const status = ensureDaemonRunning();
   if (!status.started) {
     printWarning(`Daemon already running${status.pid ? ` (pid ${status.pid})` : ''}.`);
@@ -80,8 +76,7 @@ export function daemonStart(): void {
 }
 
 export function daemonStop(): void {
-  printCliHeader('Daemon control');
-  printSection('Daemon Stop');
+  printCommandScreen('Daemon control', 'Daemon Stop');
   const paths = ensureAppDirs();
   if (!fs.existsSync(paths.pidFilePath)) {
     printWarning('Daemon is not running.');
@@ -99,8 +94,7 @@ export function daemonStop(): void {
 }
 
 export function daemonStatus(): void {
-  printCliHeader('Daemon control');
-  printSection('Daemon Status');
+  printCommandScreen('Daemon control', 'Daemon Status');
   const status = isDaemonRunning();
   if (!status.pid) {
     printInfo('Daemon status: stopped');

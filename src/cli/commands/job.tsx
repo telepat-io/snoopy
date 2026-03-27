@@ -17,7 +17,7 @@ import {
   formatCommentScanBlock,
   formatPostScanBlock,
   isRichTty,
-  printCliHeader,
+  printCommandScreen,
   printError,
   printInfo,
   printKeyValue,
@@ -227,8 +227,7 @@ export async function addJob(): Promise<void> {
 }
 
 export function listJobs(): void {
-  printCliHeader('Jobs');
-  printSection('Configured Jobs');
+  printCommandScreen('Jobs', 'Configured Jobs');
   const jobsRepo = new JobsRepository();
   const jobs = jobsRepo.list();
   if (jobs.length === 0) {
@@ -238,16 +237,13 @@ export function listJobs(): void {
 
   jobs.forEach((job) => {
     const state = job.enabled ? 'on' : 'off';
-    printInfo(`${job.name} (${job.slug})`);
-    printKeyValue('State', state);
-    printKeyValue('ID', job.id);
+    printInfo(`${job.name} (${job.slug}) [${job.id}] state=${state}`);
     printKeyValue('Subreddits', job.subreddits.map((subreddit) => `r/${subreddit}`).join(', '));
   });
 }
 
 export async function removeJob(jobRef?: string): Promise<void> {
-  printCliHeader('Jobs');
-  printSection('Delete Job');
+  printCommandScreen('Jobs', 'Delete Job');
   const jobsRepo = new JobsRepository();
   const job = await resolveJobFromArgOrPrompt(jobsRepo, jobRef, { requiredForMessage: 'job deletion' });
   if (!job) {
@@ -264,8 +260,7 @@ export async function removeJob(jobRef?: string): Promise<void> {
 }
 
 export async function enableJob(jobRef?: string): Promise<void> {
-  printCliHeader('Jobs');
-  printSection('Enable Job');
+  printCommandScreen('Jobs', 'Enable Job');
   const jobsRepo = new JobsRepository();
   const job = await resolveJobFromArgOrPrompt(jobsRepo, jobRef, { requiredForMessage: 'job enablement' });
   if (!job) {
@@ -282,8 +277,7 @@ export async function enableJob(jobRef?: string): Promise<void> {
 }
 
 export async function disableJob(jobRef?: string): Promise<void> {
-  printCliHeader('Jobs');
-  printSection('Disable Job');
+  printCommandScreen('Jobs', 'Disable Job');
   const jobsRepo = new JobsRepository();
   const job = await resolveJobFromArgOrPrompt(jobsRepo, jobRef, { requiredForMessage: 'job disablement' });
   if (!job) {
@@ -300,8 +294,7 @@ export async function disableJob(jobRef?: string): Promise<void> {
 }
 
 export async function runJobNow(jobRef: string | undefined, options: { limit?: number }): Promise<void> {
-  printCliHeader('Manual run');
-  printSection('Run Job Now');
+  printCommandScreen('Manual run', 'Run Job Now');
   const jobsRepo = new JobsRepository();
   const runsRepo = new RunsRepository();
   const job = await resolveJobFromArgOrPrompt(jobsRepo, jobRef, { requiredForMessage: 'manual run' });
@@ -347,8 +340,7 @@ export async function runJobNow(jobRef: string | undefined, options: { limit?: n
 }
 
 export function listJobRuns(jobRef?: string): void {
-  printCliHeader('Run history');
-  printSection('Job Runs');
+  printCommandScreen('Run history', 'Job Runs');
   const jobsRepo = new JobsRepository();
   const runsRepo = new RunsRepository();
 
@@ -374,9 +366,8 @@ export function listJobRuns(jobRef?: string): void {
 
   rows.forEach((run) => {
     const cost = run.estimatedCostUsd === null ? '-' : `$${run.estimatedCostUsd.toFixed(6)}`;
-    printInfo(`${formatRunDisplayTimestamp(run)} ${run.jobName ?? run.jobId}`);
+    printInfo(`${formatRunDisplayTimestamp(run)} ${run.jobName ?? run.jobId} [${run.id}] ${run.status}`);
     printKeyValue('Run ID', run.id);
-    printKeyValue('Status', run.status);
     printKeyValue('Duration', formatRunDuration(run.startedAt, run.finishedAt));
     printKeyValue('Discovered', String(run.itemsDiscovered));
     printKeyValue('New', String(run.itemsNew));

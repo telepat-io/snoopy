@@ -1,7 +1,7 @@
 import { JobsRepository } from '../../services/db/repositories/jobsRepo.js';
 import { RunsRepository } from '../../services/db/repositories/runsRepo.js';
 import { extractErrorEntries, readRunLog } from '../../services/logging/logReader.js';
-import { printCliHeader, printInfo, printKeyValue, printSection, printSuccess, printWarning } from '../ui/consoleUi.js';
+import { printCommandScreen, printInfo, printKeyValue, printSuccess, printWarning } from '../ui/consoleUi.js';
 import { formatRunDisplayTimestamp } from '../ui/time.js';
 import { resolveJobFromArgOrPrompt } from './selection.js';
 
@@ -17,8 +17,7 @@ function isWithinHours(createdAt: string, hours: number): boolean {
 export async function showJobErrors(jobRef?: string, options: { hours?: number } = {}): Promise<void> {
   const hours = options.hours ?? 24;
 
-  printCliHeader('Recent errors');
-  printSection('Errors');
+  printCommandScreen('Recent errors', 'Errors');
 
   const jobsRepo = new JobsRepository();
   const runsRepo = new RunsRepository();

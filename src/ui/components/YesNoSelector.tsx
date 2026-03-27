@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Box, Text, useInput } from 'ink';
+import { uiTheme } from '../theme.js';
 import {
   cursorForDefaultValue,
   moveCursor,
@@ -44,10 +45,10 @@ export function YesNoSelector({
 
   return (
     <Box flexDirection="column" marginTop={1}>
-      <Text color="cyan">{label}</Text>
-      <Text color={cursor === 0 ? 'yellow' : 'white'}>{cursor === 0 ? '>' : ' '} {yesLabel}</Text>
-      <Text color={cursor === 1 ? 'yellow' : 'white'}>{cursor === 1 ? '>' : ' '} {noLabel}</Text>
-      <Text color="gray">Use Up/Down to switch, Enter to confirm, or press Y/N.</Text>
+      <Text color={uiTheme.ink.accent}>{label}</Text>
+      <Text color={cursor === 0 ? uiTheme.ink.focus : uiTheme.ink.textPrimary} inverse={cursor === 0}>{cursor === 0 ? '>' : ' '} {yesLabel}</Text>
+      <Text color={cursor === 1 ? uiTheme.ink.focus : uiTheme.ink.textPrimary} inverse={cursor === 1}>{cursor === 1 ? '>' : ' '} {noLabel}</Text>
+      <Text color={uiTheme.ink.textMuted}>Use Up/Down to switch, Enter to confirm, or press Y/N.</Text>
     </Box>
   );
 }

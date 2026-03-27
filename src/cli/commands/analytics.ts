@@ -1,7 +1,7 @@
 import { JobsRepository } from '../../services/db/repositories/jobsRepo.js';
 import { AnalyticsService, type AnalyticsRunView, type DerivedAnalyticsMetrics } from '../../services/analytics/analyticsService.js';
 import {
-  printCliHeader,
+  printCommandScreen,
   printError,
   printInfo,
   printKeyValue,
@@ -73,7 +73,7 @@ export function showAnalytics(jobRef?: string, options: { days?: number } = {}):
   const jobsRepo = new JobsRepository();
   const analyticsService = new AnalyticsService();
 
-  printCliHeader('Analytics');
+  printCommandScreen('Analytics');
 
   if (jobRef) {
     const job = jobsRepo.getByRef(jobRef);

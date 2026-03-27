@@ -25,6 +25,7 @@ const mockRequestDaemonReload = jest.fn(() => ({
 const mockRunnerRun = jest.fn(async () => {});
 
 const mockPrintCliHeader = jest.fn();
+const mockPrintCommandScreen = jest.fn();
 const mockPrintError = jest.fn();
 const mockPrintInfo = jest.fn();
 const mockPrintKeyValue = jest.fn();
@@ -164,6 +165,7 @@ jest.mock('../../src/services/db/repositories/runsRepo.js', () => ({
 jest.mock('../../src/cli/ui/consoleUi.js', () => ({
   isRichTty: mockIsRichTty,
   printCliHeader: mockPrintCliHeader,
+  printCommandScreen: mockPrintCommandScreen,
   printError: mockPrintError,
   printInfo: mockPrintInfo,
   printKeyValue: mockPrintKeyValue,

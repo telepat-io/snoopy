@@ -1,4 +1,5 @@
 import { SNOOPY_WORDMARK } from '../../ui/components/CliHeader.js';
+import { uiTheme } from '../../ui/theme.js';
 import { toSnippet, type CommentScanLineInput, type PostScanLineInput } from '../../utils/scanLogFormatting.js';
 
 const ANSI = {
@@ -51,11 +52,20 @@ function formatQualifiedStatus(qualified: boolean | undefined): string {
 }
 
 function formatLabel(label: string): string {
-  return colorize(`${label}:`, 'blue');
+  return colorize(`${label}:`, uiTheme.ink.info);
 }
 
 function formatScanDetailLine(label: string, value: string): string {
   return `  ${formatLabel(label)} ${value}`;
+}
+
+function terminalColumns(): number {
+  return process.stdout.columns ?? 120;
+}
+
+function padLabel(label: string): string {
+  const maxWidth = Math.max(10, Math.min(24, Math.floor(terminalColumns() / 4)));
+  return label.length >= maxWidth ? label : `${label}${' '.repeat(maxWidth - label.length)}`;
 }
 
 function formatQualificationReason(
@@ -145,9 +155,20 @@ export function printCliHeader(subtitle = 'Reddit conversation scanner'): void {
   console.log('');
 }
 
+export function printCommandScreen(title: string, section?: string): void {
+  printCliHeader(title);
+  if (section) {
+    printSection(section);
+  }
+  if (isRichTty()) {
+    printMuted('Tab-friendly controls: arrows navigate selectors, Enter confirms, Esc cancels.');
+  }
+}
+
 export function printSection(title: string): void {
   if (isRichTty()) {
     console.log(colorize(bold(title), 'cyan'));
+    console.log(colorize('─'.repeat(Math.max(8, Math.min(36, title.length + 4))), 'gray'));
     return;
   }
 
@@ -174,15 +195,16 @@ export function printError(text: string): void {
 }
 
 export function printInfo(text: string): void {
-  const prefix = isRichTty() ? colorize('•', 'blue') : '-';
+  const prefix = isRichTty() ? colorize(uiTheme.symbols.sentimentInfo, 'blue') : '-';
   console.log(`${prefix} ${text}`);
 }
 
 export function printKeyValue(key: string, value: string): void {
+  const label = `${padLabel(key)}:`;
   if (isRichTty()) {
-    console.log(`${colorize(`${key}:`, 'blue')} ${value}`);
+    console.log(`${colorize(label, 'blue')} ${value}`);
     return;
   }
 
-  console.log(`${key}: ${value}`);
+  console.log(`${label} ${value}`);
 }

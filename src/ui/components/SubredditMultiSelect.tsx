@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Text, useInput } from 'ink';
 import { resolveCustomSubreddit } from './subredditOptions.js';
+import { uiTheme } from '../theme.js';
 
 interface SubredditMultiSelectProps {
   options: string[];
@@ -98,21 +99,21 @@ export function SubredditMultiSelect({ options, onDone }: SubredditMultiSelectPr
 
   return (
     <Box flexDirection="column" marginTop={1}>
-      <Text color="cyan">Choose subreddits (Up/Down, Space to toggle, A to add custom, Enter to finish)</Text>
+      <Text color={uiTheme.ink.accent}>Choose subreddits (Up/Down, Space to toggle, A to add custom, Enter to finish)</Text>
       {displayOptions.map((option, index) => {
         const isCursor = index === cursor;
         const isSelected = selected.has(option);
         return (
-          <Text key={option} color={isCursor ? 'yellow' : 'white'}>
+          <Text key={option} color={isCursor ? uiTheme.ink.focus : uiTheme.ink.textPrimary} inverse={isCursor}>
             {isCursor ? '>' : ' '} {isSelected ? '[x]' : '[ ]'} r/{option}
           </Text>
         );
       })}
       {customMode ? (
         <>
-          <Text color="magenta">Custom subreddit (no r/ needed)</Text>
+          <Text color={uiTheme.ink.info}>Custom subreddit (no r/ needed)</Text>
           <Text>{'> '}{customInput}</Text>
-          <Text color="gray">Enter to add, Esc to cancel</Text>
+          <Text color={uiTheme.ink.textMuted}>Enter to add, Esc to cancel</Text>
         </>
       ) : null}
     </Box>

@@ -7,7 +7,7 @@ import { getOpenRouterApiKey } from '../../services/security/secretStore.js';
 import { getStartupStatus } from '../../services/startup/index.js';
 import { ensureAppDirs } from '../../utils/paths.js';
 import {
-  printCliHeader,
+  printCommandScreen,
   printError,
   printInfo,
   printKeyValue,
@@ -46,8 +46,7 @@ function isWithinLast24Hours(createdAt: string): boolean {
 }
 
 export async function runDoctor(): Promise<void> {
-  printCliHeader('Diagnostics');
-  printSection('Snoopy Doctor');
+  printCommandScreen('Diagnostics', 'Snoopy Doctor');
   const paths = ensureAppDirs();
 
   let dbOk = false;

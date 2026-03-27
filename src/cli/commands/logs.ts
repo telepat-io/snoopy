@@ -1,13 +1,12 @@
 import { JobsRepository } from '../../services/db/repositories/jobsRepo.js';
 import { RunsRepository } from '../../services/db/repositories/runsRepo.js';
 import { formatRunLogPretty, readRunLog } from '../../services/logging/logReader.js';
-import { printCliHeader, printError, printInfo, printKeyValue, printSection, printWarning } from '../ui/consoleUi.js';
+import { printCommandScreen, printError, printInfo, printKeyValue, printWarning } from '../ui/consoleUi.js';
 import { formatRunDisplayTimestamp } from '../ui/time.js';
 import { resolveJobFromArgOrPrompt, resolveRunFromArgOrPrompt } from './selection.js';
 
 export async function showRunLogs(runId?: string, options: { raw?: boolean } = {}): Promise<void> {
-  printCliHeader('Run logs');
-  printSection(options.raw ? 'Logs (raw)' : 'Logs (pretty)');
+  printCommandScreen('Run logs', options.raw ? 'Logs (raw)' : 'Logs (pretty)');
 
   const jobsRepo = new JobsRepository();
   const runsRepo = new RunsRepository();

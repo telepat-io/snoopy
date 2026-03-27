@@ -1,11 +1,10 @@
 import { JobsRepository } from '../../services/db/repositories/jobsRepo.js';
 import { ScanItemsRepository } from '../../services/db/repositories/scanItemsRepo.js';
 import { CsvResultsExporter } from '../../services/export/csvResults.js';
-import { printCliHeader, printError, printInfo, printKeyValue, printSection, printSuccess, printWarning } from '../ui/consoleUi.js';
+import { printCommandScreen, printError, printInfo, printKeyValue, printSuccess, printWarning } from '../ui/consoleUi.js';
 
 export function exportCsv(jobRef?: string): void {
-  printCliHeader('Data exports');
-  printSection('Export CSV');
+  printCommandScreen('Data exports', 'Export CSV');
 
   const jobsRepo = new JobsRepository();
   const scanItemsRepo = new ScanItemsRepository();

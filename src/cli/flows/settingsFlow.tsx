@@ -2,7 +2,8 @@ import React, { useMemo, useState } from 'react';
 import { Box, Text, useApp, useInput } from 'ink';
 import { TextPrompt } from '../../ui/components/TextPrompt.js';
 import { YesNoSelector } from '../../ui/components/YesNoSelector.js';
-import { CliHeader } from '../../ui/components/CliHeader.js';
+import { AppFrame, Panel } from '../../ui/components/AppFrame.js';
+import { uiTheme } from '../../ui/theme.js';
 import {
   type AppSettings,
   type RedditCredentialState,
@@ -33,14 +34,20 @@ type Mode = 'menu' | 'edit' | 'confirmClear';
 
 interface SettingsFrameProps {
   children: React.ReactNode;
+  statusText?: string;
+  statusTone?: 'info' | 'success' | 'warning' | 'danger';
 }
 
-function SettingsFrame({ children }: SettingsFrameProps): React.JSX.Element {
+function SettingsFrame({ children, statusText, statusTone = 'info' }: SettingsFrameProps): React.JSX.Element {
   return (
-    <Box flexDirection="column">
-      <CliHeader subtitle="Settings" />
+    <AppFrame
+      subtitle="Settings"
+      statusText={statusText}
+      statusTone={statusTone}
+      hints={['Up/Down: move', 'Enter: select/confirm', 'Esc: cancel or exit']}
+    >
       {children}
-    </Box>
+    </AppFrame>
   );
 }
 
@@ -51,7 +58,7 @@ function labelForSettingKey(key: EditableSettingKey): string {
     case 'model':
       return 'Default model';
     case 'temperature':
-      return 'Tehey mperature (0.0 - 2.0)';
+      return 'Temperature (0.0 - 2.0)';
     case 'maxTokens':
       return 'Max tokens';
     case 'topP':
@@ -181,49 +188,55 @@ export function SettingsFlow({ current, currentRedditCredentials, currentApiKey,
 
   if (mode === 'menu') {
     return (
-      <SettingsFrame>
-        <Text color="cyan">Choose a setting to edit. Press Enter to select.</Text>
-        <Text color="gray">Use Up/Down arrows to navigate. Esc or Cancel exits without saving.</Text>
-        <Box flexDirection="column" marginTop={1}>
-          {menuItems.map((item, index) => {
-            const isCursor = index === cursor;
-            const value = item.summary ? `: ${item.summary}` : '';
-            return (
-              <Text key={item.key} color={isCursor ? 'yellow' : 'white'}>
-                {isCursor ? '>' : ' '} {item.label}{value}
-              </Text>
-            );
-          })}
-        </Box>
-        {menuError ? (
-          <Text color="red">{menuError}</Text>
-        ) : null}
+      <SettingsFrame
+        statusText={menuError ?? 'Ready'}
+        statusTone={menuError ? 'danger' : 'info'}
+      >
+        <Panel title="Settings Menu">
+          <Text color={uiTheme.ink.accent}>Choose a setting to edit. Press Enter to select.</Text>
+          <Text color={uiTheme.ink.textMuted}>Use Up/Down arrows to navigate. Esc or Cancel exits without saving.</Text>
+          <Box flexDirection="column" marginTop={1}>
+            {menuItems.map((item, index) => {
+              const isCursor = index === cursor;
+              const value = item.summary ? `: ${item.summary}` : '';
+              return (
+                <Text key={item.key} color={isCursor ? uiTheme.ink.focus : uiTheme.ink.textPrimary} inverse={isCursor}>
+                  {isCursor ? '>' : ' '} {item.label}{value}
+                </Text>
+              );
+            })}
+          </Box>
+        </Panel>
       </SettingsFrame>
     );
   }
 
   if (mode === 'confirmClear' && editingKey) {
     return (
-      <SettingsFrame>
-        <YesNoSelector
-          label="Clear this field?"
-          defaultValue={false}
-          onSubmit={(shouldClear) => {
-            if (shouldClear) {
-              setClearedFields((prev) => new Set([...prev, editingKey]));
-            }
-            setMode('menu');
-            setEditingKey(null);
-          }}
-        />
+      <SettingsFrame statusText="Confirm field clear" statusTone="warning">
+        <Panel title="Confirmation">
+          <YesNoSelector
+            label="Clear this field?"
+            defaultValue={false}
+            onSubmit={(shouldClear) => {
+              if (shouldClear) {
+                setClearedFields((prev) => new Set([...prev, editingKey]));
+              }
+              setMode('menu');
+              setEditingKey(null);
+            }}
+          />
+        </Panel>
       </SettingsFrame>
     );
   }
 
   if (!editingKey) {
     return (
-      <SettingsFrame>
-        <Text color="red">No setting selected. Press Esc to exit.</Text>
+      <SettingsFrame statusText="No setting selected" statusTone="danger">
+        <Panel title="Error">
+          <Text color={uiTheme.ink.danger}>No setting selected. Press Esc to exit.</Text>
+        </Panel>
       </SettingsFrame>
     );
   }
@@ -232,11 +245,13 @@ export function SettingsFlow({ current, currentRedditCredentials, currentApiKey,
 
   if (editingKey === 'notificationsEnabled') {
     return (
-      <SettingsFrame>
-        <Text>
-          {labelForSettingKey(editingKey)}: {draft.notificationsEnabled ? 'Enabled' : 'Disabled'}
-        </Text>
-        <Text color="gray">Press Enter to toggle, Esc to cancel.</Text>
+      <SettingsFrame statusText="Toggle notifications" statusTone="info">
+        <Panel title="Edit Setting">
+          <Text>
+            {labelForSettingKey(editingKey)}: {draft.notificationsEnabled ? 'Enabled' : 'Disabled'}
+          </Text>
+          <Text color={uiTheme.ink.textMuted}>Press Enter to toggle, Esc to cancel.</Text>
+        </Panel>
       </SettingsFrame>
     );
   }
@@ -250,35 +265,37 @@ export function SettingsFlow({ current, currentRedditCredentials, currentApiKey,
   const helpText = fieldHasCurrentValue ? 'Press Enter with empty value to clear' : 'Press Enter to continue';
 
   return (
-    <SettingsFrame>
-      <TextPrompt
-        label={labelForSettingKey(editingKey)}
-        initialValue={initialValue as string}
-        secret={isSecret}
-        onSubmit={(value) => {
-          if (value === '' && fieldHasCurrentValue && editingKey !== 'model') {
-            setMode('confirmClear');
-            return;
-          }
-
-          if (editingKey === 'apiKey') {
-            if (value) {
-              setDraftSecrets((prev) => ({ ...prev, apiKey: value }));
+    <SettingsFrame statusText="Editing setting" statusTone="info">
+      <Panel title="Edit Setting">
+        <TextPrompt
+          label={labelForSettingKey(editingKey)}
+          initialValue={initialValue as string}
+          secret={isSecret}
+          onSubmit={(value) => {
+            if (value === '' && fieldHasCurrentValue && editingKey !== 'model') {
+              setMode('confirmClear');
+              return;
             }
-          } else if (editingKey === 'redditClientSecret') {
-            if (value) {
-              setDraftSecrets((prev) => ({ ...prev, redditClientSecret: value }));
-            }
-          } else if (value) {
-            const field = keyToDraftField(editingKey);
-            setDraft((prev) => ({ ...prev, [field]: value }));
-          }
 
-          setMode('menu');
-          setEditingKey(null);
-        }}
-      />
-      {!isSecret && <Text color="gray">{helpText}</Text>}
+            if (editingKey === 'apiKey') {
+              if (value) {
+                setDraftSecrets((prev) => ({ ...prev, apiKey: value }));
+              }
+            } else if (editingKey === 'redditClientSecret') {
+              if (value) {
+                setDraftSecrets((prev) => ({ ...prev, redditClientSecret: value }));
+              }
+            } else if (value) {
+              const field = keyToDraftField(editingKey);
+              setDraft((prev) => ({ ...prev, [field]: value }));
+            }
+
+            setMode('menu');
+            setEditingKey(null);
+          }}
+        />
+        {!isSecret ? <Text color={uiTheme.ink.textMuted}>{helpText}</Text> : null}
+      </Panel>
     </SettingsFrame>
   );
 }
