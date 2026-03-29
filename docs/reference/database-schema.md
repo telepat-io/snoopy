@@ -245,4 +245,4 @@ WHERE run_id = ?
 
 ## Agent Workflow Reference
 
-For end-to-end direct DB workflows (list jobs, insert jobs, verify daemon/startup state, run jobs, read/update results), see [Agent Operations](agent-operations.md).
+For end-to-end direct DB workflows (list jobs, insert jobs, verify daemon/startup state, run jobs, read/update results), see [Agent Operations](../guides/agent-operations.md).

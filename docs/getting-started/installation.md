@@ -115,7 +115,7 @@ snoopy doctor
 
 ## Related Docs
 
-- [Commands](commands/index.md)
-- [job command reference](commands/job.md)
-- [Agent Operations](agent-operations.md)
-- [Security and Secret Storage](security.md)
+- [CLI Reference](../reference/cli-reference.md)
+- [Job command reference](../reference/commands/job.md)
+- [Agent Operations](../guides/agent-operations.md)
+- [Security and Secret Storage](../technical/security.md)

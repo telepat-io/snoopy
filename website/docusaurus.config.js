@@ -8,7 +8,7 @@ const baseUrl = localMode ? '/' : process.env.DOCS_BASE_URL || '/ideon/';
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'Snoopy Docs',
-  tagline: 'Documentation for Reddit monitoring with Snoopy',
+  tagline: 'Monitor Reddit conversations and qualify intent with AI.',
   url,
   baseUrl,
   organizationName: githubOwner,
@@ -21,7 +21,7 @@ const config = {
       onBrokenMarkdownLinks: 'throw'
     }
   },
-  favicon: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><text y=%2224%22 font-size=%2224%22>🕵️</text></svg>',
+  favicon: 'img/favicon.svg',
   presets: [
     [
       'classic',
@@ -44,13 +44,27 @@ const config = {
       respectPrefersColorScheme: true
     },
     navbar: {
-      title: 'Snoopy Docs',
+      title: 'Snoopy',
+      logo: {
+        alt: 'Snoopy Logo',
+        src: 'img/logo.svg'
+      },
       items: [
         {
           type: 'docSidebar',
           sidebarId: 'docsSidebar',
           position: 'left',
           label: 'Docs'
+        },
+        {
+          to: '/reference/cli-reference',
+          label: 'CLI Reference',
+          position: 'left'
+        },
+        {
+          to: '/technical/security',
+          label: 'Technical',
+          position: 'left'
         },
         {
           href: `https://github.com/${githubOwner}/${githubRepo}`,
@@ -66,30 +80,39 @@ const config = {
           title: 'Docs',
           items: [
             {
-              label: 'Command Reference',
-              to: '/commands'
+              label: 'Getting Started',
+              to: '/getting-started/overview'
             },
             {
-              label: 'Database Schema',
-              to: '/database-schema'
+              label: 'CLI Reference',
+              to: '/reference/cli-reference'
             }
           ]
         },
         {
-          title: 'Operations',
+          title: 'Project',
           items: [
             {
-              label: 'Scheduling and Startup',
-              to: '/scheduling-and-startup'
+              label: 'Repository',
+              href: `https://github.com/${githubOwner}/${githubRepo}`
+            }
+          ]
+        },
+        {
+          title: 'More',
+          items: [
+            {
+              label: 'Contributing',
+              to: '/contributing/development'
             },
             {
-              label: 'E2E Smoke Testing',
-              to: '/e2e-testing'
+              label: 'GitHub',
+              href: `https://github.com/${githubOwner}/${githubRepo}`
             }
           ]
         }
       ],
-      copyright: `Copyright ${new Date().getFullYear()} Snoopy`
+      copyright: `Copyright ${new Date().getFullYear()} Snoopy contributors. Built with Docusaurus.`
     },
     prism: {
       additionalLanguages: ['bash', 'sql', 'powershell']

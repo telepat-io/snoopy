@@ -107,13 +107,15 @@ snoopy daemon start
 
 ## Full Documentation
 
-- [Installation & Setup](installation-and-setup.md)
-- [Command Reference](commands/index.md)
-- [Database Schema](database-schema.md)
-- [Agent Operations](agent-operations.md)
-- [Scheduling, Cron, Daemon, and Startup](scheduling-and-startup.md)
-- [Security and Secret Storage](security.md)
-- [E2E Smoke Testing Guide](e2e-testing.md)
+- [Getting Started Overview](getting-started/overview.md)
+- [Installation](getting-started/installation.md)
+- [Quick Start](getting-started/quickstart.md)
+- [Guides](guides/scheduling-and-startup.md)
+- [CLI Reference](reference/cli-reference.md)
+- [Database Schema](reference/database-schema.md)
+- [Security and Secret Storage](technical/security.md)
+- [E2E Smoke Testing Guide](technical/e2e-testing.md)
+- [Contributing](contributing/development.md)
 
 Deploy to GitHub Pages:
 

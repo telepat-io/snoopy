@@ -1,4 +1,6 @@
 :root {
+  --ifm-font-family-base: 'Soehne', 'Avenir Next', Avenir, 'Segoe UI', sans-serif;
+  --ifm-heading-font-family: 'Soehne', 'Avenir Next', Avenir, 'Segoe UI', sans-serif;
   --ifm-color-primary: #1f6feb;
   --ifm-color-primary-dark: #1557bf;
   --ifm-color-primary-darker: #124da8;
@@ -7,6 +9,10 @@
   --ifm-color-primary-lighter: #5b97f7;
   --ifm-color-primary-lightest: #8ab5fa;
   --ifm-background-color: #fbfdff;
+  --ifm-background-surface-color: #ffffff;
+  --ifm-navbar-height: 4rem;
+  --ifm-global-radius: 12px;
+  --ifm-link-decoration: none;
   --ifm-code-font-size: 95%;
 }
 
@@ -18,16 +24,81 @@
   --ifm-color-primary-light: #9bc8ff;
   --ifm-color-primary-lighter: #abd0ff;
   --ifm-color-primary-lightest: #d7e8ff;
+  --ifm-background-color: #0b1220;
+  --ifm-background-surface-color: #111b2d;
 }
 
-.hero--primary {
-  background: linear-gradient(135deg, #0f172a 0%, #1d4ed8 55%, #60a5fa 100%);
+html,
+body {
+  background:
+    radial-gradient(1200px 500px at 8% -10%, rgba(31, 111, 235, 0.1), transparent 65%),
+    radial-gradient(900px 420px at 92% 2%, rgba(96, 165, 250, 0.09), transparent 60%),
+    var(--ifm-background-color);
 }
 
 .navbar {
-  box-shadow: 0 1px 0 rgba(15, 23, 42, 0.08);
+  backdrop-filter: saturate(150%) blur(8px);
+  background: rgba(251, 253, 255, 0.88);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.04);
+}
+
+[data-theme='dark'] .navbar {
+  background: rgba(11, 18, 32, 0.82);
+  border-bottom: 1px solid rgba(167, 232, 255, 0.12);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+
+.navbar__brand,
+.navbar__link {
+  font-weight: 600;
+}
+
+.theme-doc-markdown {
+  background: var(--ifm-background-surface-color);
+  border: 1px solid rgba(15, 23, 42, 0.07);
+  border-radius: 16px;
+  padding: 1.5rem 1.75rem;
+  box-shadow: 0 10px 25px rgba(15, 23, 42, 0.04);
+}
+
+[data-theme='dark'] .theme-doc-markdown {
+  border-color: rgba(167, 232, 255, 0.12);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+}
+
+.theme-doc-markdown h1 {
+  letter-spacing: -0.02em;
+  margin-bottom: 1.1rem;
+}
+
+.theme-doc-markdown h2,
+.theme-doc-markdown h3 {
+  letter-spacing: -0.01em;
+}
+
+.theme-doc-markdown code {
+  border-radius: 8px;
+}
+
+.pagination-nav__link {
+  border-radius: 14px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  background: var(--ifm-background-surface-color);
+}
+
+[data-theme='dark'] .pagination-nav__link {
+  border-color: rgba(167, 232, 255, 0.14);
 }
 
 .footer {
-  background: #0f172a;
+  background: linear-gradient(180deg, #0f172a 0%, #0a1020 100%);
+  border-top: 1px solid rgba(167, 232, 255, 0.12);
+}
+
+@media (max-width: 996px) {
+  .theme-doc-markdown {
+    padding: 1.1rem 1rem;
+    border-radius: 12px;
+  }
 }

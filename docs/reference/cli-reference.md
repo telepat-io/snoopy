@@ -1,9 +1,9 @@
 ---
-title: Command Reference
+title: CLI Reference
 sidebar_position: 1
 ---
 
-# Command Reference
+# CLI Reference
 
 This section documents the Snoopy CLI one command group at a time.
 
@@ -32,15 +32,15 @@ For commands with `[jobRef]` or `[runId]`, omitting the argument starts an inter
 
 ## Per-Command Pages
 
-- [Job Commands (`job`, `jobs`)](job.md)
-- [Settings](settings.md)
-- [Daemon](daemon.md)
-- [Startup (`startup`, `reboot`)](startup.md)
-- [Export](export.md)
-- [Analytics](analytics.md)
-- [Logs](logs.md)
-- [Errors](errors.md)
-- [Doctor](doctor.md)
+- [Job Commands (`job`, `jobs`)](commands/job.md)
+- [Settings](commands/settings.md)
+- [Daemon](commands/daemon.md)
+- [Startup (`startup`, `reboot`)](commands/startup.md)
+- [Export](commands/export.md)
+- [Analytics](commands/analytics.md)
+- [Logs](commands/logs.md)
+- [Errors](commands/errors.md)
+- [Doctor](commands/doctor.md)
 
 ## Top-Level Aliases
 

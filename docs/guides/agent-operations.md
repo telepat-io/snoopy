@@ -477,7 +477,7 @@ WHERE job_id = '<job-id>'
 - `validated = 1` — result has been quality-checked and accepted
 - `processed = 1` — result has been handed off to a downstream workflow
 
-For the full table schema including all columns, indexes, and constraints, see [Database Schema](database-schema.md).
+For the full table schema including all columns, indexes, and constraints, see [Database Schema](../reference/database-schema.md).
 
 ---
 

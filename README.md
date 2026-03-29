@@ -56,7 +56,7 @@ npm run build
 npm link
 ```
 
-For first-time onboarding (OpenRouter key setup, first `job add`, and verification), see [Installation & Setup](docs/installation-and-setup.md).
+For first-time onboarding (OpenRouter key setup, first `job add`, and verification), see [Installation & Setup](docs/getting-started/installation.md).
 
 ## Development
 
@@ -222,14 +222,17 @@ Optional env vars:
 
 ## Full Documentation
 
-- [Documentation Index](docs/README.md)
-- [Installation & Setup](docs/installation-and-setup.md)
-- [Command Reference](docs/commands/index.md)
-- [Database Schema](docs/database-schema.md)
-- [Agent DB Operations](docs/agents-db.md)
-- [Scheduling, Cron, Daemon, and Startup](docs/scheduling-and-startup.md)
-- [Security and Secret Storage](docs/security.md)
-- [E2E Smoke Testing Guide](docs/e2e-testing.md)
+- [Documentation Index](docs/index.md)
+- [Getting Started Overview](docs/getting-started/overview.md)
+- [Installation & Setup](docs/getting-started/installation.md)
+- [Quick Start](docs/getting-started/quickstart.md)
+- [CLI Reference](docs/reference/cli-reference.md)
+- [Database Schema](docs/reference/database-schema.md)
+- [Agent Operations](docs/guides/agent-operations.md)
+- [Scheduling, Cron, Daemon, and Startup](docs/guides/scheduling-and-startup.md)
+- [Security and Secret Storage](docs/technical/security.md)
+- [E2E Smoke Testing Guide](docs/technical/e2e-testing.md)
+- [Contributing](docs/contributing/development.md)
 
 ## Docs Site
 
