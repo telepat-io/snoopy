@@ -38,7 +38,7 @@ Define what you care about in plain language, let Snoopy create a monitoring job
 ## Install
 
 ```bash
-npm install -g snoopy-cli
+npm install -g @telepat/snoopy
 ```
 
 Requirements: Node.js 20+, npm 10+

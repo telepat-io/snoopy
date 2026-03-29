@@ -16,7 +16,7 @@ This guide is for AI agents and automation scripts operating Snoopy end-to-end. 
 **From npm (recommended for production use):**
 
 ```bash
-npm install -g snoopy-cli
+npm install -g @telepat/snoopy
 snoopy --help
 ```
 
@@ -90,7 +90,7 @@ The fastest path to a running system:
 
 ```bash
 # 1. Install (if not already done)
-npm install -g snoopy-cli
+npm install -g @telepat/snoopy
 
 # 2. Create your first monitoring job
 #    This will prompt for your OpenRouter key if not yet set,

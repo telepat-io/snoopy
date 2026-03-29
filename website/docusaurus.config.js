@@ -1,9 +1,9 @@
-const githubOwner = process.env.GITHUB_OWNER || 'cozymantis';
+const githubOwner = process.env.GITHUB_OWNER || 'telepat-io';
 const githubRepo = process.env.GITHUB_REPO || 'snoopy';
 const localMode = process.env.DOCS_LOCAL === 'true';
 
-const url = localMode ? 'http://localhost' : process.env.DOCS_URL || `https://${githubOwner}.github.io`;
-const baseUrl = localMode ? '/' : process.env.DOCS_BASE_URL || `/${githubRepo}/`;
+const url = localMode ? 'http://localhost' : process.env.DOCS_URL || 'https://docs.telepat.io';
+const baseUrl = localMode ? '/' : process.env.DOCS_BASE_URL || '/ideon/';
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {

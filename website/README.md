@@ -17,7 +17,7 @@ npm run docs:serve
 GitHub Pages deployment:
 
 ```bash
-GITHUB_OWNER=cozymantis GITHUB_REPO=snoopy npm run docs:deploy
+GITHUB_OWNER=telepat-io GITHUB_REPO=snoopy npm run docs:deploy
 ```
 
 Optional overrides:

@@ -6,11 +6,11 @@
 
 # Monitor Reddit Conversations With AI
 
-[![Build](https://img.shields.io/github/actions/workflow/status/cozymantis/snoopy/ci.yml?branch=main&label=build)](https://github.com/cozymantis/snoopy/actions/workflows/ci.yml)
+[![Build](https://img.shields.io/github/actions/workflow/status/telepat-io/snoopy/ci.yml?branch=main&label=build)](https://github.com/telepat-io/snoopy/actions/workflows/ci.yml)
 [![Coverage](https://img.shields.io/badge/coverage-94.6%25-brightgreen)](#development)
-[![npm](https://img.shields.io/npm/v/snoopy-cli)](https://www.npmjs.com/package/snoopy-cli)
+[![npm](https://img.shields.io/npm/v/@telepat/snoopy)](https://www.npmjs.com/package/@telepat/snoopy)
 
-📖 [Full documentation](https://cozymantis.github.io/snoopy/)
+📖 [Full documentation](https://docs.telepat.io/ideon/)
 
 Snoopy helps you monitor Reddit for high-intent conversations that match your business goals.
 
@@ -44,7 +44,7 @@ Requirements:
 From npm:
 
 ```bash
-npm install -g snoopy-cli
+npm install -g @telepat/snoopy
 snoopy --help
 ```
 
@@ -249,7 +249,7 @@ npm run docs:serve
 Deploy to GitHub Pages:
 
 ```bash
-GITHUB_OWNER=cozymantis GITHUB_REPO=snoopy npm run docs:deploy
+GITHUB_OWNER=telepat-io GITHUB_REPO=snoopy npm run docs:deploy
 ```
 
 Docs changes pushed to `main` under `docs/` or `website/` are also rebuilt and published to GitHub Pages automatically via GitHub Actions.

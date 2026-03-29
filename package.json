@@ -1,5 +1,5 @@
 {
-  "name": "snoopy-cli",
+  "name": "@telepat/snoopy",
   "version": "0.1.4",
   "description": "Snoopy CLI for Reddit conversation monitoring jobs.",
   "type": "module",
@@ -25,6 +25,7 @@
     "e2e:smoke": "tsx src/scripts/e2eSmoke.ts",
     "lint": "eslint src tests --ext .ts,.tsx",
     "test": "jest",
+    "test:coverage": "jest --coverage",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "npm run lint && npm run build && npm test"
   },
@@ -38,12 +39,12 @@
   "author": "",
   "repository": {
     "type": "git",
-    "url": "https://github.com/cozymantis/snoopy.git"
+    "url": "https://github.com/telepat-io/snoopy.git"
   },
   "bugs": {
-    "url": "https://github.com/cozymantis/snoopy/issues"
+    "url": "https://github.com/telepat-io/snoopy/issues"
   },
-  "homepage": "https://github.com/cozymantis/snoopy",
+  "homepage": "https://docs.telepat.io/ideon/",
   "license": "ISC",
   "dependencies": {
     "@inkjs/ui": "^2.0.0",

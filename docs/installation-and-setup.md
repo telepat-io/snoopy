@@ -20,7 +20,7 @@ Without an OpenRouter key, job runs will fail when Snoopy reaches qualification.
 From npm (recommended):
 
 ```bash
-npm install -g snoopy-cli
+npm install -g @telepat/snoopy
 snoopy --help
 ```
 
@@ -101,7 +101,7 @@ If you want the full setup path in one place:
 
 ```bash
 # 1) Install globally
-npm install -g snoopy-cli
+npm install -g @telepat/snoopy
 
 # 2) Optional: configure key before creating jobs
 snoopy settings
