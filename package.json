@@ -44,7 +44,7 @@
   "bugs": {
     "url": "https://github.com/telepat-io/snoopy/issues"
   },
-  "homepage": "https://docs.telepat.io/ideon/",
+  "homepage": "https://docs.telepat.io/snoopy/",
   "license": "ISC",
   "dependencies": {
     "@inkjs/ui": "^2.0.0",

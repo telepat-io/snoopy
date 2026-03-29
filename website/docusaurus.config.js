@@ -3,7 +3,7 @@ const githubRepo = process.env.GITHUB_REPO || 'snoopy';
 const localMode = process.env.DOCS_LOCAL === 'true';
 
 const url = localMode ? 'http://localhost' : process.env.DOCS_URL || 'https://docs.telepat.io';
-const baseUrl = localMode ? '/' : process.env.DOCS_BASE_URL || '/ideon/';
+const baseUrl = localMode ? '/' : process.env.DOCS_BASE_URL || '/snoopy/';
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
