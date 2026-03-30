@@ -33,6 +33,21 @@ function mapRow(row: Record<string, unknown>): Job {
   };
 }
 
+export interface JobSummaryRow {
+  jobId: string;
+  jobSlug: string;
+  jobName: string;
+  enabled: number;
+  description: string;
+  subredditsJson: string;
+  scheduleCron: string;
+  lastRunAt: string | null;
+  totalScanned: number;
+  totalQualified: number;
+  totalCostUsd: number;
+  runCount: number;
+}
+
 export class JobsRepository {
   private readonly db = getDb();
   private readonly removeCascadeStmt = this.db.transaction((jobId: string) => {
@@ -209,4 +224,28 @@ export class JobsRepository {
     this.remove(job.id);
     return job;
   }
-}
+
+    listWithStats(): JobSummaryRow[] {
+      return this.db
+        .prepare(
+          `SELECT
+             j.id as jobId,
+             j.slug as jobSlug,
+             j.name as jobName,
+             j.enabled as enabled,
+             j.description as description,
+             j.subreddits_json as subredditsJson,
+             j.schedule_cron as scheduleCron,
+             MAX(COALESCE(jr.finished_at, jr.started_at, jr.created_at)) as lastRunAt,
+             COALESCE(SUM(jr.items_new), 0) as totalScanned,
+             COALESCE(SUM(jr.items_qualified), 0) as totalQualified,
+             COALESCE(SUM(jr.estimated_cost_usd), 0) as totalCostUsd,
+             COUNT(jr.id) as runCount
+           FROM jobs j
+           LEFT JOIN job_runs jr ON jr.job_id = j.id
+           GROUP BY j.id
+           ORDER BY j.name ASC`
+        )
+        .all() as JobSummaryRow[];
+    }
+  }

@@ -160,6 +160,7 @@ describe('command selection helpers', () => {
         id: 'run-1',
         jobId: 'job-1',
         jobName: 'Alpha',
+        jobSlug: 'alpha',
         status: 'completed',
         message: null,
         startedAt: null,

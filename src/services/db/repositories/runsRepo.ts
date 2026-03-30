@@ -14,6 +14,7 @@ export interface RunRow {
   id: string;
   jobId: string;
   jobName: string | null;
+  jobSlug: string | null;
   status: string;
   message: string | null;
   startedAt: string | null;
@@ -138,6 +139,7 @@ export class RunsRepository {
            jr.id as id,
            jr.job_id as jobId,
            j.name as jobName,
+           j.slug as jobSlug,
            jr.status as status,
            jr.message as message,
            jr.started_at as startedAt,
@@ -178,6 +180,7 @@ export class RunsRepository {
            jr.id as id,
            jr.job_id as jobId,
            j.name as jobName,
+           j.slug as jobSlug,
            jr.status as status,
            jr.message as message,
            jr.started_at as startedAt,
@@ -206,6 +209,7 @@ export class RunsRepository {
            jr.id as id,
            jr.job_id as jobId,
            j.name as jobName,
+           j.slug as jobSlug,
            jr.status as status,
            jr.message as message,
            jr.started_at as startedAt,

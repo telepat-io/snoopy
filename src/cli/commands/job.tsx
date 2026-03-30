@@ -3,7 +3,7 @@ import { render } from 'ink';
 import { JobAddFlow } from '../flows/jobAddFlow.js';
 import { JobsRepository } from '../../services/db/repositories/jobsRepo.js';
 import { SettingsRepository } from '../../services/db/repositories/settingsRepo.js';
-import { RunsRepository } from '../../services/db/repositories/runsRepo.js';
+import { type RunRow, RunsRepository } from '../../services/db/repositories/runsRepo.js';
 import {
   deleteOpenRouterApiKey,
   getOpenRouterApiKey,
@@ -26,6 +26,8 @@ import {
   printWarning
 } from '../ui/consoleUi.js';
 import { formatRunDisplayTimestamp } from '../ui/time.js';
+import { RunsTable } from '../../ui/components/RunsTable.js';
+import { JobsTable } from '../../ui/components/JobsTable.js';
 import { resolveJobFromArgOrPrompt } from './selection.js';
 
 interface JobAddFlowResult {
@@ -226,20 +228,36 @@ export async function addJob(): Promise<void> {
   await runInitialJobAndEnable(job.id);
 }
 
-export function listJobs(): void {
-  printCommandScreen('Jobs', 'Configured Jobs');
+export async function listJobs(): Promise<void> {
   const jobsRepo = new JobsRepository();
-  const jobs = jobsRepo.list();
-  if (jobs.length === 0) {
+  const rows = jobsRepo.listWithStats();
+
+  if (rows.length === 0) {
+    printCommandScreen('Jobs', 'Configured Jobs');
     printWarning('No jobs configured yet.');
     return;
   }
 
-  jobs.forEach((job) => {
-    const state = job.enabled ? 'on' : 'off';
-    printInfo(`${job.name} (${job.slug}) [${job.id}] state=${state}`);
-    printKeyValue('Subreddits', job.subreddits.map((subreddit) => `r/${subreddit}`).join(', '));
-  });
+  if (!isRichTty()) {
+    printCommandScreen('Jobs', 'Configured Jobs');
+    rows.forEach((row) => {
+      const state = row.enabled !== 0 ? 'on' : 'off';
+      printInfo(`${row.jobName} (${row.jobSlug}) state=${state}`);
+      printKeyValue('Scanned', String(row.totalScanned));
+      printKeyValue('Qualified', String(row.totalQualified));
+    });
+    return;
+  }
+
+  const app = render(
+    <JobsTable
+      jobs={rows}
+      onExit={() => {
+        app.unmount();
+      }}
+    />
+  );
+  await app.waitUntilExit();
 }
 
 export async function removeJob(jobRef?: string): Promise<void> {
@@ -339,8 +357,22 @@ export async function runJobNow(jobRef: string | undefined, options: { limit?: n
   }
 }
 
-export function listJobRuns(jobRef?: string): void {
-  printCommandScreen('Run history', 'Job Runs');
+function printRunsFlatDump(rows: RunRow[]): void {
+  rows.forEach((run) => {
+    const cost = run.estimatedCostUsd === null ? '-' : `$${run.estimatedCostUsd.toFixed(6)}`;
+    printInfo(`${formatRunDisplayTimestamp(run)} ${run.jobName ?? run.jobId} [${run.id}] ${run.status}`);
+    printKeyValue('Run ID', run.id);
+    printKeyValue('Duration', formatRunDuration(run.startedAt, run.finishedAt));
+    printKeyValue('Discovered', String(run.itemsDiscovered));
+    printKeyValue('New', String(run.itemsNew));
+    printKeyValue('Qualified', String(run.itemsQualified));
+    printKeyValue('Tokens', `${run.promptTokens}/${run.completionTokens}`);
+    printKeyValue('Cost', cost);
+    printKeyValue('Log', run.logFilePath ?? '-');
+  });
+}
+
+export async function listJobRuns(jobRef?: string): Promise<void> {
   const jobsRepo = new JobsRepository();
   const runsRepo = new RunsRepository();
 
@@ -360,22 +392,26 @@ export function listJobRuns(jobRef?: string): void {
   }
 
   if (rows.length === 0) {
+    printCommandScreen('Run history', 'Job Runs');
     printWarning('No run history yet.');
     return;
   }
 
-  rows.forEach((run) => {
-    const cost = run.estimatedCostUsd === null ? '-' : `$${run.estimatedCostUsd.toFixed(6)}`;
-    printInfo(`${formatRunDisplayTimestamp(run)} ${run.jobName ?? run.jobId} [${run.id}] ${run.status}`);
-    printKeyValue('Run ID', run.id);
-    printKeyValue('Duration', formatRunDuration(run.startedAt, run.finishedAt));
-    printKeyValue('Discovered', String(run.itemsDiscovered));
-    printKeyValue('New', String(run.itemsNew));
-    printKeyValue('Qualified', String(run.itemsQualified));
-    printKeyValue('Tokens', `${run.promptTokens}/${run.completionTokens}`);
-    printKeyValue('Cost', cost);
-    printKeyValue('Log', run.logFilePath ?? '-');
-  });
+  if (!isRichTty()) {
+    printCommandScreen('Run history', 'Job Runs');
+    printRunsFlatDump(rows);
+    return;
+  }
+
+  const app = render(
+    <RunsTable
+      runs={rows}
+      onExit={() => {
+        app.unmount();
+      }}
+    />
+  );
+  await app.waitUntilExit();
 }
 
 function logManualRunProgress(event: JobRunProgressEvent): void {
