@@ -8,6 +8,7 @@ import { showRunLogs } from './commands/logs.js';
 import { showJobErrors } from './commands/errors.js';
 import { exportCsv } from './commands/export.js';
 import { showAnalytics } from './commands/analytics.js';
+import { showResults } from './commands/results.js';
 import {
   disableStartupCommand,
   enableStartupCommand,
@@ -143,6 +144,14 @@ program
   .option('-d, --days <count>', 'Look back this many days', parsePositiveInteger)
   .action((jobRef: string | undefined, options: { days?: number }) => {
     showAnalytics(jobRef, options);
+  });
+
+program
+  .command('results')
+  .argument('[jobRef]', 'Optional job ID or slug')
+  .description('Browse job results in an interactive viewer')
+  .action(async (jobRef: string | undefined) => {
+    await showResults(jobRef);
   });
 
 const exportCommand = program.command('export').description('Export data artifacts');

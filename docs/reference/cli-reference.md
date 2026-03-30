@@ -22,6 +22,7 @@ This section documents the Snoopy CLI one command group at a time.
 - `reboot`
 - `export`
 - `analytics [jobRef]`
+- `results [jobRef]`
 - `logs [runId]`
 - `errors [jobRef]`
 - `doctor`
@@ -38,6 +39,7 @@ For commands with `[jobRef]` or `[runId]`, omitting the argument starts an inter
 - [Startup (`startup`, `reboot`)](commands/startup.md)
 - [Export](commands/export.md)
 - [Analytics](commands/analytics.md)
+- [Results](commands/results.md)
 - [Logs](commands/logs.md)
 - [Errors](commands/errors.md)
 - [Doctor](commands/doctor.md)
@@ -97,6 +99,7 @@ snoopy job run --limit 5
 snoopy job run <jobRef> --limit 5
 snoopy job runs <jobRef>
 snoopy analytics <jobRef>
+snoopy results <jobRef>
 snoopy export csv <jobRef>
 snoopy logs
 snoopy logs <runId>

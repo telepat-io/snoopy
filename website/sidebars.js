@@ -25,6 +25,7 @@ module.exports = {
         'reference/commands/startup',
         'reference/commands/export',
         'reference/commands/analytics',
+        'reference/commands/results',
         'reference/commands/logs',
         'reference/commands/errors',
         'reference/commands/doctor'

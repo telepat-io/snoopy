@@ -125,7 +125,7 @@ snoopy job run --limit 5
 snoopy job run <jobRef> --limit 5
 ```
 
-If `<jobRef>` is omitted for `job run`, `job enable`, `job disable`, `job delete`, `start`, `stop`, or `errors`, Snoopy shows your job list and lets you pick with up/down arrows and Enter.
+If `<jobRef>` is omitted for `job run`, `job enable`, `job disable`, `job delete`, `start`, `stop`, `errors`, or `results`, Snoopy shows your job list and lets you pick with up/down arrows and Enter.
 
 4. View run history:
 
@@ -141,14 +141,21 @@ snoopy analytics <jobRef>
 snoopy analytics --days 7
 ```
 
-6. Regenerate results CSV files (all jobs or one job):
+6. Browse results in the interactive viewer:
+
+```bash
+snoopy results
+snoopy results <jobRef>
+```
+
+7. Regenerate results CSV files (all jobs or one job):
 
 ```bash
 snoopy export csv
 snoopy export csv <jobRef>
 ```
 
-7. Inspect one run's detailed log output:
+8. Inspect one run's detailed log output:
 
 ```bash
 snoopy logs
@@ -158,13 +165,13 @@ snoopy logs <runId> --raw
 
 When `runId` is omitted for `logs`, Snoopy first prompts for a job, then prompts for a run from that job (up/down arrows + Enter).
 
-8. Show recent errors for one job:
+9. Show recent errors for one job:
 
 ```bash
 snoopy errors <jobRef>
 ```
 
-9. Enable daemon mode:
+10. Enable daemon mode:
 
 ```bash
 snoopy daemon start
@@ -178,6 +185,7 @@ snoopy daemon reload
 - `job run [jobRef] --limit <N>`
 - `job runs [jobRef]`
 - `analytics [jobRef] --days <N>`
+- `results [jobRef]`
 - `export csv [jobRef]`
 - `logs [runId]`
 - `errors [jobRef] --hours <N>`

@@ -57,6 +57,30 @@ export interface QualifiedScanItemRow {
   createdAt: string;
 }
 
+export interface ScanItemRow {
+  id: string;
+  jobId: string;
+  runId: string;
+  type: ScanItemType;
+  redditPostId: string;
+  redditCommentId: string | null;
+  subreddit: string;
+  author: string;
+  title: string | null;
+  body: string;
+  url: string;
+  redditPostedAt: string;
+  qualified: boolean;
+  viewed: boolean;
+  validated: boolean;
+  processed: boolean;
+  qualificationReason: string | null;
+  promptTokens: number;
+  completionTokens: number;
+  estimatedCostUsd: number | null;
+  createdAt: string;
+}
+
 export interface AnalyticsTotalsRow {
   newPosts: number;
   newComments: number;
@@ -146,6 +170,53 @@ export class ScanItemsRepository {
 
     return rows.map((row) => ({
       ...row,
+      viewed: row.viewed === 1,
+      validated: row.validated === 1,
+      processed: row.processed === 1
+    }));
+  }
+
+  listByJob(jobId: string): ScanItemRow[] {
+    const rows = this.db
+      .prepare(
+        `SELECT
+           id,
+           job_id as jobId,
+           run_id as runId,
+           type,
+           reddit_post_id as redditPostId,
+           reddit_comment_id as redditCommentId,
+           subreddit,
+           author,
+           title,
+           body,
+           url,
+           reddit_posted_at as redditPostedAt,
+           qualified,
+           viewed,
+           validated,
+           processed,
+           qualification_reason as qualificationReason,
+           prompt_tokens as promptTokens,
+           completion_tokens as completionTokens,
+           estimated_cost_usd as estimatedCostUsd,
+           created_at as createdAt
+         FROM scan_items
+         WHERE job_id = ?
+         ORDER BY datetime(reddit_posted_at) DESC, datetime(created_at) DESC, id DESC`
+      )
+      .all(jobId) as Array<
+      Omit<ScanItemRow, 'qualified' | 'viewed' | 'validated' | 'processed'> & {
+          qualified: number;
+          viewed: number;
+          validated: number;
+          processed: number;
+        }
+    >;
+
+    return rows.map((row) => ({
+      ...row,
+      qualified: row.qualified === 1,
       viewed: row.viewed === 1,
       validated: row.validated === 1,
       processed: row.processed === 1
