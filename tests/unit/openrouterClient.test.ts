@@ -612,6 +612,7 @@ describe('OpenRouter JSON parsing behavior', () => {
       },
       qualificationPrompt: 'qualify startup operators asking for help',
       postTitle: 'Need GTM help',
+      postBody: 'Founder post body context',
       targetAuthor: 'alice',
       thread: [
         { id: 'c1', author: 'bob', body: 'context', replies: [] },
@@ -621,6 +622,13 @@ describe('OpenRouter JSON parsing behavior', () => {
 
     expect(result.qualified).toBe(true);
     expect(createMock).toHaveBeenCalled();
+    const requestPayload = createMock.mock.calls[0]?.[0] as { messages?: Array<{ role: string; content: string }> };
+    const userMessage = requestPayload.messages?.find((message) => message.role === 'user')?.content ?? '';
+    expect(userMessage).toContain('Post title: Need GTM help');
+    expect(userMessage).toContain('Post body: Founder post body context');
+    expect(userMessage).toContain('- (User A) context');
+    expect(userMessage).toContain('- (alice) I need GTM ideas');
+    expect(userMessage).toContain('QUALIFY ONLY the final comment line authored by alice');
   });
 
   it('maps OpenAI AuthenticationError to auth client error', async () => {

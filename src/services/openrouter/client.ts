@@ -50,8 +50,46 @@ interface QualifyPostRequest extends QualificationRequestBase {
 
 interface QualifyCommentThreadRequest extends QualificationRequestBase {
   postTitle: string;
+  postBody: string;
   targetAuthor: string;
   thread: RedditComment[];
+}
+
+function toAlphaLabel(index: number): string {
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  let value = index;
+  let label = '';
+
+  do {
+    label = `${alphabet[value % 26]}${label}`;
+    value = Math.floor(value / 26) - 1;
+  } while (value >= 0);
+
+  return label;
+}
+
+function buildAnonymizedThreadLines(thread: RedditComment[], targetAuthor: string): string[] {
+  const authorLabels = new Map<string, string>();
+  let nextLabelIndex = 0;
+
+  return thread.map((comment) => {
+    const author = comment.author || '[deleted]';
+    let displayAuthor = author;
+
+    if (author !== targetAuthor) {
+      const existingLabel = authorLabels.get(author);
+      if (existingLabel) {
+        displayAuthor = existingLabel;
+      } else {
+        const generatedLabel = `User ${toAlphaLabel(nextLabelIndex)}`;
+        nextLabelIndex += 1;
+        authorLabels.set(author, generatedLabel);
+        displayAuthor = generatedLabel;
+      }
+    }
+
+    return `- (${displayAuthor}) ${comment.body}`;
+  });
 }
 
 interface CompletionLike {
@@ -328,18 +366,18 @@ export class OpenRouterClient {
   }
 
   async qualifyCommentThread(input: QualifyCommentThreadRequest): Promise<QualificationResult> {
-    const threadText = input.thread
-      .map((comment) => `${comment.author}: ${comment.body}`)
-      .join('\n');
+    const threadText = buildAnonymizedThreadLines(input.thread, input.targetAuthor).join('\n');
 
     const userMessage = [
       `Post title: ${input.postTitle}`,
       '',
+      `Post body: ${input.postBody}`,
+      '',
       'Comment thread (chronological):',
       threadText,
       '',
-      `Important: decide qualification based on the most recent comment by ${input.targetAuthor}.`,
-      'Use other thread context only for interpretation.'
+      `Important: QUALIFY ONLY the final comment line authored by ${input.targetAuthor}.`,
+      'Treat all earlier lines as context only and do not qualify them.'
     ].join('\n');
 
     return this.runQualification(input, userMessage);

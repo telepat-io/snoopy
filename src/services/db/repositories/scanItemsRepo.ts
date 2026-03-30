@@ -23,6 +23,22 @@ export interface NewScanItem {
   completionTokens?: number;
   estimatedCostUsd?: number | null;
   qualificationReason: string | null;
+  commentThreadNodes?: NewCommentThreadNode[];
+}
+
+export interface NewCommentThreadNode {
+  redditCommentId: string;
+  parentRedditCommentId: string | null;
+  author: string;
+  body: string;
+  depth: number;
+  isTarget: boolean;
+}
+
+export interface CommentThreadNodeRow extends NewCommentThreadNode {
+  id: string;
+  scanItemId: string;
+  createdAt: string;
 }
 
 export interface QualifiedScanItemRow {
@@ -276,55 +292,115 @@ export class ScanItemsRepository {
   create(item: NewScanItem): string {
     const id = crypto.randomUUID();
 
-    this.db
-      .prepare(
-        `INSERT INTO scan_items (
-          id,
-          job_id,
-          run_id,
-          type,
-          reddit_post_id,
-          reddit_comment_id,
-          subreddit,
-          author,
-          title,
-          body,
-          url,
-          reddit_posted_at,
-          qualified,
-          viewed,
-          validated,
-          processed,
-          prompt_tokens,
-          completion_tokens,
-          estimated_cost_usd,
-          qualification_reason,
-          created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`
-      )
-      .run(
-        id,
-        item.jobId,
-        item.runId,
-        item.type,
-        item.redditPostId,
-        item.redditCommentId,
-        item.subreddit,
-        item.author,
-        item.title,
-        item.body,
-        item.url,
-        item.redditPostedAt,
-        item.qualified ? 1 : 0,
-        item.viewed ? 1 : 0,
-        item.validated ? 1 : 0,
-        item.processed ? 1 : 0,
-        item.promptTokens ?? 0,
-        item.completionTokens ?? 0,
-        item.estimatedCostUsd ?? null,
-        item.qualificationReason
-      );
+    const createInTransaction = this.db.transaction((newId: string, newItem: NewScanItem) => {
+      this.db
+        .prepare(
+          `INSERT INTO scan_items (
+            id,
+            job_id,
+            run_id,
+            type,
+            reddit_post_id,
+            reddit_comment_id,
+            subreddit,
+            author,
+            title,
+            body,
+            url,
+            reddit_posted_at,
+            qualified,
+            viewed,
+            validated,
+            processed,
+            prompt_tokens,
+            completion_tokens,
+            estimated_cost_usd,
+            qualification_reason,
+            created_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`
+        )
+        .run(
+          newId,
+          newItem.jobId,
+          newItem.runId,
+          newItem.type,
+          newItem.redditPostId,
+          newItem.redditCommentId,
+          newItem.subreddit,
+          newItem.author,
+          newItem.title,
+          newItem.body,
+          newItem.url,
+          newItem.redditPostedAt,
+          newItem.qualified ? 1 : 0,
+          newItem.viewed ? 1 : 0,
+          newItem.validated ? 1 : 0,
+          newItem.processed ? 1 : 0,
+          newItem.promptTokens ?? 0,
+          newItem.completionTokens ?? 0,
+          newItem.estimatedCostUsd ?? null,
+          newItem.qualificationReason
+        );
+
+      for (const node of newItem.commentThreadNodes ?? []) {
+        this.db
+          .prepare(
+            `INSERT INTO comment_thread_nodes (
+              id,
+              scan_item_id,
+              reddit_comment_id,
+              parent_reddit_comment_id,
+              author,
+              body,
+              depth,
+              is_target,
+              created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`
+          )
+          .run(
+            crypto.randomUUID(),
+            newId,
+            node.redditCommentId,
+            node.parentRedditCommentId,
+            node.author,
+            node.body,
+            node.depth,
+            node.isTarget ? 1 : 0
+          );
+      }
+    });
+
+    createInTransaction(id, item);
 
     return id;
+  }
+
+  listCommentThreadNodes(scanItemId: string): CommentThreadNodeRow[] {
+    const rows = this.db
+      .prepare(
+        `SELECT
+           id,
+           scan_item_id as scanItemId,
+           reddit_comment_id as redditCommentId,
+           parent_reddit_comment_id as parentRedditCommentId,
+           author,
+           body,
+           depth,
+           is_target as isTarget,
+           created_at as createdAt
+         FROM comment_thread_nodes
+         WHERE scan_item_id = ?
+         ORDER BY depth ASC, created_at ASC, id ASC`
+      )
+      .all(scanItemId) as Array<
+      Omit<CommentThreadNodeRow, 'isTarget'> & {
+          isTarget: number;
+        }
+    >;
+
+    return rows.map((row) => ({
+      ...row,
+      isTarget: row.isTarget === 1
+    }));
   }
 }

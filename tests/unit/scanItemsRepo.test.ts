@@ -78,6 +78,80 @@ describe('ScanItemsRepository', () => {
     );
   });
 
+  it('stores thread lineage nodes for comment scan items', () => {
+    const db = getDb();
+    const repo = new ScanItemsRepository();
+
+    const jobId = crypto.randomUUID();
+    const runId = crypto.randomUUID();
+
+    db.prepare(
+      `INSERT INTO jobs (
+        id, slug, name, description, qualification_prompt, subreddits_json,
+        schedule_cron, enabled, monitor_comments, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, 1, 1, datetime('now'), datetime('now'))`
+    ).run(jobId, `job-${Date.now()}-thread`, `job-${Date.now()}-thread`, 'desc', 'prompt', JSON.stringify(['askreddit']), '*/30 * * * *');
+
+    db.prepare(
+      `INSERT INTO job_runs (
+        id, job_id, status, started_at, finished_at, created_at
+      ) VALUES (?, ?, 'completed', datetime('now'), datetime('now'), datetime('now'))`
+    ).run(runId, jobId);
+
+    const scanItemId = repo.create({
+      jobId,
+      runId,
+      type: 'comment',
+      redditPostId: 'post-thread',
+      redditCommentId: 'c3',
+      subreddit: 'askreddit',
+      author: 'author-target',
+      title: 'thread title',
+      body: 'target body',
+      url: 'https://reddit.com/post-thread/c3',
+      redditPostedAt: '2026-03-03T00:00:00.000Z',
+      qualified: true,
+      qualificationReason: 'match',
+      commentThreadNodes: [
+        {
+          redditCommentId: 'c1',
+          parentRedditCommentId: null,
+          author: 'author-a',
+          body: 'root',
+          depth: 0,
+          isTarget: false
+        },
+        {
+          redditCommentId: 'c2',
+          parentRedditCommentId: 'c1',
+          author: 'author-b',
+          body: 'middle',
+          depth: 1,
+          isTarget: false
+        },
+        {
+          redditCommentId: 'c3',
+          parentRedditCommentId: 'c2',
+          author: 'author-target',
+          body: 'target',
+          depth: 2,
+          isTarget: true
+        }
+      ]
+    });
+
+    const nodes = repo.listCommentThreadNodes(scanItemId);
+    expect(nodes).toHaveLength(3);
+    expect(nodes.map((node) => node.redditCommentId)).toEqual(['c1', 'c2', 'c3']);
+    expect(nodes[2]).toEqual(
+      expect.objectContaining({
+        parentRedditCommentId: 'c2',
+        depth: 2,
+        isTarget: true
+      })
+    );
+  });
+
   it('returns qualified items in newest-first order', () => {
     const db = getDb();
     const repo = new ScanItemsRepository();

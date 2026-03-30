@@ -460,6 +460,7 @@ export class JobRunner {
               modelSettings,
               qualificationPrompt: job.qualificationPrompt,
               postTitle: post.title,
+              postBody: post.body,
               targetAuthor: author,
               thread
             });
@@ -493,7 +494,15 @@ export class JobRunner {
               promptTokens: result.promptTokens,
               completionTokens: result.completionTokens,
               estimatedCostUsd: this.estimateCost(result.promptTokens, result.completionTokens),
-              qualificationReason: result.reason
+              qualificationReason: result.reason,
+              commentThreadNodes: thread.map((threadComment, index) => ({
+                redditCommentId: threadComment.id,
+                parentRedditCommentId: index === 0 ? null : thread[index - 1]?.id ?? null,
+                author: threadComment.author,
+                body: threadComment.body,
+                depth: index,
+                isTarget: index === thread.length - 1
+              }))
             });
 
             runStats.itemsNew += 1;
