@@ -21,6 +21,17 @@ snoopy doctor
 - startup registration state and method
 - recent job run failures or logged errors from the last 24 hours
 
+## Fix Suggestions
+
+When a check fails, `doctor` prints a suggested command to resolve the problem:
+
+| Issue | Suggested fix |
+|---|---|
+| Daemon not running | `snoopy daemon start` |
+| OpenRouter API key missing | `snoopy settings` |
+| Database unreachable | Inspect the DB file path shown |
+| Recent job run errors | `snoopy job` / `snoopy logs <runId>` |
+
 ## Typical Use
 
 Run `doctor` after:

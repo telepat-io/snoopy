@@ -11,6 +11,7 @@ import {
   printError,
   printInfo,
   printKeyValue,
+  printMuted,
   printSection,
   printSuccess,
   printWarning
@@ -76,12 +77,14 @@ export async function runDoctor(): Promise<void> {
     printSuccess(`Database: ${dbDetails}`);
   } else {
     printError(`Database: ${dbDetails}`);
+    printMuted(`  → Check that ${paths.dbPath} is accessible and not corrupted`);
   }
 
   if (apiKey) {
     printSuccess('OpenRouter API key: configured');
   } else {
     printWarning('OpenRouter API key: missing');
+    printMuted('  → Run: snoopy settings  to configure your OpenRouter API key');
   }
 
   printInfo(`Jobs: ${jobs.length} total, ${enabledJobs} enabled`);
@@ -90,6 +93,7 @@ export async function runDoctor(): Promise<void> {
     printSuccess(`Daemon: ${daemon.details}`);
   } else {
     printWarning(`Daemon: ${daemon.details}`);
+    printMuted('  → Run: snoopy daemon start  to start the background daemon');
   }
 
   printInfo(`Startup on reboot: ${startup.enabled ? 'enabled' : 'disabled'} via ${startup.method}`);
@@ -115,6 +119,7 @@ export async function runDoctor(): Promise<void> {
   }
 
   printWarning(`Found ${recentProblemRuns.length} recent run(s) with failures or logged errors.`);
+  printMuted('  → Review job config with: snoopy job  or investigate logs with: snoopy logs <runId>');
   recentProblemRuns.forEach(({ run, errorEntries }) => {
     printWarning(`${formatRunDisplayTimestamp(run)} ${run.jobName ?? run.jobId} (${run.status})`);
     printKeyValue('Run ID', run.id);

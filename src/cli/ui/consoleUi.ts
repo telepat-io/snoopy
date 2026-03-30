@@ -160,9 +160,6 @@ export function printCommandScreen(title: string, section?: string): void {
   if (section) {
     printSection(section);
   }
-  if (isRichTty()) {
-    printMuted('Tab-friendly controls: arrows navigate selectors, Enter confirms, Esc cancels.');
-  }
 }
 
 export function printSection(title: string): void {

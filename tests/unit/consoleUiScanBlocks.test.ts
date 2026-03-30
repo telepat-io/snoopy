@@ -3,6 +3,7 @@ jest.mock('../../src/ui/components/CliHeader.js', () => ({
 }));
 
 import { formatCommentScanBlock, formatPostScanBlock } from '../../src/cli/ui/consoleUi.js';
+import { printCommandScreen } from '../../src/cli/ui/consoleUi.js';
 
 function setTty(enabled: boolean): void {
   Object.defineProperty(process.stdout, 'isTTY', {
@@ -92,5 +93,18 @@ describe('scan block rendering in console UI', () => {
 
     expect(output).toContain('\u001b[34mID:\u001b[0m');
     expect(output).toContain('\u001b[34mStatus:\u001b[0m \u001b[32mqualified\u001b[0m');
+  });
+
+  it('does not print selector controls for static command screens', () => {
+    setTty(true);
+    const logs: string[] = [];
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation((value?: unknown) => {
+      logs.push(String(value ?? ''));
+    });
+
+    printCommandScreen('Diagnostics', 'Snoopy Doctor');
+
+    expect(logs.some((line) => line.includes('Tab-friendly controls'))).toBe(false);
+    consoleSpy.mockRestore();
   });
 });
