@@ -3,8 +3,7 @@ import { render } from 'ink';
 import { JobsRepository } from '../../services/db/repositories/jobsRepo.js';
 import {
   ScanItemsRepository,
-  type CommentThreadNodeRow,
-  type ScanItemRow
+  type CommentThreadNodeRow
 } from '../../services/db/repositories/scanItemsRepo.js';
 import {
   isRichTty,
@@ -20,14 +19,24 @@ import { resolveJobFromArgOrPrompt } from './selection.js';
 import { ResultsViewer } from '../../ui/components/ResultsViewer.js';
 import type { ResultsViewerItem } from '../../ui/components/resultsViewerModel.js';
 
-function buildViewerItems(
-  items: ScanItemRow[],
-  loadThreadNodes: (scanItemId: string) => CommentThreadNodeRow[]
-): ResultsViewerItem[] {
-  return items.map((item) => ({
-    ...item,
-    commentThreadNodes: item.type === 'comment' ? loadThreadNodes(item.id) : []
-  }));
+const MAX_ITEM_CACHE = 256;
+const MAX_THREAD_CACHE = 256;
+const FLAT_OUTPUT_LIMIT = 50;
+
+function setBoundedMapValue<K, V>(map: Map<K, V>, key: K, value: V, maxSize: number): void {
+  if (map.has(key)) {
+    map.delete(key);
+  }
+
+  map.set(key, value);
+  if (map.size <= maxSize) {
+    return;
+  }
+
+  const oldestKey = map.keys().next().value as K | undefined;
+  if (oldestKey !== undefined) {
+    map.delete(oldestKey);
+  }
 }
 
 function printFlatResults(items: ResultsViewerItem[]): void {
@@ -66,26 +75,72 @@ export async function showResults(jobRef?: string): Promise<void> {
     return;
   }
 
-  const items = scanItemsRepo.listByJob(job.id);
-  if (items.length === 0) {
+  const totalItems = scanItemsRepo.countByJob(job.id);
+  if (totalItems === 0) {
     printWarning(`No results found for ${job.name} (${job.slug}).`);
     return;
   }
 
-  const viewerItems = buildViewerItems(items, (scanItemId) => scanItemsRepo.listCommentThreadNodes(scanItemId));
-
   if (!isRichTty()) {
     printWarning('Rich terminal not detected; rendering flat output.');
-    printFlatResults(viewerItems);
+    const flatRows = scanItemsRepo.listByJobPage(job.id, FLAT_OUTPUT_LIMIT, 0);
+    const flatItems = flatRows.map((item) => ({
+      ...item,
+      commentThreadNodes: item.type === 'comment' ? scanItemsRepo.listCommentThreadNodes(item.id) : []
+    }));
+    printFlatResults(flatItems);
+    if (totalItems > flatItems.length) {
+      printInfo(`Showing first ${flatItems.length} of ${totalItems} result(s). Use a rich TTY to browse all items.`);
+    }
     return;
   }
+
+  const itemCache = new Map<number, ResultsViewerItem>();
+  const threadCache = new Map<string, CommentThreadNodeRow[]>();
+
+  const getItemAt = (index: number): ResultsViewerItem | null => {
+    if (index < 0 || index >= totalItems) {
+      return null;
+    }
+
+    const cached = itemCache.get(index);
+    if (cached) {
+      setBoundedMapValue(itemCache, index, cached, MAX_ITEM_CACHE);
+      return cached;
+    }
+
+    const row = scanItemsRepo.getByJobIndex(job.id, index);
+    if (!row) {
+      return null;
+    }
+
+    let commentThreadNodes: CommentThreadNodeRow[] = [];
+    if (row.type === 'comment') {
+      const cachedThread = threadCache.get(row.id);
+      if (cachedThread) {
+        commentThreadNodes = cachedThread;
+        setBoundedMapValue(threadCache, row.id, cachedThread, MAX_THREAD_CACHE);
+      } else {
+        commentThreadNodes = scanItemsRepo.listCommentThreadNodes(row.id);
+        setBoundedMapValue(threadCache, row.id, commentThreadNodes, MAX_THREAD_CACHE);
+      }
+    }
+
+    const viewerItem: ResultsViewerItem = {
+      ...row,
+      commentThreadNodes
+    };
+    setBoundedMapValue(itemCache, index, viewerItem, MAX_ITEM_CACHE);
+    return viewerItem;
+  };
 
   try {
     const app = render(
       <ResultsViewer
         jobName={job.name}
         jobSlug={job.slug}
-        items={viewerItems}
+        totalItems={totalItems}
+        getItemAt={getItemAt}
         onExit={() => {
           app.unmount();
         }}

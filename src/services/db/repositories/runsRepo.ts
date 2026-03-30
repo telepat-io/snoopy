@@ -43,6 +43,26 @@ interface RunAnalyticsFilter {
 export class RunsRepository {
   private readonly db = getDb();
 
+  private readonly runSelectWithJob = `SELECT
+           jr.id as id,
+           jr.job_id as jobId,
+           j.name as jobName,
+           j.slug as jobSlug,
+           jr.status as status,
+           jr.message as message,
+           jr.started_at as startedAt,
+           jr.finished_at as finishedAt,
+           jr.created_at as createdAt,
+           jr.items_discovered as itemsDiscovered,
+           jr.items_new as itemsNew,
+           jr.items_qualified as itemsQualified,
+           jr.prompt_tokens as promptTokens,
+           jr.completion_tokens as completionTokens,
+           jr.estimated_cost_usd as estimatedCostUsd,
+           jr.log_file_path as logFilePath
+         FROM job_runs jr
+         LEFT JOIN jobs j ON j.id = jr.job_id`;
+
   private buildRunFilter(filter: { jobId?: string; days: number }): { clause: string; params: Array<string | number> } {
     const params: Array<string | number> = [`-${filter.days} days`];
     const conditions = ["datetime(jr.created_at) >= datetime('now', ?)"];
@@ -135,25 +155,7 @@ export class RunsRepository {
   getById(runId: string): RunRow | null {
     const row = this.db
       .prepare(
-        `SELECT
-           jr.id as id,
-           jr.job_id as jobId,
-           j.name as jobName,
-           j.slug as jobSlug,
-           jr.status as status,
-           jr.message as message,
-           jr.started_at as startedAt,
-           jr.finished_at as finishedAt,
-           jr.created_at as createdAt,
-           jr.items_discovered as itemsDiscovered,
-           jr.items_new as itemsNew,
-           jr.items_qualified as itemsQualified,
-           jr.prompt_tokens as promptTokens,
-           jr.completion_tokens as completionTokens,
-           jr.estimated_cost_usd as estimatedCostUsd,
-           jr.log_file_path as logFilePath
-         FROM job_runs jr
-         LEFT JOIN jobs j ON j.id = jr.job_id
+        `${this.runSelectWithJob}
          WHERE jr.id = ?
          LIMIT 1`
       )
@@ -176,25 +178,7 @@ export class RunsRepository {
   listByJob(jobId: string, limit = 20): RunRow[] {
     return this.db
       .prepare(
-        `SELECT
-           jr.id as id,
-           jr.job_id as jobId,
-           j.name as jobName,
-           j.slug as jobSlug,
-           jr.status as status,
-           jr.message as message,
-           jr.started_at as startedAt,
-           jr.finished_at as finishedAt,
-           jr.created_at as createdAt,
-           jr.items_discovered as itemsDiscovered,
-           jr.items_new as itemsNew,
-           jr.items_qualified as itemsQualified,
-           jr.prompt_tokens as promptTokens,
-           jr.completion_tokens as completionTokens,
-           jr.estimated_cost_usd as estimatedCostUsd,
-           jr.log_file_path as logFilePath
-         FROM job_runs jr
-         LEFT JOIN jobs j ON j.id = jr.job_id
+        `${this.runSelectWithJob}
          WHERE jr.job_id = ?
          ORDER BY jr.created_at DESC
          LIMIT ?`
@@ -205,29 +189,71 @@ export class RunsRepository {
   latestWithJobNames(limit = 20): RunRow[] {
     return this.db
       .prepare(
-        `SELECT
-           jr.id as id,
-           jr.job_id as jobId,
-           j.name as jobName,
-           j.slug as jobSlug,
-           jr.status as status,
-           jr.message as message,
-           jr.started_at as startedAt,
-           jr.finished_at as finishedAt,
-           jr.created_at as createdAt,
-           jr.items_discovered as itemsDiscovered,
-           jr.items_new as itemsNew,
-           jr.items_qualified as itemsQualified,
-           jr.prompt_tokens as promptTokens,
-           jr.completion_tokens as completionTokens,
-           jr.estimated_cost_usd as estimatedCostUsd,
-           jr.log_file_path as logFilePath
-         FROM job_runs jr
-         LEFT JOIN jobs j ON j.id = jr.job_id
+        `${this.runSelectWithJob}
          ORDER BY jr.created_at DESC
          LIMIT ?`
       )
       .all(limit) as RunRow[];
+  }
+
+  countByJob(jobId: string): number {
+    const row = this.db
+      .prepare(
+        `SELECT COUNT(*) as count
+         FROM job_runs
+         WHERE job_id = ?`
+      )
+      .get(jobId) as { count: number } | undefined;
+
+    return Number(row?.count ?? 0);
+  }
+
+  countAll(): number {
+    const row = this.db
+      .prepare(
+        `SELECT COUNT(*) as count
+         FROM job_runs`
+      )
+      .get() as { count: number } | undefined;
+
+    return Number(row?.count ?? 0);
+  }
+
+  listByJobPage(jobId: string, limit: number, offset: number): RunRow[] {
+    const boundedLimit = Math.max(1, Math.floor(limit));
+    const boundedOffset = Math.max(0, Math.floor(offset));
+
+    return this.db
+      .prepare(
+        `${this.runSelectWithJob}
+         WHERE jr.job_id = ?
+         ORDER BY jr.created_at DESC
+         LIMIT ? OFFSET ?`
+      )
+      .all(jobId, boundedLimit, boundedOffset) as RunRow[];
+  }
+
+  latestWithJobNamesPage(limit: number, offset: number): RunRow[] {
+    const boundedLimit = Math.max(1, Math.floor(limit));
+    const boundedOffset = Math.max(0, Math.floor(offset));
+
+    return this.db
+      .prepare(
+        `${this.runSelectWithJob}
+         ORDER BY jr.created_at DESC
+         LIMIT ? OFFSET ?`
+      )
+      .all(boundedLimit, boundedOffset) as RunRow[];
+  }
+
+  getByJobIndex(jobId: string, index: number): RunRow | null {
+    const rows = this.listByJobPage(jobId, 1, index);
+    return rows[0] ?? null;
+  }
+
+  getLatestWithJobNamesByIndex(index: number): RunRow | null {
+    const rows = this.latestWithJobNamesPage(1, index);
+    return rows[0] ?? null;
   }
 
   listAnalyticsRuns(filter: RunAnalyticsFilter): RunAnalyticsRow[] {

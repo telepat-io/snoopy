@@ -107,6 +107,25 @@ interface AnalyticsFilter {
 export class ScanItemsRepository {
   private readonly db = getDb();
 
+  private mapScanItemRows(
+    rows: Array<
+      Omit<ScanItemRow, 'qualified' | 'viewed' | 'validated' | 'processed'> & {
+          qualified: number;
+          viewed: number;
+          validated: number;
+          processed: number;
+        }
+    >
+  ): ScanItemRow[] {
+    return rows.map((row) => ({
+      ...row,
+      qualified: row.qualified === 1,
+      viewed: row.viewed === 1,
+      validated: row.validated === 1,
+      processed: row.processed === 1
+    }));
+  }
+
   private buildFilterClause(alias: string, filter: AnalyticsFilter): { clause: string; params: Array<string | number> } {
     const params: Array<string | number> = [`-${filter.days} days`];
     const conditions = [`datetime(${alias}.created_at) >= datetime('now', ?)`];
@@ -214,13 +233,69 @@ export class ScanItemsRepository {
         }
     >;
 
-    return rows.map((row) => ({
-      ...row,
-      qualified: row.qualified === 1,
-      viewed: row.viewed === 1,
-      validated: row.validated === 1,
-      processed: row.processed === 1
-    }));
+    return this.mapScanItemRows(rows);
+  }
+
+  countByJob(jobId: string): number {
+    const row = this.db
+      .prepare(
+        `SELECT COUNT(*) as count
+         FROM scan_items
+         WHERE job_id = ?`
+      )
+      .get(jobId) as { count: number } | undefined;
+
+    return Number(row?.count ?? 0);
+  }
+
+  listByJobPage(jobId: string, limit: number, offset: number): ScanItemRow[] {
+    const boundedLimit = Math.max(1, Math.floor(limit));
+    const boundedOffset = Math.max(0, Math.floor(offset));
+
+    const rows = this.db
+      .prepare(
+        `SELECT
+           id,
+           job_id as jobId,
+           run_id as runId,
+           type,
+           reddit_post_id as redditPostId,
+           reddit_comment_id as redditCommentId,
+           subreddit,
+           author,
+           title,
+           body,
+           url,
+           reddit_posted_at as redditPostedAt,
+           qualified,
+           viewed,
+           validated,
+           processed,
+           qualification_reason as qualificationReason,
+           prompt_tokens as promptTokens,
+           completion_tokens as completionTokens,
+           estimated_cost_usd as estimatedCostUsd,
+           created_at as createdAt
+         FROM scan_items
+         WHERE job_id = ?
+         ORDER BY datetime(reddit_posted_at) DESC, datetime(created_at) DESC, id DESC
+         LIMIT ? OFFSET ?`
+      )
+      .all(jobId, boundedLimit, boundedOffset) as Array<
+      Omit<ScanItemRow, 'qualified' | 'viewed' | 'validated' | 'processed'> & {
+          qualified: number;
+          viewed: number;
+          validated: number;
+          processed: number;
+        }
+    >;
+
+    return this.mapScanItemRows(rows);
+  }
+
+  getByJobIndex(jobId: string, index: number): ScanItemRow | null {
+    const rows = this.listByJobPage(jobId, 1, index);
+    return rows[0] ?? null;
   }
 
   existsPost(jobId: string, postId: string): boolean {

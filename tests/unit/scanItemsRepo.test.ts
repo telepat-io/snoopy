@@ -278,6 +278,34 @@ describe('ScanItemsRepository', () => {
         url: 'https://reddit.com/post-older'
       })
     );
+
+    expect(repo.countByJob(jobId)).toBe(2);
+
+    const page0 = repo.listByJobPage(jobId, 1, 0);
+    expect(page0).toHaveLength(1);
+    expect(page0[0]).toEqual(
+      expect.objectContaining({
+        type: 'comment',
+        qualified: false,
+        url: 'https://reddit.com/post-newer/comment-newer'
+      })
+    );
+
+    const page1 = repo.listByJobPage(jobId, 1, 1);
+    expect(page1).toHaveLength(1);
+    expect(page1[0]).toEqual(
+      expect.objectContaining({
+        type: 'post',
+        qualified: true,
+        url: 'https://reddit.com/post-older'
+      })
+    );
+
+    const byIndex0 = repo.getByJobIndex(jobId, 0);
+    const byIndex1 = repo.getByJobIndex(jobId, 1);
+    expect(byIndex0).toEqual(page0[0]);
+    expect(byIndex1).toEqual(page1[0]);
+    expect(repo.getByJobIndex(jobId, 2)).toBeNull();
   });
 
   it('stores and returns lifecycle flags for qualified items', () => {

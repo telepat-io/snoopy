@@ -12,11 +12,12 @@ import {
 interface ResultsViewerProps {
   jobName: string;
   jobSlug: string;
-  items: ResultsViewerItem[];
+  totalItems: number;
+  getItemAt: (index: number) => ResultsViewerItem | null;
   onExit: () => void;
 }
 
-export function ResultsViewer({ jobName, jobSlug, items, onExit }: ResultsViewerProps): React.JSX.Element {
+export function ResultsViewer({ jobName, jobSlug, totalItems, getItemAt, onExit }: ResultsViewerProps): React.JSX.Element {
   const { stdout } = useStdout();
   const terminalRows = stdout?.rows ?? 24;
   const terminalCols = stdout?.columns ?? 80;
@@ -24,7 +25,7 @@ export function ResultsViewer({ jobName, jobSlug, items, onExit }: ResultsViewer
   const [cursor, setCursor] = useState(0);
   const [contentScrollTop, setContentScrollTop] = useState(0);
 
-  const item = items[cursor];
+  const item = useMemo(() => getItemAt(cursor), [cursor, getItemAt]);
   const resultLines = useMemo(() => {
     if (!item) {
       return [];
@@ -42,7 +43,7 @@ export function ResultsViewer({ jobName, jobSlug, items, onExit }: ResultsViewer
 
   useInput((input, key) => {
     if (key.leftArrow) {
-      const next = nextItemIndex(cursor, 'left', items.length);
+      const next = nextItemIndex(cursor, 'left', totalItems);
       if (next !== cursor) {
         setCursor(next);
         setContentScrollTop(0);
@@ -51,7 +52,7 @@ export function ResultsViewer({ jobName, jobSlug, items, onExit }: ResultsViewer
     }
 
     if (key.rightArrow) {
-      const next = nextItemIndex(cursor, 'right', items.length);
+      const next = nextItemIndex(cursor, 'right', totalItems);
       if (next !== cursor) {
         setCursor(next);
         setContentScrollTop(0);
@@ -124,7 +125,7 @@ export function ResultsViewer({ jobName, jobSlug, items, onExit }: ResultsViewer
     <AppFrame
       subtitle="Results"
       description={`${jobName} (${jobSlug})`}
-      statusText={`${cursor + 1} / ${items.length}`}
+      statusText={`${cursor + 1} / ${totalItems}`}
       statusTone="info"
       hints={['←→ result', '↑↓ scroll', 'q quit']}
     >

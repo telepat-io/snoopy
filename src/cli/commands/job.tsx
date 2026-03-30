@@ -372,40 +372,89 @@ function printRunsFlatDump(rows: RunRow[]): void {
   });
 }
 
+const MAX_RUN_CACHE = 256;
+const FLAT_RUN_LIMIT = 50;
+
+function setBoundedMapValue<K, V>(map: Map<K, V>, key: K, value: V, maxSize: number): void {
+  if (map.has(key)) {
+    map.delete(key);
+  }
+
+  map.set(key, value);
+  if (map.size <= maxSize) {
+    return;
+  }
+
+  const oldestKey = map.keys().next().value as K | undefined;
+  if (oldestKey !== undefined) {
+    map.delete(oldestKey);
+  }
+}
+
 export async function listJobRuns(jobRef?: string): Promise<void> {
   const jobsRepo = new JobsRepository();
   const runsRepo = new RunsRepository();
 
-  const rows = jobRef
+  const selectedJob = jobRef
     ? (() => {
         const job = jobsRepo.getByRef(jobRef);
         if (!job) {
           printError(`Job not found: ${jobRef}`);
           return null;
         }
-        return runsRepo.listByJob(job.id);
+        return job;
       })()
-    : runsRepo.latestWithJobNames();
+    : undefined;
 
-  if (rows === null) {
+  if (selectedJob === null) {
     return;
   }
 
-  if (rows.length === 0) {
+  const totalRuns = selectedJob ? runsRepo.countByJob(selectedJob.id) : runsRepo.countAll();
+
+  if (totalRuns === 0) {
     printCommandScreen('Run history', 'Job Runs');
     printWarning('No run history yet.');
     return;
   }
 
+  const runCache = new Map<number, RunRow>();
+  const getRunAt = (index: number): RunRow | null => {
+    if (index < 0 || index >= totalRuns) {
+      return null;
+    }
+
+    const cached = runCache.get(index);
+    if (cached) {
+      setBoundedMapValue(runCache, index, cached, MAX_RUN_CACHE);
+      return cached;
+    }
+
+    const fetched = selectedJob ? runsRepo.getByJobIndex(selectedJob.id, index) : runsRepo.getLatestWithJobNamesByIndex(index);
+    if (!fetched) {
+      return null;
+    }
+
+    setBoundedMapValue(runCache, index, fetched, MAX_RUN_CACHE);
+    return fetched;
+  };
+
   if (!isRichTty()) {
     printCommandScreen('Run history', 'Job Runs');
+    const rows = selectedJob
+      ? runsRepo.listByJobPage(selectedJob.id, FLAT_RUN_LIMIT, 0)
+      : runsRepo.latestWithJobNamesPage(FLAT_RUN_LIMIT, 0);
     printRunsFlatDump(rows);
+    if (totalRuns > rows.length) {
+      printInfo(`Showing first ${rows.length} of ${totalRuns} run(s). Use a rich TTY to browse all runs.`);
+    }
     return;
   }
 
   const app = render(
     <RunsTable
-      runs={rows}
+      totalRuns={totalRuns}
+      getRunAt={getRunAt}
       onExit={() => {
         app.unmount();
       }}

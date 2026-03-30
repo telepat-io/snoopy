@@ -71,6 +71,24 @@ describe('RunsRepository', () => {
     const fromJob = latestNamed.find((row) => row.jobId === jobId);
     expect(fromJob?.jobName).toContain('runs-alt-');
     expect(runsRepo.latestWithJobNames().length).toBeGreaterThan(0);
+
+    const totalForJob = runsRepo.countByJob(jobId);
+    expect(totalForJob).toBeGreaterThanOrEqual(2);
+
+    const firstPage = runsRepo.listByJobPage(jobId, 1, 0);
+    expect(firstPage).toHaveLength(1);
+
+    const firstByIndex = runsRepo.getByJobIndex(jobId, 0);
+    expect(firstByIndex).toEqual(firstPage[0]);
+
+    const globalTotal = runsRepo.countAll();
+    expect(globalTotal).toBeGreaterThanOrEqual(totalForJob);
+
+    const globalPage = runsRepo.latestWithJobNamesPage(1, 0);
+    expect(globalPage).toHaveLength(1);
+
+    const globalByIndex = runsRepo.getLatestWithJobNamesByIndex(0);
+    expect(globalByIndex).toEqual(globalPage[0]);
   });
 
   it('lists run analytics and counts runs within a day window', () => {

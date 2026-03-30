@@ -18,11 +18,12 @@ const COL_SEP = '  ';
 type View = 'list' | 'detail';
 
 interface RunsTableProps {
-  runs: RunRow[];
+  totalRuns: number;
+  getRunAt: (index: number) => RunRow | null;
   onExit: () => void;
 }
 
-export function RunsTable({ runs, onExit }: RunsTableProps): React.JSX.Element {
+export function RunsTable({ totalRuns, getRunAt, onExit }: RunsTableProps): React.JSX.Element {
   const { stdout } = useStdout();
   const terminalRows = stdout?.rows ?? 24;
 
@@ -33,38 +34,48 @@ export function RunsTable({ runs, onExit }: RunsTableProps): React.JSX.Element {
   const [cursor, setCursor] = useState(0);
   const [scrollTop, setScrollTop] = useState(0);
 
-  const widths = computeColumnWidths(runs);
-  const header = formatHeaderRow(widths);
+  const currentRun = getRunAt(cursor);
 
   const { scrollTop: nextScrollTop, visibleStart, visibleEnd } = computeScrollWindow(
     cursor,
     scrollTop,
-    runs.length,
+    totalRuns,
     maxWindow
   );
+
+  const visibleRuns: RunRow[] = [];
+  for (let index = visibleStart; index < visibleEnd; index += 1) {
+    const run = getRunAt(index);
+    if (run) {
+      visibleRuns.push(run);
+    }
+  }
+
+  const widthSample = currentRun ? [currentRun, ...visibleRuns] : visibleRuns;
+  const widths = computeColumnWidths(widthSample);
+  const header = formatHeaderRow(widths);
 
   if (nextScrollTop !== scrollTop) {
     setScrollTop(nextScrollTop);
   }
 
-  const visibleRuns = runs.slice(visibleStart, visibleEnd);
   const aboveCount = visibleStart;
-  const belowCount = runs.length - visibleEnd;
+  const belowCount = totalRuns - visibleEnd;
 
   useInput((input, key) => {
     if (view === 'list') {
       if (key.upArrow) {
         const next = Math.max(0, cursor - 1);
         setCursor(next);
-        const win = computeScrollWindow(next, scrollTop, runs.length, maxWindow);
+        const win = computeScrollWindow(next, scrollTop, totalRuns, maxWindow);
         setScrollTop(win.scrollTop);
         return;
       }
 
       if (key.downArrow) {
-        const next = Math.min(runs.length - 1, cursor + 1);
+        const next = Math.min(totalRuns - 1, cursor + 1);
         setCursor(next);
-        const win = computeScrollWindow(next, scrollTop, runs.length, maxWindow);
+        const win = computeScrollWindow(next, scrollTop, totalRuns, maxWindow);
         setScrollTop(win.scrollTop);
         return;
       }
@@ -92,7 +103,7 @@ export function RunsTable({ runs, onExit }: RunsTableProps): React.JSX.Element {
   });
 
   if (view === 'detail') {
-    const run = runs[cursor];
+    const run = currentRun;
     if (!run) return <></>;
     const detailLines = buildDetailLines(run);
     const title = `${formatRunDisplayTimestamp(run)} — ${run.jobName ?? run.jobId}`;
@@ -100,7 +111,7 @@ export function RunsTable({ runs, onExit }: RunsTableProps): React.JSX.Element {
     return (
       <AppFrame
         subtitle="Run History"
-        statusText={`${cursor + 1} / ${runs.length}`}
+        statusText={`${cursor + 1} / ${totalRuns}`}
         statusTone="info"
         hints={['Esc / ← back', 'q quit']}
       >
@@ -119,7 +130,7 @@ export function RunsTable({ runs, onExit }: RunsTableProps): React.JSX.Element {
   return (
     <AppFrame
       subtitle="Run History"
-      statusText={`${cursor + 1} / ${runs.length}`}
+      statusText={`${cursor + 1} / ${totalRuns}`}
       statusTone="info"
       hints={['↑↓ navigate', '↵ details', 'q quit']}
     >

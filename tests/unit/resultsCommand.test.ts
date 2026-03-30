@@ -7,7 +7,9 @@ const mockPrintKeyValue = jest.fn();
 const mockPrintSection = jest.fn();
 const mockPrintWarning = jest.fn();
 const mockResolveJobFromArgOrPrompt = jest.fn();
-const mockListByJob = jest.fn();
+const mockCountByJob = jest.fn();
+const mockListByJobPage = jest.fn();
+const mockGetByJobIndex = jest.fn();
 const mockListCommentThreadNodes = jest.fn();
 
 jest.mock('ink', () => ({
@@ -34,7 +36,9 @@ jest.mock('../../src/services/db/repositories/jobsRepo.js', () => ({
 
 jest.mock('../../src/services/db/repositories/scanItemsRepo.js', () => ({
   ScanItemsRepository: jest.fn().mockImplementation(() => ({
-    listByJob: mockListByJob,
+    countByJob: mockCountByJob,
+    listByJobPage: mockListByJobPage,
+    getByJobIndex: mockGetByJobIndex,
     listCommentThreadNodes: mockListCommentThreadNodes
   }))
 }));
@@ -48,6 +52,9 @@ import { showResults } from '../../src/cli/commands/results.js';
 describe('showResults command', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    mockCountByJob.mockReturnValue(0);
+    mockListByJobPage.mockReturnValue([]);
+    mockGetByJobIndex.mockReturnValue(null);
     mockListCommentThreadNodes.mockReturnValue([]);
     mockRender.mockReturnValue({
       unmount: jest.fn(),
@@ -61,7 +68,7 @@ describe('showResults command', () => {
       slug: 'alpha',
       name: 'Alpha'
     });
-    mockListByJob.mockReturnValue([]);
+    mockCountByJob.mockReturnValue(0);
 
     await showResults('alpha');
 
@@ -75,31 +82,30 @@ describe('showResults command', () => {
       slug: 'alpha',
       name: 'Alpha'
     });
-    mockListByJob.mockReturnValue([
-      {
-        id: 'scan-1',
-        jobId: 'job-1',
-        runId: 'run-1',
-        type: 'post',
-        redditPostId: 'post-1',
-        redditCommentId: null,
-        subreddit: 'askreddit',
-        author: 'alice',
-        title: 'title',
-        body: 'body',
-        url: 'https://example.com',
-        redditPostedAt: '2026-03-01T00:00:00.000Z',
-        qualified: true,
-        viewed: false,
-        validated: false,
-        processed: false,
-        qualificationReason: 'fit',
-        promptTokens: 1,
-        completionTokens: 1,
-        estimatedCostUsd: 0.000001,
-        createdAt: '2026-03-01T00:00:00.000Z'
-      }
-    ]);
+    mockCountByJob.mockReturnValue(1);
+    mockGetByJobIndex.mockReturnValue({
+      id: 'scan-1',
+      jobId: 'job-1',
+      runId: 'run-1',
+      type: 'post',
+      redditPostId: 'post-1',
+      redditCommentId: null,
+      subreddit: 'askreddit',
+      author: 'alice',
+      title: 'title',
+      body: 'body',
+      url: 'https://example.com',
+      redditPostedAt: '2026-03-01T00:00:00.000Z',
+      qualified: true,
+      viewed: false,
+      validated: false,
+      processed: false,
+      qualificationReason: 'fit',
+      promptTokens: 1,
+      completionTokens: 1,
+      estimatedCostUsd: 0.000001,
+      createdAt: '2026-03-01T00:00:00.000Z'
+    });
     mockIsRichTty.mockReturnValue(true);
 
     await showResults('alpha');
@@ -116,7 +122,8 @@ describe('showResults command', () => {
       slug: 'alpha',
       name: 'Alpha'
     });
-    mockListByJob.mockReturnValue([
+    mockCountByJob.mockReturnValue(1);
+    mockListByJobPage.mockReturnValue([
       {
         id: 'scan-1',
         jobId: 'job-1',
@@ -155,6 +162,6 @@ describe('showResults command', () => {
 
     await showResults();
 
-    expect(mockListByJob).not.toHaveBeenCalled();
+    expect(mockCountByJob).not.toHaveBeenCalled();
   });
 });
