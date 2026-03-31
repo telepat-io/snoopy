@@ -3,6 +3,7 @@ import path from 'node:path';
 import type { Job } from '../../types/job.js';
 import type { QualifiedScanItemRow } from '../db/repositories/scanItemsRepo.js';
 import { getAppPaths } from '../../utils/paths.js';
+import { createExportFileName } from './fileNaming.js';
 
 const CSV_HEADERS = ['URL', 'Title', 'Truncated Content', 'Author', 'Justification', 'Date'] as const;
 
@@ -34,8 +35,8 @@ export interface CsvExportSummary {
 export class CsvResultsExporter {
   private readonly resultsDir = getAppPaths().resultsDir;
 
-  exportJobResults(job: Job, qualifiedRows: QualifiedScanItemRow[]): CsvExportSummary {
-    const outputPath = path.join(this.resultsDir, `${job.slug}.csv`);
+  exportJobResults(job: Job, qualifiedRows: QualifiedScanItemRow[], exportedAt = new Date()): CsvExportSummary {
+    const outputPath = path.join(this.resultsDir, createExportFileName(job.slug, 'csv', exportedAt));
     const lines = [toCsvLine([...CSV_HEADERS])];
 
     for (const row of qualifiedRows) {

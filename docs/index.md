@@ -79,11 +79,11 @@ snoopy analytics
 snoopy analytics <jobRef> --days 7
 ```
 
-6. Export qualified results to CSV:
+6. Export qualified results:
 
 ```bash
-snoopy export csv
-snoopy export csv <jobRef>
+snoopy export
+snoopy export <jobRef> --json --last-run
 ```
 
 7. Start the background daemon:
@@ -98,7 +98,7 @@ snoopy daemon start
 - `job list`
 - `job run [jobRef] --limit <N>`
 - `job runs [jobRef]`
-- `export csv [jobRef]`
+- `export [jobRef] --csv|--json [--last-run]`
 - `start [jobRef]` / `stop [jobRef]`
 - `delete [jobRef]`
 - `daemon start|stop|status`

@@ -329,16 +329,18 @@ Output metrics:
 
 ## 10. Export Qualified Results
 
-Export qualified scan items to CSV for downstream processing.
+Export qualified scan items for downstream processing without querying SQLite directly.
 
 ```bash
-snoopy export csv <jobRef>   # One job
-snoopy export csv            # All jobs
+snoopy export <jobRef> --json --last-run           # One job, latest run only
+snoopy export --json --last-run                    # All jobs, latest run each
+snoopy export <jobRef> --json --last-run --limit 500  # Raise row cap when needed
+snoopy export <jobRef> --csv                       # CSV output (default format)
 ```
 
-Output files are written to `~/.snoopy/results/<job-slug>.csv`. Files are regenerated from the database on each call (not incremental). The command prints row count and file path on completion.
+Output files are written to `~/.snoopy/results/<timestamp>_<job-slug>.<ext>` where timestamp is UTC `YYYYMMDD-HHmmss`. Files are regenerated from the database on each call (not incremental). The command prints row count and file path on completion.
 
-CSV columns include: item ID, type (post/comment), subreddit, author, title, URL, body snippet, reddit_posted_at, qualified, qualification_reason, viewed, validated, processed, created_at.
+For agents, prefer `--json --last-run` to retrieve only the newest run's qualified items in a machine-friendly format. This avoids reading the DB directly while keeping automation deterministic.
 
 ---
 

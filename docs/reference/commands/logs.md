@@ -35,4 +35,4 @@ Notes:
 - files are named `run-<runId>.log`
 - older runs may not have a log file if they predate detailed run logging
 - terminals without hyperlink support still show full URLs so links can be copied
-- results CSV files are exported separately under `~/.snoopy/results/` via `snoopy export csv`
+- results files are exported separately under `~/.snoopy/results/` via `snoopy export`

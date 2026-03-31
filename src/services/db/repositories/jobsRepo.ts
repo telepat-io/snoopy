@@ -1,9 +1,7 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs';
-import path from 'node:path';
 import { getDb } from '../sqlite.js';
 import type { Job, NewJob } from '../../../types/job.js';
-import { getAppPaths } from '../../../utils/paths.js';
 
 function toSlug(value: string): string {
   const cleaned = value
@@ -51,8 +49,6 @@ export interface JobSummaryRow {
 export class JobsRepository {
   private readonly db = getDb();
   private readonly removeCascadeStmt = this.db.transaction((jobId: string) => {
-    const jobRow = this.db.prepare('SELECT slug FROM jobs WHERE id = ?').get(jobId) as { slug: string } | undefined;
-
     const runLogs = this.db
       .prepare(
         `SELECT log_file_path as logFilePath
@@ -70,17 +66,6 @@ export class JobsRepository {
       try {
         if (fs.existsSync(row.logFilePath)) {
           fs.unlinkSync(row.logFilePath);
-        }
-      } catch {
-        // Ignore filesystem cleanup failures and continue DB cleanup.
-      }
-    }
-
-    if (jobRow?.slug) {
-      const csvPath = path.join(getAppPaths().resultsDir, `${jobRow.slug}.csv`);
-      try {
-        if (fs.existsSync(csvPath)) {
-          fs.unlinkSync(csvPath);
         }
       } catch {
         // Ignore filesystem cleanup failures and continue DB cleanup.

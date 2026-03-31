@@ -154,13 +154,16 @@ program
     await showResults(jobRef);
   });
 
-const exportCommand = program.command('export').description('Export data artifacts');
-exportCommand
-  .command('csv')
+program
+  .command('export')
   .argument('[jobRef]', 'Optional job ID or slug')
-  .description('Regenerate CSV qualified results for one job or all jobs')
-  .action((jobRef?: string) => {
-    exportCsv(jobRef);
+  .description('Export qualified results for one job or all jobs')
+  .option('--csv', 'Export as CSV (default)')
+  .option('--json', 'Export as JSON')
+  .option('--last-run', 'Export only items from each job\'s latest run')
+  .option('--limit <count>', 'Maximum rows per job file (default: 100)', parsePositiveInteger, 100)
+  .action((jobRef: string | undefined, options: { csv?: boolean; json?: boolean; lastRun?: boolean; limit: number }) => {
+    exportCsv(jobRef, options);
   });
 
 program.parseAsync(process.argv).catch((error: unknown) => {

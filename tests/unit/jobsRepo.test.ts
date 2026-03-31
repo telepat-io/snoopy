@@ -5,6 +5,7 @@ import { getDb } from '../../src/services/db/sqlite.js';
 import { RunsRepository } from '../../src/services/db/repositories/runsRepo.js';
 import { ScanItemsRepository } from '../../src/services/db/repositories/scanItemsRepo.js';
 import { ensureAppDirs } from '../../src/utils/paths.js';
+import { createExportFileName } from '../../src/services/export/fileNaming.js';
 
 describe('JobsRepository', () => {
   it('creates and lists jobs', () => {
@@ -80,7 +81,7 @@ describe('JobsRepository', () => {
     expect(third.slug).toBe('fancy-startup-alerts-3');
   });
 
-  it('deletes related runs and scan items when a job is removed', () => {
+  it('deletes DB/log data but keeps export artifacts when a job is removed', () => {
     const db = getDb();
     const jobsRepo = new JobsRepository();
     const runsRepo = new RunsRepository();
@@ -95,9 +96,12 @@ describe('JobsRepository', () => {
 
     const paths = ensureAppDirs();
     const logFilePath = path.join(paths.logsDir, `run-delete-cascade-${Date.now()}.log`);
-    const csvPath = path.join(paths.resultsDir, `${created.slug}.csv`);
+    const exportedAt = new Date('2026-03-31T14:22:00.000Z');
+    const csvPath = path.join(paths.resultsDir, createExportFileName(created.slug, 'csv', exportedAt));
+    const jsonPath = path.join(paths.resultsDir, createExportFileName(created.slug, 'json', exportedAt));
     fs.writeFileSync(logFilePath, 'test run log');
     fs.writeFileSync(csvPath, 'URL,Title,Truncated Content,Author,Justification,Date\n', 'utf8');
+    fs.writeFileSync(jsonPath, '[]\n', 'utf8');
 
     const runId = runsRepo.startRun(created.id, logFilePath);
     runsRepo.completeRun(runId, {
@@ -133,12 +137,16 @@ describe('JobsRepository', () => {
     expect(jobsRepo.getById(created.id)).toBeNull();
     expect(runsRepo.listByJob(created.id)).toHaveLength(0);
     expect(fs.existsSync(logFilePath)).toBe(false);
-    expect(fs.existsSync(csvPath)).toBe(false);
+    expect(fs.existsSync(csvPath)).toBe(true);
+    expect(fs.existsSync(jsonPath)).toBe(true);
 
     const remainingScanItems = db
       .prepare('SELECT COUNT(*) as count FROM scan_items WHERE job_id = ?')
       .get(created.id) as { count: number };
     expect(remainingScanItems.count).toBe(0);
+
+    fs.unlinkSync(csvPath);
+    fs.unlinkSync(jsonPath);
   });
 
   it('returns null when removing by unknown ref', () => {

@@ -100,7 +100,7 @@ snoopy job run <jobRef> --limit 5
 snoopy job runs <jobRef>
 snoopy analytics <jobRef>
 snoopy results <jobRef>
-snoopy export csv <jobRef>
+snoopy export <jobRef> --json --last-run
 snoopy logs
 snoopy logs <runId>
 snoopy errors <jobRef>

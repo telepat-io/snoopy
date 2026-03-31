@@ -157,7 +157,8 @@ export class ScanItemsRepository {
     };
   }
 
-  listQualifiedByJob(jobId: string): QualifiedScanItemRow[] {
+  listQualifiedByJob(jobId: string, limit = 100): QualifiedScanItemRow[] {
+    const boundedLimit = Math.max(1, Math.floor(limit));
     const rows = this.db
       .prepare(
         `SELECT
@@ -177,9 +178,51 @@ export class ScanItemsRepository {
          FROM scan_items
          WHERE job_id = ?
            AND qualified = 1
-         ORDER BY datetime(reddit_posted_at) DESC, datetime(created_at) DESC, id DESC`
+         ORDER BY datetime(reddit_posted_at) DESC, datetime(created_at) DESC, id DESC
+         LIMIT ?`
       )
-      .all(jobId) as Array<
+      .all(jobId, boundedLimit) as Array<
+      Omit<QualifiedScanItemRow, 'viewed' | 'validated' | 'processed'> & {
+          viewed: number;
+          validated: number;
+          processed: number;
+        }
+    >;
+
+    return rows.map((row) => ({
+      ...row,
+      viewed: row.viewed === 1,
+      validated: row.validated === 1,
+      processed: row.processed === 1
+    }));
+  }
+
+  listQualifiedByJobRun(jobId: string, runId: string, limit = 100): QualifiedScanItemRow[] {
+    const boundedLimit = Math.max(1, Math.floor(limit));
+    const rows = this.db
+      .prepare(
+        `SELECT
+           id,
+           job_id as jobId,
+           run_id as runId,
+           author,
+           title,
+           body,
+           url,
+           reddit_posted_at as redditPostedAt,
+           viewed,
+           validated,
+           processed,
+           qualification_reason as qualificationReason,
+           created_at as createdAt
+         FROM scan_items
+         WHERE job_id = ?
+           AND run_id = ?
+           AND qualified = 1
+         ORDER BY datetime(reddit_posted_at) DESC, datetime(created_at) DESC, id DESC
+         LIMIT ?`
+      )
+      .all(jobId, runId, boundedLimit) as Array<
       Omit<QualifiedScanItemRow, 'viewed' | 'validated' | 'processed'> & {
           viewed: number;
           validated: number;

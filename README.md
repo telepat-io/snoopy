@@ -148,11 +148,11 @@ snoopy results
 snoopy results <jobRef>
 ```
 
-7. Regenerate results CSV files (all jobs or one job):
+7. Regenerate qualified results files (all jobs or one job):
 
 ```bash
-snoopy export csv
-snoopy export csv <jobRef>
+snoopy export
+snoopy export <jobRef> --json --last-run
 ```
 
 8. Inspect one run's detailed log output:
@@ -186,7 +186,7 @@ snoopy daemon reload
 - `job runs [jobRef]`
 - `analytics [jobRef] --days <N>`
 - `results [jobRef]`
-- `export csv [jobRef]`
+- `export [jobRef] --csv|--json [--last-run]`
 - `logs [runId]`
 - `errors [jobRef] --hours <N>`
 - `start [jobRef]` / `stop [jobRef]`
@@ -207,13 +207,14 @@ snoopy daemon reload
 - Run logs older than 5 days are deleted automatically on daemon startup and after each job run.
 - Deleting a job also deletes all associated per-run log files for that job.
 
-## Results CSV Exports
+## Results Exports
 
-- Export files are generated on demand with `export csv`.
+- Export files are generated on demand with `export`.
 - Files are written under `~/.snoopy/results/`.
-- Each job gets one file named `<job-slug>.csv`.
-- CSV files are regenerated from database truth on each export command.
-- Deleting a job also deletes that job's CSV file.
+- Each export writes a timestamped file like `<YYYYMMDD-HHmmss>_<job-slug>.<ext>`.
+- Use `--csv` (default) or `--json` to choose output format.
+- Use `--last-run` to export only qualified rows from each job's most recent run.
+- Export files are regenerated from database truth on each export command.
 
 ## Live E2E Smoke Test
 

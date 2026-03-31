@@ -42,8 +42,8 @@ snoopy startup status
 ## 6. Export Qualified Results
 
 ```bash
-snoopy export csv
-snoopy export csv <jobRef>
+snoopy export
+snoopy export <jobRef> --json --last-run
 ```
 
 ## Next

@@ -3,6 +3,7 @@ import path from 'node:path';
 import type { Job } from '../../src/types/job.js';
 import { ensureAppDirs } from '../../src/utils/paths.js';
 import { CsvResultsExporter } from '../../src/services/export/csvResults.js';
+import { createExportFileName } from '../../src/services/export/fileNaming.js';
 import type { QualifiedScanItemRow } from '../../src/services/db/repositories/scanItemsRepo.js';
 
 describe('CsvResultsExporter', () => {
@@ -46,11 +47,12 @@ describe('CsvResultsExporter', () => {
     const paths = ensureAppDirs();
     const exporter = new CsvResultsExporter();
     const job = makeJob(`csv-overwrite-${Date.now()}`);
+    const exportedAt = new Date('2026-03-31T14:22:00.000Z');
 
-    const outputPath = path.join(paths.resultsDir, `${job.slug}.csv`);
+    const outputPath = path.join(paths.resultsDir, createExportFileName(job.slug, 'csv', exportedAt));
     fs.writeFileSync(outputPath, 'stale file\n', 'utf8');
 
-    const summary = exporter.exportJobResults(job, [makeRow('r1')]);
+    const summary = exporter.exportJobResults(job, [makeRow('r1')], exportedAt);
 
     expect(summary.outputPath).toBe(outputPath);
     expect(summary.rowCount).toBe(1);
@@ -65,6 +67,7 @@ describe('CsvResultsExporter', () => {
     const paths = ensureAppDirs();
     const exporter = new CsvResultsExporter();
     const job = makeJob(`csv-escape-${Date.now()}`);
+    const exportedAt = new Date('2026-03-31T14:22:00.000Z');
 
     const longBody = `${'x'.repeat(320)} tail`;
     exporter.exportJobResults(job, [
@@ -74,9 +77,9 @@ describe('CsvResultsExporter', () => {
         qualificationReason: 'reason with\nnewline',
         author: 'auth,or'
       })
-    ]);
+    ], exportedAt);
 
-    const outputPath = path.join(paths.resultsDir, `${job.slug}.csv`);
+    const outputPath = path.join(paths.resultsDir, createExportFileName(job.slug, 'csv', exportedAt));
     const content = fs.readFileSync(outputPath, 'utf8');
 
     expect(content).toContain('"Title with, comma and ""quote"""');

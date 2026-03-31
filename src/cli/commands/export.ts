@@ -1,14 +1,40 @@
 import { JobsRepository } from '../../services/db/repositories/jobsRepo.js';
+import { RunsRepository } from '../../services/db/repositories/runsRepo.js';
 import { ScanItemsRepository } from '../../services/db/repositories/scanItemsRepo.js';
 import { CsvResultsExporter } from '../../services/export/csvResults.js';
+import { JsonResultsExporter } from '../../services/export/jsonResults.js';
 import { printCommandScreen, printError, printInfo, printKeyValue, printSuccess, printWarning } from '../ui/consoleUi.js';
 
-export function exportCsv(jobRef?: string): void {
-  printCommandScreen('Data exports', 'Export CSV');
+type ExportFormat = 'csv' | 'json';
+
+interface ExportCommandOptions {
+  csv?: boolean;
+  json?: boolean;
+  lastRun?: boolean;
+  limit?: number;
+}
+
+function resolveFormat(options: ExportCommandOptions): ExportFormat {
+  if (options.csv && options.json) {
+    throw new Error('Please choose only one format flag: --csv or --json.');
+  }
+
+  if (options.json) {
+    return 'json';
+  }
+
+  return 'csv';
+}
+
+export function exportCsv(jobRef?: string, options: ExportCommandOptions = {}): void {
+  const format = resolveFormat(options);
+  printCommandScreen('Data exports', format === 'csv' ? 'Export CSV' : 'Export JSON');
 
   const jobsRepo = new JobsRepository();
+  const runsRepo = new RunsRepository();
   const scanItemsRepo = new ScanItemsRepository();
-  const exporter = new CsvResultsExporter();
+  const csvExporter = new CsvResultsExporter();
+  const jsonExporter = new JsonResultsExporter();
 
   const jobs = jobRef
     ? (() => {
@@ -30,12 +56,27 @@ export function exportCsv(jobRef?: string): void {
 
   let failures = 0;
   let totalRows = 0;
+  let filesExported = 0;
 
   jobs.forEach((job) => {
     try {
-      const qualifiedRows = scanItemsRepo.listQualifiedByJob(job.id);
-      const result = exporter.exportJobResults(job, qualifiedRows);
+      const latestRunId = options.lastRun ? runsRepo.listByJob(job.id, 1)[0]?.id ?? null : null;
+      if (options.lastRun && !latestRunId) {
+        printWarning(`Skipping ${job.name} (${job.slug}): no runs found.`);
+        return;
+      }
+
+      const limit = options.limit ?? 100;
+      const qualifiedRows = latestRunId
+        ? scanItemsRepo.listQualifiedByJobRun(job.id, latestRunId, limit)
+        : scanItemsRepo.listQualifiedByJob(job.id, limit);
+
+      const result = format === 'csv'
+        ? csvExporter.exportJobResults(job, qualifiedRows)
+        : jsonExporter.exportJobResults(job, qualifiedRows);
+
       totalRows += result.rowCount;
+      filesExported += 1;
 
       printInfo(`${job.name} (${job.slug})`);
       printKeyValue('Rows', String(result.rowCount));
@@ -48,8 +89,8 @@ export function exportCsv(jobRef?: string): void {
   });
 
   if (failures > 0) {
-    throw new Error(`CSV export completed with ${failures} failure(s).`);
+    throw new Error(`Export completed with ${failures} failure(s).`);
   }
 
-  printSuccess(`Exported ${jobs.length} file(s), ${totalRows} row(s).`);
+  printSuccess(`Exported ${filesExported} file(s), ${totalRows} row(s).`);
 }

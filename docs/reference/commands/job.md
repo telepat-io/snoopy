@@ -130,6 +130,6 @@ snoopy job runs <jobRef>
 `job runs` only shows run history. To regenerate per-job result files, run:
 
 ```bash
-snoopy export csv
-snoopy export csv <jobRef>
+snoopy export
+snoopy export <jobRef> --json --last-run
 ```
