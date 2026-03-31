@@ -7,7 +7,7 @@
 # Monitor Reddit Conversations With AI
 
 [![Build](https://img.shields.io/github/actions/workflow/status/telepat-io/snoopy/ci.yml?branch=main&label=build)](https://github.com/telepat-io/snoopy/actions/workflows/ci.yml)
-[![Coverage](https://img.shields.io/badge/coverage-94.6%25-brightgreen)](#development)
+[![Coverage](https://codecov.io/gh/telepat-io/snoopy/graph/badge.svg)](https://codecov.io/gh/telepat-io/snoopy)
 [![npm](https://img.shields.io/npm/v/@telepat/snoopy)](https://www.npmjs.com/package/@telepat/snoopy)
 
 📖 [Full documentation](https://docs.telepat.io/ideon/)

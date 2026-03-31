@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
     steps:
       - uses: actions/checkout@v4
 
@@ -29,5 +31,15 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Test
-        run: npm test
+      - name: Test with lcov coverage
+        run: npm run test:coverage
+
+      - name: Upload coverage to Codecov
+        if: ${{ env.CODECOV_TOKEN != '' }}
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ env.CODECOV_TOKEN }}
+          files: ./coverage/lcov.info
+          fail_ci_if_error: false
+          disable_search: true
+          verbose: true
