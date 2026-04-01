@@ -47,4 +47,36 @@ describe('scan log formatting', () => {
     expect(line).toContain('post: https://www.reddit.com/r/startups/comments/post-123/');
     expect(line).toContain('ids: comment=comment-9, post=post-123');
   });
+
+  it('uses pending/default messaging when qualification data is incomplete', () => {
+    expect(
+      formatPostScanLine({
+        postId: 'post-999',
+        title: '  Pending item  '
+      })
+    ).toContain('qualification pending');
+
+    expect(
+      formatCommentScanLine({
+        postId: 'post-999',
+        commentId: 'comment-1',
+        author: 'eve',
+        qualified: true,
+        qualificationReason: '   '
+      })
+    ).toContain('qualified (reason: No justification provided.)');
+  });
+
+  it('falls back to a generic comment header when there is no snippet', () => {
+    const line = formatCommentScanLine({
+      postId: 'post-321',
+      commentId: 'comment-3',
+      author: 'writer',
+      commentSnippet: '   '
+    });
+
+    expect(line).toContain('Comment by writer');
+    expect(line).not.toContain('comment:');
+    expect(line).not.toContain('post:');
+  });
 });

@@ -24,4 +24,49 @@ describe('CLI time formatting', () => {
       })
     ).toBe(expected);
   });
+
+  it('returns placeholders or original input when timestamps cannot be parsed', () => {
+    expect(formatLocalTimestamp(undefined)).toBe('-');
+    expect(formatLocalTimestamp(null)).toBe('-');
+    expect(formatLocalTimestamp('not-a-timestamp')).toBe('not-a-timestamp');
+  });
+
+  it('accepts iso timestamps and explicit timezone offsets', () => {
+    const isoExpected = new Intl.DateTimeFormat(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit'
+    }).format(new Date('2026-03-27T18:30:00Z'));
+
+    const offsetExpected = new Intl.DateTimeFormat(undefined, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit'
+    }).format(new Date('2026-03-27T18:30:00+02:00'));
+
+    expect(formatLocalTimestamp('2026-03-27T18:30:00Z')).toBe(isoExpected);
+    expect(formatLocalTimestamp('2026-03-27T18:30:00+02:00')).toBe(offsetExpected);
+  });
+
+  it('uses startedAt when finishedAt is absent and createdAt when no run has started', () => {
+    expect(
+      formatRunDisplayLabel({
+        createdAt: '2026-03-27 18:00:00',
+        startedAt: '2026-03-27 18:05:00',
+        finishedAt: null
+      })
+    ).toBe(`Started ${formatLocalTimestamp('2026-03-27 18:05:00')}`);
+
+    expect(
+      formatRunDisplayLabel({
+        createdAt: '2026-03-27 18:00:00',
+        startedAt: null,
+        finishedAt: null
+      })
+    ).toBe(`Created ${formatLocalTimestamp('2026-03-27 18:00:00')}`);
+  });
 });

@@ -162,4 +162,155 @@ describe('settingsFlowModel', () => {
       clientId: ''
     });
   });
+
+  it('shows cleared summary for redditAppName and Will-update variants for secrets', () => {
+    const redditState = createRedditState();
+    const draft = createSettingsDraft(createCurrentSettings(), redditState);
+
+    const clearedAppName = new Set<EditableSettingKey>(['redditAppName']);
+
+    const items = buildSettingsMenuItems({
+      draft,
+      draftSecrets: { apiKey: 'or-draft-key-abcdef', redditClientSecret: 'new-secret' },
+      currentApiKey: null,
+      hasCurrentRedditClientSecret: false,
+      clearedFields: clearedAppName
+    });
+
+    expect(items.find((item) => item.key === 'apiKey')?.summary).toBe('Will update (****cdef)');
+    expect(items.find((item) => item.key === 'redditClientSecret')?.summary).toBe('Will update (hidden)');
+    expect(items.find((item) => item.key === 'redditAppName')?.summary).toBe('Cleared');
+  });
+
+  it('shows missing when no apiKey and no draftApiKey, and missing when no reddit client secret', () => {
+    const redditState: RedditCredentialState = { appName: '', clientId: '', hasClientSecret: false };
+    const draft = createSettingsDraft(createCurrentSettings(), redditState);
+
+    const items = buildSettingsMenuItems({
+      draft,
+      draftSecrets: {},
+      currentApiKey: null,
+      hasCurrentRedditClientSecret: false
+    });
+
+    expect(items.find((item) => item.key === 'apiKey')?.summary).toBe('Missing');
+    expect(items.find((item) => item.key === 'redditClientId')?.summary).toBe('Missing');
+    expect(items.find((item) => item.key === 'redditClientSecret')?.summary).toBe('Missing');
+    expect(items.find((item) => item.key === 'redditAppName')?.summary).toBe('(empty)');
+  });
+
+  it('shows model empty placeholder when model is empty', () => {
+    const redditState = createRedditState();
+    const draft = { ...createSettingsDraft(createCurrentSettings(), redditState), model: '' };
+
+    const items = buildSettingsMenuItems({
+      draft,
+      draftSecrets: {},
+      currentApiKey: null,
+      hasCurrentRedditClientSecret: false
+    });
+
+    expect(items.find((item) => item.key === 'model')?.summary).toBe('(empty)');
+  });
+
+  it('shows No timeout label when jobTimeoutMinutes is 0', () => {
+    const redditState = createRedditState();
+    const draft = { ...createSettingsDraft(createCurrentSettings(), redditState), jobTimeoutMinutes: '0' };
+
+    const items = buildSettingsMenuItems({
+      draft,
+      draftSecrets: {},
+      currentApiKey: null,
+      hasCurrentRedditClientSecret: false
+    });
+
+    expect(items.find((item) => item.key === 'jobTimeoutMinutes')?.summary).toBe('No timeout');
+  });
+
+  it('shows Disabled for notifications when notificationsEnabled is false', () => {
+    const redditState = createRedditState();
+    const draft = { ...createSettingsDraft(createCurrentSettings(), redditState), notificationsEnabled: false };
+
+    const items = buildSettingsMenuItems({
+      draft,
+      draftSecrets: {},
+      currentApiKey: null,
+      hasCurrentRedditClientSecret: false
+    });
+
+    expect(items.find((item) => item.key === 'notificationsEnabled')?.summary).toBe('Disabled');
+  });
+
+  it('rejects empty model', () => {
+    const redditState = createRedditState();
+    const draft = { ...createSettingsDraft(createCurrentSettings(), redditState), model: '   ' };
+
+    const result = buildSettingsSaveResult(draft, {}, redditState, new Set());
+    expect(result).toEqual({ ok: false, error: 'Model cannot be empty.' });
+  });
+
+  it('rejects invalid maxTokens', () => {
+    const redditState = createRedditState();
+    const draft = { ...createSettingsDraft(createCurrentSettings(), redditState), maxTokens: '-1' };
+
+    const result = buildSettingsSaveResult(draft, {}, redditState, new Set());
+    expect(result).toEqual({ ok: false, error: 'Max tokens must be a positive integer.' });
+  });
+
+  it('rejects non-integer maxTokens', () => {
+    const redditState = createRedditState();
+    const draft = { ...createSettingsDraft(createCurrentSettings(), redditState), maxTokens: '1.5' };
+
+    const result = buildSettingsSaveResult(draft, {}, redditState, new Set());
+    expect(result).toEqual({ ok: false, error: 'Max tokens must be a positive integer.' });
+  });
+
+  it('rejects invalid topP', () => {
+    const redditState = createRedditState();
+    const draft = { ...createSettingsDraft(createCurrentSettings(), redditState), topP: '1.5' };
+
+    const result = buildSettingsSaveResult(draft, {}, redditState, new Set());
+    expect(result).toEqual({ ok: false, error: 'Top P must be a number from 0.0 to 1.0.' });
+  });
+
+  it('rejects invalid cronIntervalMinutes', () => {
+    const redditState = createRedditState();
+    const draft = { ...createSettingsDraft(createCurrentSettings(), redditState), cronIntervalMinutes: '0' };
+
+    const result = buildSettingsSaveResult(draft, {}, redditState, new Set());
+    expect(result).toEqual({ ok: false, error: 'Scan interval must be an integer greater than or equal to 1.' });
+  });
+
+  it('rejects invalid jobTimeoutMinutes', () => {
+    const redditState = createRedditState();
+    const draft = { ...createSettingsDraft(createCurrentSettings(), redditState), jobTimeoutMinutes: '-1' };
+
+    const result = buildSettingsSaveResult(draft, {}, redditState, new Set());
+    expect(result).toEqual({ ok: false, error: 'Job timeout must be an integer greater than or equal to 0.' });
+  });
+
+  it('accepts zero jobTimeoutMinutes and omits reddit credentials when unchanged', () => {
+    const redditState = createRedditState();
+    const draft = { ...createSettingsDraft(createCurrentSettings(), redditState), jobTimeoutMinutes: '0' };
+
+    const result = buildSettingsSaveResult(draft, {}, redditState, new Set());
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error('Expected success');
+    expect(result.result.settings.jobTimeoutMs).toBe(0);
+    expect(result.result.redditCredentials).toBeUndefined();
+  });
+
+  it('clears redditAppName when in clearedFields and updates reddit credentials', () => {
+    const redditState = createRedditState();
+    const draft = createSettingsDraft(createCurrentSettings(), redditState);
+    const clearedFields = new Set<EditableSettingKey>(['redditAppName']);
+
+    const result = buildSettingsSaveResult(draft, {}, redditState, clearedFields);
+    expect(result.ok).toBe(true);
+    if (!result.ok) throw new Error('Expected success');
+    expect(result.result.redditCredentials).toEqual({
+      appName: '',
+      clientId: redditState.clientId
+    });
+  });
 });

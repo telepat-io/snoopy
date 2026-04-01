@@ -18,5 +18,15 @@ export default {
         tsconfig: 'tsconfig.json'
       }
     ]
-  }
+  },
+  collectCoverageFrom: [
+    'src/**/*.{ts,tsx}',
+    '!src/ui/components/AppFrame.tsx',
+    '!src/ui/components/CliHeader.tsx',
+    '!src/ui/components/JobsTable.tsx',
+    '!src/ui/components/RunsTable.tsx',
+    '!src/utils/notify.ts',
+    '!src/services/export/fileNaming.ts',
+    '!src/services/export/jsonResults.ts'
+  ]
 };
