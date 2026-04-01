@@ -21,6 +21,12 @@ const mockFormatRunDisplayTimestamp = jest.fn((...args: unknown[]) => {
   return 'TS run';
 });
 
+const FIXED_NOW = Date.parse('2026-04-01T12:00:00.000Z');
+
+function hoursAgoIso(hours: number): string {
+  return new Date(FIXED_NOW - hours * 60 * 60 * 1000).toISOString();
+}
+
 jest.mock('node:fs', () => ({
   __esModule: true,
   default: {
@@ -86,6 +92,7 @@ import { runDoctor } from '../../src/cli/commands/doctor.js';
 describe('runDoctor coverage', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    jest.spyOn(Date, 'now').mockReturnValue(FIXED_NOW);
     mockEnsureAppDirs.mockReturnValue({
       dbPath: '/tmp/snoopy.db',
       pidFilePath: '/tmp/snoopy.pid'
@@ -119,16 +126,35 @@ describe('runDoctor coverage', () => {
     }) as typeof process.kill);
   });
 
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   it('prints healthy diagnostics and no recent errors', async () => {
     await runDoctor();
 
     expect(mockPrintCommandScreen).toHaveBeenCalledWith('Diagnostics', 'Snoopy Doctor');
+    expect(mockRunsLatestWithJobNames).toHaveBeenCalledWith(20);
+    expect(mockPrintKeyValue).toHaveBeenCalledWith('Platform', process.platform);
+    expect(mockPrintKeyValue).toHaveBeenCalledWith('Node', process.version);
     expect(mockPrintSuccess).toHaveBeenCalledWith('Database: DB reachable at /tmp/snoopy.db');
     expect(mockPrintSuccess).toHaveBeenCalledWith('OpenRouter API key: configured');
     expect(mockPrintInfo).toHaveBeenCalledWith('Jobs: 2 total, 1 enabled');
     expect(mockPrintSuccess).toHaveBeenCalledWith(`Daemon: Daemon running (pid ${process.pid})`);
     expect(mockPrintInfo).toHaveBeenCalledWith('Startup on reboot: enabled via launchd');
+    expect(mockPrintInfo).toHaveBeenCalledWith('Startup details: configured');
     expect(mockPrintSuccess).toHaveBeenCalledWith('No recent job run failures or logged errors in the last 24 hours.');
+  });
+
+  it('warns when the daemon pid file is missing and still prints environment details', async () => {
+    mockExistsSync.mockReturnValue(false);
+
+    await runDoctor();
+
+    expect(mockPrintWarning).toHaveBeenCalledWith('Daemon: Daemon not running (no pid file)');
+    expect(mockPrintMuted).toHaveBeenCalledWith('  → Run: snoopy daemon start  to start the background daemon');
+    expect(mockPrintInfo).toHaveBeenCalledWith('Startup details: configured');
+    expect(mockReadFileSync).not.toHaveBeenCalled();
   });
 
   it('prints remediation guidance for database, api key, daemon, and recent failures', async () => {
@@ -149,7 +175,7 @@ describe('runDoctor coverage', () => {
         jobName: 'Alpha',
         status: 'failed',
         message: 'run failed',
-        createdAt: new Date().toISOString(),
+        createdAt: hoursAgoIso(1),
         logFilePath: '/tmp/run-1.log'
       }
     ]);
@@ -173,6 +199,35 @@ describe('runDoctor coverage', () => {
     expect(mockPrintKeyValue).toHaveBeenCalledWith('Run ID', 'run-1');
     expect(mockPrintKeyValue).toHaveBeenCalledWith('Message', 'run failed');
     expect(mockPrintInfo).toHaveBeenCalledWith('[2026-03-01T00:00:00Z] [ERROR] last error');
+  });
+
+  it('reports recent logged errors even for non-failed runs and falls back to the job id', async () => {
+    mockRunsLatestWithJobNames.mockReturnValue([
+      {
+        id: 'run-2',
+        jobId: 'job-2',
+        jobName: null,
+        status: 'completed',
+        message: null,
+        createdAt: hoursAgoIso(2),
+        logFilePath: '/tmp/run-2.log'
+      }
+    ]);
+    mockReadRunLog.mockReturnValue('run log 2');
+    mockExtractErrorEntries.mockReturnValue([
+      '[2026-03-01T00:00:00Z] [ERROR] first error\nstack line',
+      '[2026-03-01T00:05:00Z] [ERROR] second error\nextra details'
+    ]);
+
+    await runDoctor();
+
+    expect(mockReadRunLog).toHaveBeenCalledWith('/tmp/run-2.log');
+    expect(mockExtractErrorEntries).toHaveBeenCalledWith('run log 2');
+    expect(mockPrintWarning).toHaveBeenCalledWith('Found 1 recent run(s) with failures or logged errors.');
+    expect(mockPrintWarning).toHaveBeenCalledWith('TS run job-2 (completed)');
+    expect(mockPrintKeyValue).toHaveBeenCalledWith('Run ID', 'run-2');
+    expect(mockPrintKeyValue).toHaveBeenCalledWith('Message', '-');
+    expect(mockPrintInfo).toHaveBeenCalledWith('[2026-03-01T00:05:00Z] [ERROR] second error');
   });
 
   it('ignores old or invalid run timestamps when scanning recent problems', async () => {
