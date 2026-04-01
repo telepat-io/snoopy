@@ -61,4 +61,5 @@ jobs:
 
       - name: Publish package to npm
         # Trusted publishing via GitHub OIDC (id-token: write); no npm token required.
-        run: npm publish --access public
+        # Quality gates already ran above; skip lifecycle scripts to avoid duplicate checks.
+        run: npm publish --ignore-scripts --access public
