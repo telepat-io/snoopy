@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.6](https://github.com/telepat-io/snoopy/compare/snoopy-v0.1.5...snoopy-v0.1.6) (2026-04-01)
+
+
+### Features
+
+* enhance runDoctor coverage with additional scenarios and timestamp handling ([fce77a9](https://github.com/telepat-io/snoopy/commit/fce77a9ebdcca4cb984b885012bca81c56c1a188))
+
 ## [0.1.5](https://github.com/telepat-io/snoopy/compare/snoopy-v0.1.4...snoopy-v0.1.5) (2026-03-31)
 
 
