@@ -9,6 +9,8 @@
   },
   "files": [
     "dist/src",
+    "!dist/src/**/*.map",
+    "!dist/src/scripts/**",
     "README.md",
     "LICENSE"
   ],
