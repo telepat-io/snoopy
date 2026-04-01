@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.7](https://github.com/telepat-io/snoopy/compare/snoopy-v0.1.6...snoopy-v0.1.7) (2026-04-01)
+
+
+### Features
+
+* update Node.js version to 24 and simplify npm publish process ([a276b94](https://github.com/telepat-io/snoopy/commit/a276b94bcc4e4b153beec83713c50d4f84bf5e10))
+
 ## [0.1.6](https://github.com/telepat-io/snoopy/compare/snoopy-v0.1.5...snoopy-v0.1.6) (2026-04-01)
 
 
