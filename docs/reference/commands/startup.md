@@ -7,6 +7,8 @@ sidebar_position: 7
 
 The `startup` group manages OS-level registration so Snoopy can start on reboot or login.
 
+Startup registration is always explicit opt-in.
+
 The `reboot` group is an alias for the user-facing startup behavior commands.
 
 ## Aliases
@@ -60,4 +62,4 @@ Implementation varies by OS:
 
 - macOS: launchd
 - Linux: systemd user service, with cron fallback
-- Windows: Task Scheduler, with registry Run fallback
+- Windows: Task Scheduler only (no registry Run fallback)

@@ -5,8 +5,7 @@ import { execSync } from 'node:child_process';
 import { hasSystemdUser, installLinuxSystemd, uninstallLinuxSystemd } from './linuxSystemd.js';
 import { installLinuxCronFallback, uninstallLinuxCronFallback } from './linuxCronFallback.js';
 import { installMacStartup, uninstallMacStartup } from './macosLaunchd.js';
-import { installWindowsRunFallback, uninstallWindowsRunFallback } from './windowsRunFallback.js';
-import { installWindowsTask, uninstallWindowsTask } from './windowsTaskScheduler.js';
+import { hasWindowsTaskInstalled, installWindowsTask, uninstallWindowsTask } from './windowsTaskScheduler.js';
 
 export interface StartupInstallResult {
   success: boolean;
@@ -37,12 +36,18 @@ export function installStartup(commandPath: string): StartupInstallResult {
   }
 
   if (process.platform === 'win32') {
+    // On Windows we intentionally use a single explicit method.
+    // If task creation fails, we do not silently fall back to registry persistence.
     try {
       installWindowsTask(commandPath);
       return { success: true, method: 'task-scheduler', detail: 'Task Scheduler job created' };
-    } catch {
-      installWindowsRunFallback(commandPath);
-      return { success: true, method: 'registry-run', detail: 'Registry startup entry created' };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      return {
+        success: false,
+        method: 'task-scheduler',
+        detail: `Task Scheduler startup setup failed: ${message}`
+      };
     }
   }
 
@@ -61,7 +66,6 @@ export function uninstallStartup(): void {
 
   if (process.platform === 'win32') {
     uninstallWindowsTask();
-    uninstallWindowsRunFallback();
   }
 }
 
@@ -104,32 +108,19 @@ export function getStartupStatus(): StartupStatusResult {
   }
 
   if (process.platform === 'win32') {
-    try {
-      execSync('schtasks /query /tn "Snoopy\\Daemon"', { shell: 'cmd.exe', stdio: 'ignore' });
+    if (hasWindowsTaskInstalled()) {
       return {
         enabled: true,
         method: 'task-scheduler',
         detail: 'Scheduled task exists'
       };
-    } catch {
-      try {
-        execSync('reg query "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run" /v "SnoopyDaemon"', {
-          shell: 'cmd.exe',
-          stdio: 'ignore'
-        });
-        return {
-          enabled: true,
-          method: 'registry-run',
-          detail: 'Registry startup entry exists'
-        };
-      } catch {
-        return {
-          enabled: false,
-          method: 'task-scheduler',
-          detail: 'No startup registration found'
-        };
-      }
     }
+
+    return {
+      enabled: false,
+      method: 'task-scheduler',
+      detail: 'No startup registration found'
+    };
   }
 
   return {

@@ -3,6 +3,7 @@ const mockMkdirSync = jest.fn();
 const mockWriteFileSync = jest.fn();
 const mockUnlinkSync = jest.fn();
 const mockExecSync = jest.fn();
+const mockExecFileSync = jest.fn();
 const mockHomedir = jest.fn(() => '/Users/tester');
 
 jest.mock('node:fs', () => ({
@@ -23,15 +24,15 @@ jest.mock('node:os', () => ({
 }));
 
 jest.mock('node:child_process', () => ({
-  execSync: (...args: unknown[]) => mockExecSync(...args)
+  execSync: (...args: unknown[]) => mockExecSync(...args),
+  execFileSync: (...args: unknown[]) => mockExecFileSync(...args)
 }));
 
 import path from 'node:path';
 import { installLinuxCronFallback, uninstallLinuxCronFallback } from '../../src/services/startup/linuxCronFallback.js';
 import { hasSystemdUser, installLinuxSystemd, uninstallLinuxSystemd } from '../../src/services/startup/linuxSystemd.js';
 import { installMacStartup, uninstallMacStartup } from '../../src/services/startup/macosLaunchd.js';
-import { installWindowsRunFallback, uninstallWindowsRunFallback } from '../../src/services/startup/windowsRunFallback.js';
-import { installWindowsTask, uninstallWindowsTask } from '../../src/services/startup/windowsTaskScheduler.js';
+import { hasWindowsTaskInstalled, installWindowsTask, uninstallWindowsTask } from '../../src/services/startup/windowsTaskScheduler.js';
 
 describe('startup platform helpers', () => {
   beforeEach(() => {
@@ -39,6 +40,7 @@ describe('startup platform helpers', () => {
     mockHomedir.mockReturnValue('/Users/tester');
     mockExistsSync.mockReturnValue(false);
     mockExecSync.mockReturnValue('');
+    mockExecFileSync.mockReturnValue('');
   });
 
   it('writes and unloads/loads the mac launchd plist', () => {
@@ -143,50 +145,53 @@ describe('startup platform helpers', () => {
     expect(mockExecSync).toHaveBeenCalledTimes(1);
   });
 
-  it('creates and removes the windows registry startup entry', () => {
-    installWindowsRunFallback('C:/Tools/snoopy.exe');
-
-    expect(mockExecSync).toHaveBeenCalledWith(
-      'reg add "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run" /v "SnoopyDaemon" /t REG_SZ /d "\\"C:/Tools/snoopy.exe\\" daemon run" /f',
-      { shell: 'cmd.exe' }
-    );
-
-    jest.clearAllMocks();
-    uninstallWindowsRunFallback();
-    expect(mockExecSync).toHaveBeenCalledWith(
-      'reg delete "HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run" /v "SnoopyDaemon" /f',
-      { shell: 'cmd.exe' }
-    );
-  });
-
-  it('ignores missing windows registry startup entries on uninstall', () => {
-    mockExecSync.mockImplementationOnce(() => {
-      throw new Error('missing key');
-    });
-
-    expect(() => uninstallWindowsRunFallback()).not.toThrow();
-  });
-
   it('creates and removes the windows scheduled task', () => {
     installWindowsTask('C:/Tools/snoopy.exe');
 
-    expect(mockExecSync).toHaveBeenCalledWith(
-      'schtasks /create /tn "Snoopy\\Daemon" /tr "\\"C:/Tools/snoopy.exe\\" daemon run" /sc onlogon /f',
-      { shell: 'cmd.exe' }
+    expect(mockExecFileSync).toHaveBeenCalledWith(
+      'schtasks',
+      ['/create', '/tn', 'Snoopy\\Daemon', '/tr', '"C:/Tools/snoopy.exe" daemon run', '/sc', 'onlogon', '/f'],
+      { stdio: 'pipe' }
     );
 
     jest.clearAllMocks();
     uninstallWindowsTask();
-    expect(mockExecSync).toHaveBeenCalledWith('schtasks /delete /tn "Snoopy\\Daemon" /f', {
-      shell: 'cmd.exe'
-    });
+    expect(mockExecFileSync).toHaveBeenCalledWith('schtasks', ['/delete', '/tn', 'Snoopy\\Daemon', '/f'], { stdio: 'pipe' });
   });
 
   it('ignores missing scheduled tasks on uninstall', () => {
-    mockExecSync.mockImplementationOnce(() => {
+    mockExecFileSync.mockImplementationOnce(() => {
       throw new Error('missing task');
     });
 
     expect(() => uninstallWindowsTask()).not.toThrow();
+  });
+
+  it('validates windows startup command path before creating tasks', () => {
+    expect(() => installWindowsTask('relative/snoopy.js')).toThrow(
+      'Startup command path must be an absolute Windows path without quotes or newlines.'
+    );
+    expect(mockExecFileSync).not.toHaveBeenCalled();
+  });
+
+  it('checks windows task status without cmd shell', () => {
+    mockExecFileSync.mockReturnValueOnce('ok');
+    expect(hasWindowsTaskInstalled()).toBe(true);
+    expect(mockExecFileSync).toHaveBeenLastCalledWith('schtasks', ['/query', '/tn', 'Snoopy\\Daemon'], { stdio: 'ignore' });
+
+    mockExecFileSync.mockImplementationOnce(() => {
+      throw new Error('missing task');
+    });
+    expect(hasWindowsTaskInstalled()).toBe(false);
+  });
+
+  it('supports absolute windows paths with spaces safely', () => {
+    installWindowsTask('C:/Program Files/Snoopy/snoopy.exe');
+
+    expect(mockExecFileSync).toHaveBeenCalledWith(
+      'schtasks',
+      ['/create', '/tn', 'Snoopy\\Daemon', '/tr', '"C:/Program Files/Snoopy/snoopy.exe" daemon run', '/sc', 'onlogon', '/f'],
+      { stdio: 'pipe' }
+    );
   });
 });

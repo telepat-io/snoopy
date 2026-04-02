@@ -66,6 +66,8 @@ Examples:
 
 Snoopy supports OS startup registration.
 
+Startup registration is always explicit opt-in. Snoopy only configures it when you run startup enable/install (or explicitly choose startup install during job setup).
+
 Commands:
 
 - `snoopy startup install`
@@ -109,14 +111,11 @@ Preferred method:
 
 - Task Scheduler job
 
-Fallback method:
-
-- HKCU Run registry entry
-
 Status checks:
 
 - `schtasks /query /tn "Snoopy\\Daemon"`
-- `reg query HKCU\Software\Microsoft\Windows\CurrentVersion\Run /v SnoopyDaemon`
+
+If Task Scheduler setup fails, Snoopy returns an error instead of silently falling back to alternate persistence mechanisms.
 
 ## Operational Recommendations
 

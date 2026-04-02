@@ -51,6 +51,10 @@ interface JobAddFlowResult {
   };
 }
 
+function getStartupCommandPath(): string {
+  return process.argv[1] ?? '';
+}
+
 function formatRunDuration(startedAt: string | null, finishedAt: string | null): string {
   if (!startedAt || !finishedAt) {
     return '-';
@@ -206,9 +210,9 @@ export async function addJob(): Promise<void> {
 
   if (!startupStatus.enabled && flowResult.installStartup) {
     try {
-      const result = installStartup(process.argv[1]!);
+      const result = installStartup(getStartupCommandPath());
       if (result.success) {
-        printSuccess(`Startup configured via ${result.method}: ${result.detail}`);
+        printSuccess(`Startup configured (opt-in) via ${result.method}: ${result.detail}`);
       } else {
         printWarning(`Startup registration not configured: ${result.detail}`);
       }

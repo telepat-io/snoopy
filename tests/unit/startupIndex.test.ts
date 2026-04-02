@@ -40,10 +40,9 @@ async function loadStartupIndex() {
     uninstallLinuxCronFallback: jest.fn(),
     installMacStartup: jest.fn(),
     uninstallMacStartup: jest.fn(),
-    installWindowsRunFallback: jest.fn(),
-    uninstallWindowsRunFallback: jest.fn(),
     installWindowsTask: jest.fn(),
-    uninstallWindowsTask: jest.fn()
+    uninstallWindowsTask: jest.fn(),
+    hasWindowsTaskInstalled: jest.fn()
   };
 
   jest.doMock('../../src/services/startup/linuxSystemd.js', () => ({
@@ -59,13 +58,10 @@ async function loadStartupIndex() {
     installMacStartup: mocks.installMacStartup,
     uninstallMacStartup: mocks.uninstallMacStartup
   }));
-  jest.doMock('../../src/services/startup/windowsRunFallback.js', () => ({
-    installWindowsRunFallback: mocks.installWindowsRunFallback,
-    uninstallWindowsRunFallback: mocks.uninstallWindowsRunFallback
-  }));
   jest.doMock('../../src/services/startup/windowsTaskScheduler.js', () => ({
     installWindowsTask: mocks.installWindowsTask,
-    uninstallWindowsTask: mocks.uninstallWindowsTask
+    uninstallWindowsTask: mocks.uninstallWindowsTask,
+    hasWindowsTaskInstalled: mocks.hasWindowsTaskInstalled
   }));
 
   const startup = await import('../../src/services/startup/index.js');
@@ -122,7 +118,7 @@ describe('startup index', () => {
     expect(mocks.installLinuxCronFallback).toHaveBeenCalledWith('/usr/bin/snoopy');
   });
 
-  it('installs startup via task scheduler or registry fallback on windows', async () => {
+  it('installs startup via task scheduler on windows', async () => {
     const { startup, mocks } = await loadStartupIndex();
     setPlatform('win32');
 
@@ -137,11 +133,10 @@ describe('startup index', () => {
       throw new Error('task scheduler failed');
     });
     expect(startup.installStartup('C:/Tools/snoopy.exe')).toEqual({
-      success: true,
-      method: 'registry-run',
-      detail: 'Registry startup entry created'
+      success: false,
+      method: 'task-scheduler',
+      detail: 'Task Scheduler startup setup failed: task scheduler failed'
     });
-    expect(mocks.installWindowsRunFallback).toHaveBeenCalledWith('C:/Tools/snoopy.exe');
   });
 
   it('returns unsupported startup installation on unknown platforms', async () => {
@@ -171,7 +166,6 @@ describe('startup index', () => {
     setPlatform('win32');
     loaded.startup.uninstallStartup();
     expect(loaded.mocks.uninstallWindowsTask).toHaveBeenCalledTimes(1);
-    expect(loaded.mocks.uninstallWindowsRunFallback).toHaveBeenCalledTimes(1);
   });
 
   it('reports mac startup status from launch agent existence', async () => {
@@ -230,9 +224,10 @@ describe('startup index', () => {
     });
   });
 
-  it('reports windows startup status from task scheduler or registry fallbacks', async () => {
-    const { startup } = await loadStartupIndex();
+  it('reports windows startup status from task scheduler state', async () => {
+    const { startup, mocks } = await loadStartupIndex();
     setPlatform('win32');
+    mocks.hasWindowsTaskInstalled.mockReturnValue(true);
 
     expect(startup.getStartupStatus()).toEqual({
       enabled: true,
@@ -240,22 +235,7 @@ describe('startup index', () => {
       detail: 'Scheduled task exists'
     });
 
-    mockExecSync.mockImplementationOnce(() => {
-      throw new Error('task missing');
-    });
-    expect(startup.getStartupStatus()).toEqual({
-      enabled: true,
-      method: 'registry-run',
-      detail: 'Registry startup entry exists'
-    });
-
-    mockExecSync
-      .mockImplementationOnce(() => {
-        throw new Error('task missing');
-      })
-      .mockImplementationOnce(() => {
-        throw new Error('registry missing');
-      });
+    mocks.hasWindowsTaskInstalled.mockReturnValue(false);
     expect(startup.getStartupStatus()).toEqual({
       enabled: false,
       method: 'task-scheduler',

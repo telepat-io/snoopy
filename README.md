@@ -32,7 +32,7 @@ Define what you care about in plain language, let Snoopy create a monitoring job
 - Local SQLite persistence for jobs, runs, and scan items.
 - Built-in daemon for scheduled scanning (cron expressions).
 - On-demand CSV export of qualified results per job.
-- Startup registration for macOS, Linux, and Windows.
+- Explicit opt-in startup registration for macOS, Linux, and Windows.
 - Health checks via the doctor command.
 
 ## Install

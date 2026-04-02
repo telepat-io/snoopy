@@ -1,11 +1,15 @@
 import { getStartupStatus, installStartup, uninstallStartup } from '../../services/startup/index.js';
 import { printCommandScreen, printInfo, printSuccess, printWarning } from '../ui/consoleUi.js';
 
+function getStartupCommandPath(): string {
+  return process.argv[1] ?? '';
+}
+
 export function enableStartupCommand(): void {
   printCommandScreen('Startup configuration', 'Startup Enable');
-  const result = installStartup(process.argv[1]!);
+  const result = installStartup(getStartupCommandPath());
   if (result.success) {
-    printSuccess(`Startup enabled using ${result.method}: ${result.detail}`);
+    printSuccess(`Startup enabled (opt-in) using ${result.method}: ${result.detail}`);
     return;
   }
 
