@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.8](https://github.com/telepat-io/snoopy/compare/snoopy-v0.1.7...snoopy-v0.1.8) (2026-04-02)
+
+
+### Features
+
+* enforce explicit opt-in for startup registration and remove fallback methods ([6a2a4a1](https://github.com/telepat-io/snoopy/commit/6a2a4a16a68b19f9fe3a19f4e0419e3579b28abc))
+* skip lifecycle scripts during npm publish to avoid duplicate checks ([6baadc7](https://github.com/telepat-io/snoopy/commit/6baadc70c2ab2253d0dcdc3bbf62c9f572e68114))
+
 ## [0.1.7](https://github.com/telepat-io/snoopy/compare/snoopy-v0.1.6...snoopy-v0.1.7) (2026-04-01)
 
 
