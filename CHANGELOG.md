@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.10](https://github.com/telepat-io/snoopy/compare/snoopy-v0.1.9...snoopy-v0.1.10) (2026-04-21)
+
+
+### Bug Fixes
+
+* add cascading delete for comment thread nodes when a job is removed ([51dcd6c](https://github.com/telepat-io/snoopy/commit/51dcd6ca7b9b76b851c1950928abca78f49a3c45))
+
 ## [0.1.9](https://github.com/telepat-io/snoopy/compare/snoopy-v0.1.8...snoopy-v0.1.9) (2026-04-21)
 
 
