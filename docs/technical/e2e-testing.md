@@ -34,7 +34,7 @@ Implementation path:
 
 Before running smoke test:
 
-- `snoopy settings` has valid OpenRouter API key
+- OpenRouter API key is configured either in `snoopy settings` (keychain available) or via `SNOOPY_OPENROUTER_API_KEY`
 - optional: configure Reddit OAuth fallback credentials for environments where unauthenticated Reddit JSON access is blocked
 
 Check quickly:
@@ -101,7 +101,7 @@ snoopy delete <jobRef>
 If smoke test fails:
 
 1. Run `snoopy doctor`.
-2. Verify OpenRouter API key in `settings`.
+2. Verify OpenRouter API key in `settings` or `SNOOPY_OPENROUTER_API_KEY`.
 3. If Reddit access is denied in your environment, configure Reddit OAuth fallback credentials in `settings`.
 4. Check daemon state if relevant (`daemon status`).
 5. Review logs at `<root>/logs/snoopy.log`.

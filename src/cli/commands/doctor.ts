@@ -3,7 +3,7 @@ import { getDb } from '../../services/db/sqlite.js';
 import { JobsRepository } from '../../services/db/repositories/jobsRepo.js';
 import { RunsRepository } from '../../services/db/repositories/runsRepo.js';
 import { extractErrorEntries, readRunLog } from '../../services/logging/logReader.js';
-import { getOpenRouterApiKey } from '../../services/security/secretStore.js';
+import { getOpenRouterApiKey, isKeytarAvailable } from '../../services/security/secretStore.js';
 import { getStartupStatus } from '../../services/startup/index.js';
 import { ensureAppDirs } from '../../utils/paths.js';
 import {
@@ -67,6 +67,7 @@ export async function runDoctor(): Promise<void> {
   const enabledJobs = jobs.filter((job) => job.enabled).length;
 
   const apiKey = await getOpenRouterApiKey();
+  const keytarAvailable = await isKeytarAvailable();
   const startup = getStartupStatus();
   const daemon = getDaemonHealth();
 
@@ -84,7 +85,11 @@ export async function runDoctor(): Promise<void> {
     printSuccess('OpenRouter API key: configured');
   } else {
     printWarning('OpenRouter API key: missing');
-    printMuted('  → Run: snoopy settings  to configure your OpenRouter API key');
+    if (keytarAvailable) {
+      printMuted('  → Run: snoopy settings  to configure your OpenRouter API key');
+    } else {
+      printMuted('  → Export SNOOPY_OPENROUTER_API_KEY to configure your OpenRouter API key');
+    }
   }
 
   printInfo(`Jobs: ${jobs.length} total, ${enabledJobs} enabled`);

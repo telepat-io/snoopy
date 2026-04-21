@@ -1,17 +1,8 @@
-import crypto from 'node:crypto';
-import fs from 'node:fs';
-import path from 'node:path';
-import { ensureAppDirs } from '../../utils/paths.js';
-
 const SERVICE_NAME = 'snoopy';
 const OPENROUTER_ACCOUNT_NAME = 'openrouter_api_key';
 const REDDIT_CLIENT_SECRET_ACCOUNT_NAME = 'reddit_client_secret';
-const FILE_NAME = 'secrets.enc';
-
-interface FallbackSecrets {
-  openrouter_api_key?: string;
-  reddit_client_secret?: string;
-}
+const OPENROUTER_ENV_NAME = 'SNOOPY_OPENROUTER_API_KEY';
+const REDDIT_CLIENT_SECRET_ENV_NAME = 'SNOOPY_REDDIT_CLIENT_SECRET';
 
 interface KeytarClient {
   setPassword(service: string, account: string, password: string): Promise<void>;
@@ -20,6 +11,13 @@ interface KeytarClient {
 }
 
 let keytarClientPromise: Promise<KeytarClient | null> | undefined;
+
+export class KeytarUnavailableError extends Error {
+  constructor(message = 'Keychain storage is unavailable on this system.') {
+    super(message);
+    this.name = 'KeytarUnavailableError';
+  }
+}
 
 async function getKeytarClient(): Promise<KeytarClient | null> {
   if (keytarClientPromise) {
@@ -50,122 +48,34 @@ async function getKeytarClient(): Promise<KeytarClient | null> {
   return keytarClientPromise;
 }
 
-function getFallbackPath(): string {
-  const paths = ensureAppDirs();
-  return path.join(paths.rootDir, FILE_NAME);
+function readEnvSecret(name: string): string | null {
+  const value = process.env[name]?.trim();
+  return value ? value : null;
 }
 
-function getMachineKey(): Buffer {
-  return crypto
-    .createHash('sha256')
-    .update(`${process.platform}:${process.arch}:${process.env.USER ?? process.env.USERNAME ?? 'user'}`)
-    .digest();
-}
-
-function encrypt(value: string): string {
-  const iv = crypto.randomBytes(16);
-  const key = getMachineKey();
-  const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
-  const encrypted = Buffer.concat([cipher.update(value, 'utf8'), cipher.final()]);
-  return `${iv.toString('hex')}:${encrypted.toString('hex')}`;
-}
-
-function decrypt(value: string): string {
-  const [ivHex, contentHex] = value.split(':');
-  if (!ivHex || !contentHex) {
-    throw new Error('Invalid encrypted payload');
-  }
-  const iv = Buffer.from(ivHex, 'hex');
-  const content = Buffer.from(contentHex, 'hex');
-  const decipher = crypto.createDecipheriv('aes-256-cbc', getMachineKey(), iv);
-  const decrypted = Buffer.concat([decipher.update(content), decipher.final()]);
-  return decrypted.toString('utf8');
-}
-
-function readFallbackSecrets(): FallbackSecrets {
-  const filePath = getFallbackPath();
-  if (!fs.existsSync(filePath)) {
-    return {};
-  }
-
-  try {
-    const decrypted = decrypt(fs.readFileSync(filePath, 'utf8'));
-    const parsed = JSON.parse(decrypted) as FallbackSecrets;
-    if (parsed && typeof parsed === 'object') {
-      return parsed;
-    }
-  } catch {
-    // Legacy fallback stored only OpenRouter API key as a plaintext payload before encryption.
-  }
-
-  try {
-    const legacyValue = decrypt(fs.readFileSync(filePath, 'utf8'));
-    return legacyValue ? { openrouter_api_key: legacyValue } : {};
-  } catch {
-    return {};
-  }
-}
-
-function writeFallbackSecrets(secrets: FallbackSecrets): void {
-  const sanitized: FallbackSecrets = {
-    openrouter_api_key: secrets.openrouter_api_key?.trim() ? secrets.openrouter_api_key : undefined,
-    reddit_client_secret: secrets.reddit_client_secret?.trim() ? secrets.reddit_client_secret : undefined
-  };
-
-  if (!sanitized.openrouter_api_key && !sanitized.reddit_client_secret) {
-    const filePath = getFallbackPath();
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
-    return;
-  }
-
-  const payload = encrypt(JSON.stringify(sanitized));
-  fs.writeFileSync(getFallbackPath(), payload, { mode: 0o600 });
-}
-
-function setFallbackSecret(key: keyof FallbackSecrets, value: string): void {
-  const current = readFallbackSecrets();
-  current[key] = value;
-  writeFallbackSecrets(current);
-}
-
-function getFallbackSecret(key: keyof FallbackSecrets): string | null {
-  const current = readFallbackSecrets();
-  return current[key] ?? null;
-}
-
-function deleteFallbackSecret(key: keyof FallbackSecrets): void {
-  const current = readFallbackSecrets();
-  delete current[key];
-  writeFallbackSecrets(current);
+export async function isKeytarAvailable(): Promise<boolean> {
+  const keytarClient = await getKeytarClient();
+  return Boolean(keytarClient);
 }
 
 export async function setOpenRouterApiKey(apiKey: string): Promise<void> {
   const keytarClient = await getKeytarClient();
-  if (keytarClient) {
-    try {
-      await keytarClient.setPassword(SERVICE_NAME, OPENROUTER_ACCOUNT_NAME, apiKey);
-      return;
-    } catch {
-      // Fall through to encrypted file fallback.
-    }
+  if (!keytarClient) {
+    throw new KeytarUnavailableError(
+      `Unable to save OpenRouter API key because keychain storage is unavailable. Set ${OPENROUTER_ENV_NAME} instead.`
+    );
   }
 
-  setFallbackSecret('openrouter_api_key', apiKey);
+  await keytarClient.setPassword(SERVICE_NAME, OPENROUTER_ACCOUNT_NAME, apiKey);
 }
 
 export async function deleteOpenRouterApiKey(): Promise<void> {
   const keytarClient = await getKeytarClient();
-  if (keytarClient) {
-    try {
-      await keytarClient.deletePassword(SERVICE_NAME, OPENROUTER_ACCOUNT_NAME);
-    } catch {
-      // Ignore keychain deletion failures and continue with file cleanup.
-    }
+  if (!keytarClient) {
+    return;
   }
 
-  deleteFallbackSecret('openrouter_api_key');
+  await keytarClient.deletePassword(SERVICE_NAME, OPENROUTER_ACCOUNT_NAME);
 }
 
 export async function getOpenRouterApiKey(): Promise<string | null> {
@@ -177,25 +87,22 @@ export async function getOpenRouterApiKey(): Promise<string | null> {
         return fromKeytar;
       }
     } catch {
-      // Fallback to encrypted file when keytar is unavailable.
+      // Fall through to env fallback if keytar read fails.
     }
   }
 
-  return getFallbackSecret('openrouter_api_key');
+  return readEnvSecret(OPENROUTER_ENV_NAME);
 }
 
 export async function setRedditClientSecret(secret: string): Promise<void> {
   const keytarClient = await getKeytarClient();
-  if (keytarClient) {
-    try {
-      await keytarClient.setPassword(SERVICE_NAME, REDDIT_CLIENT_SECRET_ACCOUNT_NAME, secret);
-      return;
-    } catch {
-      // Fall through to encrypted file fallback.
-    }
+  if (!keytarClient) {
+    throw new KeytarUnavailableError(
+      `Unable to save Reddit client secret because keychain storage is unavailable. Set ${REDDIT_CLIENT_SECRET_ENV_NAME} instead.`
+    );
   }
 
-  setFallbackSecret('reddit_client_secret', secret);
+  await keytarClient.setPassword(SERVICE_NAME, REDDIT_CLIENT_SECRET_ACCOUNT_NAME, secret);
 }
 
 export async function getRedditClientSecret(): Promise<string | null> {
@@ -207,22 +114,18 @@ export async function getRedditClientSecret(): Promise<string | null> {
         return fromKeytar;
       }
     } catch {
-      // Fallback to encrypted file when keytar is unavailable.
+      // Fall through to env fallback if keytar read fails.
     }
   }
 
-  return getFallbackSecret('reddit_client_secret');
+  return readEnvSecret(REDDIT_CLIENT_SECRET_ENV_NAME);
 }
 
 export async function deleteRedditClientSecret(): Promise<void> {
   const keytarClient = await getKeytarClient();
-  if (keytarClient) {
-    try {
-      await keytarClient.deletePassword(SERVICE_NAME, REDDIT_CLIENT_SECRET_ACCOUNT_NAME);
-    } catch {
-      // Ignore keychain deletion failures and continue with file cleanup.
-    }
+  if (!keytarClient) {
+    return;
   }
 
-  deleteFallbackSecret('reddit_client_secret');
+  await keytarClient.deletePassword(SERVICE_NAME, REDDIT_CLIENT_SECRET_ACCOUNT_NAME);
 }

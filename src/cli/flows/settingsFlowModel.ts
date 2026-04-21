@@ -38,6 +38,7 @@ export interface SettingsDraftSecrets {
 interface BuildMenuItemsInput {
   draft: SettingsDraft;
   draftSecrets: SettingsDraftSecrets;
+  keytarAvailable: boolean;
   currentApiKey: string | null;
   hasCurrentRedditClientSecret: boolean;
   clearedFields?: Set<EditableSettingKey>;
@@ -108,14 +109,16 @@ export function createSettingsDraft(current: AppSettings, currentRedditCredentia
 export function buildSettingsMenuItems({
   draft,
   draftSecrets,
+  keytarAvailable,
   currentApiKey,
   hasCurrentRedditClientSecret,
   clearedFields = new Set()
 }: BuildMenuItemsInput): SettingsMenuItem[] {
+  const sourceLabel = keytarAvailable ? 'keychain' : 'env';
   const apiKeySummary = draftSecrets.apiKey
     ? `Will update (${maskSecret(draftSecrets.apiKey)})`
     : currentApiKey
-      ? `Configured (${maskSecret(currentApiKey)})`
+      ? `Configured via ${sourceLabel} (${maskSecret(currentApiKey)})`
       : 'Missing';
 
   const redditClientIdSummary = clearedFields.has('redditClientId')
@@ -129,7 +132,7 @@ export function buildSettingsMenuItems({
   const redditClientSecretSummary = draftSecrets.redditClientSecret
     ? 'Will update (hidden)'
     : hasCurrentRedditClientSecret
-      ? 'Configured (hidden)'
+      ? `Configured via ${sourceLabel} (hidden)`
       : 'Missing';
 
   return [

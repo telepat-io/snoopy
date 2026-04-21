@@ -24,7 +24,9 @@ Primary path:
 
 Fallback path:
 
-- encrypted local file at `<root>/secrets.enc`
+- environment variables
+	- `SNOOPY_OPENROUTER_API_KEY`
+	- `SNOOPY_REDDIT_CLIENT_SECRET`
 
 Default root directory:
 
@@ -39,28 +41,11 @@ Non-secret Reddit fallback metadata is stored in SQLite settings:
 
 The Reddit client secret is not stored in SQLite.
 
-Legacy note:
-
-- Older local installs may still contain `reddit_client_secret` in `settings`.
-- Snoopy migrates that value into secure secret storage on access and removes the DB key.
-
-## Fallback Encryption Details
-
-- Cipher: AES-256-CBC
-- Random IV per write
-- Key derivation: SHA-256 hash from machine/user-derived string
-
-Notes:
-
-- This is best-effort local protection, not HSM-grade security.
-- If local account is compromised, fallback protection should not be treated as a strong boundary.
-
 ## Data at Rest
 
 Primary local files:
 
 - `snoopy.db` (job configs, run analytics, scan items, Reddit app name/client ID metadata)
-- `secrets.enc` (only when keytar unavailable; contains encrypted high-value secrets)
 - `logs/snoopy.log`
 - `daemon.pid`
 
@@ -89,7 +74,7 @@ Current design is optimized for local developer/operator usage:
 
 - Use a dedicated machine/user account for production-like operation.
 - Restrict filesystem permissions for app root.
-- Prefer environments where keytar works.
+- Prefer environments where keytar works, or inject secrets at runtime via environment variables.
 - Rotate OpenRouter key periodically.
 - Rotate Reddit OAuth client secret if fallback credentials are used.
 - Back up DB securely if you rely on historical qualification data.
@@ -101,5 +86,5 @@ If a key is suspected compromised:
 
 1. Revoke/rotate impacted key(s) in provider console(s) (OpenRouter and/or Reddit app).
 2. Run `snoopy settings` and update credentials.
-3. Remove fallback file if present (`secrets.enc`).
+3. Update runtime environment variables if your deployment uses env-based secret injection.
 4. Review logs for accidental key leakage.

@@ -68,16 +68,15 @@ describe('SettingsRepository', () => {
     expect(third.appName).toBe('custom-app-name');
   });
 
-  it('migrates legacy plaintext reddit_client_secret to secure store and clears DB key', async () => {
-    const setSecretSpy = jest.spyOn(secretStore, 'setRedditClientSecret').mockResolvedValue();
+  it('returns null reddit credentials when client secret is unavailable', async () => {
     jest.spyOn(secretStore, 'getRedditClientSecret').mockResolvedValue(null);
 
     const repo = new SettingsRepository();
-    repo.set('reddit_client_secret', 'legacy-secret');
+    await repo.setRedditCredentials({
+      appName: 'snoopy-tests',
+      clientId: 'client-id'
+    });
 
-    await repo.getRedditCredentialState();
-
-    expect(setSecretSpy).toHaveBeenCalledWith('legacy-secret');
-    expect(repo.get('reddit_client_secret')).toBeNull();
+    await expect(repo.getRedditCredentials()).resolves.toBeNull();
   });
 });

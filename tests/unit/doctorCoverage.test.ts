@@ -6,6 +6,7 @@ const mockRunsLatestWithJobNames = jest.fn();
 const mockExtractErrorEntries = jest.fn();
 const mockReadRunLog = jest.fn();
 const mockGetOpenRouterApiKey = jest.fn();
+const mockIsKeytarAvailable = jest.fn();
 const mockGetStartupStatus = jest.fn();
 const mockEnsureAppDirs = jest.fn();
 const mockPrintCommandScreen = jest.fn();
@@ -61,7 +62,8 @@ jest.mock('../../src/services/logging/logReader.js', () => ({
 }));
 
 jest.mock('../../src/services/security/secretStore.js', () => ({
-  getOpenRouterApiKey: (...args: unknown[]) => mockGetOpenRouterApiKey(...args)
+  getOpenRouterApiKey: (...args: unknown[]) => mockGetOpenRouterApiKey(...args),
+  isKeytarAvailable: (...args: unknown[]) => mockIsKeytarAvailable(...args)
 }));
 
 jest.mock('../../src/services/startup/index.js', () => ({
@@ -110,6 +112,7 @@ describe('runDoctor coverage', () => {
     mockExtractErrorEntries.mockReturnValue([]);
     mockReadRunLog.mockReturnValue(null);
     mockGetOpenRouterApiKey.mockResolvedValue('api-key');
+    mockIsKeytarAvailable.mockResolvedValue(true);
     mockGetStartupStatus.mockReturnValue({
       enabled: true,
       method: 'launchd',

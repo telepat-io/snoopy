@@ -1,59 +1,23 @@
-import fs from 'node:fs';
-import path from 'node:path';
-import keytar from 'keytar';
-import {
-  deleteOpenRouterApiKey,
-  deleteRedditClientSecret,
-  getOpenRouterApiKey,
-  getRedditClientSecret,
-  setOpenRouterApiKey,
-  setRedditClientSecret
-} from '../../src/services/security/secretStore.js';
-
-jest.mock('keytar', () => ({
-  __esModule: true,
-  default: {
-    setPassword: jest.fn(),
-    getPassword: jest.fn(),
-    deletePassword: jest.fn()
-  }
-}));
-
-const keytarMock = keytar as unknown as {
-  setPassword: jest.Mock;
-  getPassword: jest.Mock;
-  deletePassword: jest.Mock;
-};
-
-function getSecretFilePath(): string {
-  return path.join(process.env.SNOOPY_ROOT_DIR!, 'secrets.enc');
-}
-
-async function loadSecretStoreModule() {
-  return Promise.resolve({
-    setOpenRouterApiKey,
-    getOpenRouterApiKey,
-    deleteOpenRouterApiKey,
-    setRedditClientSecret,
-    getRedditClientSecret,
-    deleteRedditClientSecret
-  });
-}
-
 describe('secretStore', () => {
   beforeEach(() => {
-    keytarMock.setPassword.mockReset();
-    keytarMock.getPassword.mockReset();
-    keytarMock.deletePassword.mockReset();
-    fs.rmSync(getSecretFilePath(), { force: true });
+    jest.resetModules();
+    delete process.env.SNOOPY_OPENROUTER_API_KEY;
+    delete process.env.SNOOPY_REDDIT_CLIENT_SECRET;
   });
 
   it('uses keytar when available', async () => {
-    keytarMock.setPassword.mockResolvedValue(undefined);
-    keytarMock.getPassword.mockResolvedValue('keytar-value');
-    keytarMock.deletePassword.mockResolvedValue(true);
+    const keytarMock = {
+      setPassword: jest.fn().mockResolvedValue(undefined),
+      getPassword: jest.fn().mockResolvedValue('keytar-value'),
+      deletePassword: jest.fn().mockResolvedValue(true)
+    };
 
-    const store = await loadSecretStoreModule();
+    jest.doMock('keytar', () => ({
+      __esModule: true,
+      default: keytarMock
+    }));
+
+    const store = await import('../../src/services/security/secretStore.js');
 
     await store.setOpenRouterApiKey('openrouter-secret');
     await expect(store.getOpenRouterApiKey()).resolves.toBe('keytar-value');
@@ -62,49 +26,53 @@ describe('secretStore', () => {
     expect(keytarMock.setPassword).toHaveBeenCalledWith('snoopy', 'openrouter_api_key', 'openrouter-secret');
     expect(keytarMock.getPassword).toHaveBeenCalledWith('snoopy', 'openrouter_api_key');
     expect(keytarMock.deletePassword).toHaveBeenCalledWith('snoopy', 'openrouter_api_key');
-    expect(fs.existsSync(getSecretFilePath())).toBe(false);
+    await expect(store.isKeytarAvailable()).resolves.toBe(true);
   });
 
-  it('falls back to encrypted local file when keytar operations fail', async () => {
-    keytarMock.setPassword.mockRejectedValue(new Error('keychain down'));
-    keytarMock.getPassword.mockRejectedValue(new Error('keychain down'));
+  it('falls back to env vars for reads when keytar is unavailable', async () => {
+    jest.doMock('keytar', () => {
+      throw new Error('keytar unavailable');
+    });
 
-    const store = await loadSecretStoreModule();
+    process.env.SNOOPY_OPENROUTER_API_KEY = 'env-openrouter-key';
+    process.env.SNOOPY_REDDIT_CLIENT_SECRET = 'env-reddit-secret';
 
-    await store.setOpenRouterApiKey('fallback-openrouter-key');
-    const filePath = getSecretFilePath();
-    expect(fs.existsSync(filePath)).toBe(true);
+    const store = await import('../../src/services/security/secretStore.js');
 
-    const raw = fs.readFileSync(filePath, 'utf8');
-    expect(raw).not.toContain('fallback-openrouter-key');
-    await expect(store.getOpenRouterApiKey()).resolves.toBe('fallback-openrouter-key');
+    await expect(store.getOpenRouterApiKey()).resolves.toBe('env-openrouter-key');
+    await expect(store.getRedditClientSecret()).resolves.toBe('env-reddit-secret');
+    await expect(store.isKeytarAvailable()).resolves.toBe(false);
   });
 
-  it('deletes fallback entries and removes file when all secrets are cleared', async () => {
-    keytarMock.setPassword.mockRejectedValue(new Error('keychain down'));
-    keytarMock.getPassword.mockRejectedValue(new Error('keychain down'));
-    keytarMock.deletePassword.mockRejectedValue(new Error('delete failed'));
+  it('throws a typed error when attempting secret writes without keytar', async () => {
+    jest.doMock('keytar', () => {
+      throw new Error('keytar unavailable');
+    });
 
-    const store = await loadSecretStoreModule();
+    const store = await import('../../src/services/security/secretStore.js');
 
-    await store.setOpenRouterApiKey('or-key');
-    await store.setRedditClientSecret('reddit-secret');
-    expect(fs.existsSync(getSecretFilePath())).toBe(true);
-
-    await store.deleteOpenRouterApiKey();
-    expect(fs.existsSync(getSecretFilePath())).toBe(true);
-    await expect(store.getRedditClientSecret()).resolves.toBe('reddit-secret');
-
-    await store.deleteRedditClientSecret();
-    expect(fs.existsSync(getSecretFilePath())).toBe(false);
+    await expect(store.setOpenRouterApiKey('new-key')).rejects.toBeInstanceOf(store.KeytarUnavailableError);
+    await expect(store.setRedditClientSecret('new-secret')).rejects.toBeInstanceOf(store.KeytarUnavailableError);
   });
 
-  it('returns null when fallback file cannot be decrypted', async () => {
-    keytarMock.getPassword.mockRejectedValue(new Error('keychain down'));
-    fs.writeFileSync(getSecretFilePath(), 'not-a-valid-payload', 'utf8');
+  it('falls back to env reads when keytar read fails', async () => {
+    const keytarMock = {
+      setPassword: jest.fn().mockResolvedValue(undefined),
+      getPassword: jest.fn().mockRejectedValue(new Error('keytar read failure')),
+      deletePassword: jest.fn().mockResolvedValue(true)
+    };
 
-    const store = await loadSecretStoreModule();
-    await expect(store.getOpenRouterApiKey()).resolves.toBeNull();
-    await expect(store.getRedditClientSecret()).resolves.toBeNull();
+    jest.doMock('keytar', () => ({
+      __esModule: true,
+      default: keytarMock
+    }));
+
+    process.env.SNOOPY_OPENROUTER_API_KEY = 'env-openrouter-key';
+    process.env.SNOOPY_REDDIT_CLIENT_SECRET = 'env-reddit-secret';
+
+    const store = await import('../../src/services/security/secretStore.js');
+
+    await expect(store.getOpenRouterApiKey()).resolves.toBe('env-openrouter-key');
+    await expect(store.getRedditClientSecret()).resolves.toBe('env-reddit-secret');
   });
 });

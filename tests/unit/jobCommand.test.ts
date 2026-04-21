@@ -11,6 +11,7 @@ const mockEnsureDaemonRunning = jest.fn(() => ({ started: false, pid: null }));
 const mockRequestDaemonReload = jest.fn(() => ({ reloaded: false, pid: null as number | null }));
 const mockRunnerRun = jest.fn(async () => {});
 const mockGetOpenRouterApiKey = jest.fn(async () => 'api-key');
+const mockIsKeytarAvailable = jest.fn(async () => true);
 const mockSetOpenRouterApiKey = jest.fn(async () => {});
 const mockDeleteOpenRouterApiKey = jest.fn(async () => {});
 const mockGetStartupStatus = jest.fn(() => ({ enabled: false, method: 'launchd', detail: 'not configured' }));
@@ -63,6 +64,7 @@ jest.mock('../../src/services/scheduler/jobRunner.js', () => ({
 
 jest.mock('../../src/services/security/secretStore.js', () => ({
   getOpenRouterApiKey: mockGetOpenRouterApiKey,
+  isKeytarAvailable: mockIsKeytarAvailable,
   setOpenRouterApiKey: mockSetOpenRouterApiKey,
   deleteOpenRouterApiKey: mockDeleteOpenRouterApiKey
 }));
@@ -274,6 +276,7 @@ describe('job commands', () => {
     mockEnsureDaemonRunning.mockReturnValue({ started: false, pid: null });
     mockRequestDaemonReload.mockReturnValue({ reloaded: false, pid: null });
     mockRunnerRun.mockImplementation(async () => {});
+    mockIsKeytarAvailable.mockResolvedValue(true);
     mockJobsGetByRef.mockReturnValue(null);
     mockJobsListWithStats.mockReturnValue([]);
     mockJobsRemoveByRef.mockReturnValue(null);

@@ -1,5 +1,6 @@
 const mockSetOpenRouterApiKey = jest.fn();
 const mockGetOpenRouterApiKey = jest.fn(async () => 'existing-key');
+const mockIsKeytarAvailable = jest.fn(async () => true);
 const mockDeleteOpenRouterApiKey = jest.fn();
 
 const mockInstallStartup = jest.fn(() => ({
@@ -96,6 +97,7 @@ const mockRender = jest.fn(
 
 jest.mock('../../src/services/security/secretStore.js', () => ({
   getOpenRouterApiKey: mockGetOpenRouterApiKey,
+  isKeytarAvailable: mockIsKeytarAvailable,
   setOpenRouterApiKey: mockSetOpenRouterApiKey,
   deleteOpenRouterApiKey: mockDeleteOpenRouterApiKey
 }));
@@ -203,6 +205,7 @@ describe('addJob startup registration prompt', () => {
 
     jest.clearAllMocks();
     nextFlowResult = { ...baseFlowResult };
+    mockIsKeytarAvailable.mockResolvedValue(true);
     mockGetStartupStatus.mockReturnValue({ enabled: false, method: 'launchd', detail: 'not configured' });
     mockEnsureDaemonRunning.mockReturnValue({ started: false, pid: 4321 });
     mockInstallStartup.mockReturnValue({ success: true, method: 'launchd', detail: 'installed' });

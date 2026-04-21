@@ -54,7 +54,9 @@ async function main(): Promise<void> {
   const openRouterKey = await getOpenRouterApiKey();
 
   if (!openRouterKey) {
-    throw new Error('Cannot run smoke test: OpenRouter API key is not configured.');
+    throw new Error(
+      'Cannot run smoke test: OpenRouter API key is not configured (set it in snoopy settings or export SNOOPY_OPENROUTER_API_KEY).'
+    );
   }
 
   const jobsRepo = new JobsRepository();

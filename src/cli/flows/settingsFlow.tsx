@@ -25,6 +25,7 @@ interface SettingsResult {
 
 interface SettingsFlowProps {
   current: AppSettings;
+  keytarAvailable: boolean;
   currentRedditCredentials: RedditCredentialState;
   currentApiKey: string | null;
   onDone: (result: SettingsResult) => void;
@@ -101,7 +102,13 @@ function keyToDraftField(key: Exclude<EditableSettingKey, 'apiKey' | 'redditClie
   }
 }
 
-export function SettingsFlow({ current, currentRedditCredentials, currentApiKey, onDone }: SettingsFlowProps): React.JSX.Element {
+export function SettingsFlow({
+  current,
+  keytarAvailable,
+  currentRedditCredentials,
+  currentApiKey,
+  onDone
+}: SettingsFlowProps): React.JSX.Element {
   const { exit } = useApp();
   const [mode, setMode] = useState<Mode>('menu');
   const [cursor, setCursor] = useState(0);
@@ -116,11 +123,12 @@ export function SettingsFlow({ current, currentRedditCredentials, currentApiKey,
       buildSettingsMenuItems({
         draft,
         draftSecrets,
+        keytarAvailable,
         currentApiKey,
         hasCurrentRedditClientSecret: currentRedditCredentials.hasClientSecret,
         clearedFields
       }),
-    [currentApiKey, currentRedditCredentials.hasClientSecret, draft, draftSecrets, clearedFields]
+    [keytarAvailable, currentApiKey, currentRedditCredentials.hasClientSecret, draft, draftSecrets, clearedFields]
   );
 
   useInput((_, key) => {
@@ -187,9 +195,13 @@ export function SettingsFlow({ current, currentRedditCredentials, currentApiKey,
   });
 
   if (mode === 'menu') {
+    const storageStatus = keytarAvailable
+      ? 'Keychain storage available for secret fields.'
+      : 'Keychain storage unavailable. Use SNOOPY_OPENROUTER_API_KEY and SNOOPY_REDDIT_CLIENT_SECRET.';
+
     return (
       <SettingsFrame
-        statusText={menuError ?? 'Ready'}
+        statusText={menuError ?? storageStatus}
         statusTone={menuError ? 'danger' : 'info'}
       >
         <Panel title="Settings Menu">
@@ -263,10 +275,16 @@ export function SettingsFlow({ current, currentRedditCredentials, currentApiKey,
 
   const fieldHasCurrentValue = Boolean(initialValue);
   const helpText = fieldHasCurrentValue ? 'Press Enter with empty value to clear' : 'Press Enter to continue';
+  const showSecretEnvHint = isSecret && !keytarAvailable;
 
   return (
     <SettingsFrame statusText="Editing setting" statusTone="info">
       <Panel title="Edit Setting">
+        {showSecretEnvHint ? (
+          <Text color={uiTheme.ink.warning}>
+            Keychain storage is unavailable. Save is disabled for this secret; configure env vars instead.
+          </Text>
+        ) : null}
         <TextPrompt
           label={labelForSettingKey(editingKey)}
           initialValue={initialValue as string}

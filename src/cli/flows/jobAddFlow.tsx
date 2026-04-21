@@ -28,6 +28,7 @@ interface JobAddResult {
 interface JobAddFlowProps {
   hasApiKey: boolean;
   existingApiKey: string | null;
+  canPersistApiKey: boolean;
   startupAlreadyEnabled: boolean;
   initialSettings: AppSettings;
   onApiKeyCaptured?: (apiKey: string) => Promise<void> | void;
@@ -38,6 +39,7 @@ interface JobAddFlowProps {
 type Stage =
   | 'criteria'
   | 'apiKey'
+  | 'apiKeyEnvHelp'
   | 'model'
   | 'clarifying'
   | 'clarifications'
@@ -86,6 +88,7 @@ function FlowFrame({ transcript, children, statusText, statusTone = 'info' }: Fl
 export function JobAddFlow({
   hasApiKey,
   existingApiKey,
+  canPersistApiKey,
   startupAlreadyEnabled,
   initialSettings,
   onApiKeyCaptured,
@@ -148,7 +151,7 @@ export function JobAddFlow({
   }, [answers, apiKey, criteria, defaultModel, existingApiKey, hasApiKey, model, onAuthFailure, stage]);
 
   useEffect(() => {
-    if (stage !== 'error') {
+    if (stage !== 'error' && stage !== 'apiKeyEnvHelp') {
       return;
     }
 
@@ -195,9 +198,28 @@ export function JobAddFlow({
             onSubmit={(value) => {
               setCriteria(value);
               appendTranscript('Criteria', value);
-              setStage(hasApiKey ? 'model' : 'apiKey');
+              if (hasApiKey) {
+                setStage('model');
+                return;
+              }
+
+              setStage(canPersistApiKey ? 'apiKey' : 'apiKeyEnvHelp');
             }}
           />
+        </Panel>
+      </FlowFrame>
+    );
+  }
+
+  if (stage === 'apiKeyEnvHelp') {
+    return (
+      <FlowFrame transcript={transcript} statusText="OpenRouter API key required" statusTone="warning">
+        <Panel title="Step 2: Authentication">
+          <Text color={uiTheme.ink.warning}>Keychain storage is unavailable on this system.</Text>
+          <Text>Set your API key with environment variable:</Text>
+          <Text color={uiTheme.ink.accent}>SNOOPY_OPENROUTER_API_KEY=&lt;your-key&gt;</Text>
+          <Text color={uiTheme.ink.textMuted}>After setting it, run snoopy job add again.</Text>
+          <Text color={uiTheme.ink.textMuted}>Exiting...</Text>
         </Panel>
       </FlowFrame>
     );
@@ -211,10 +233,18 @@ export function JobAddFlow({
           <TextPrompt
             label="Paste OpenRouter API key"
             secret
-            onSubmit={(value) => {
+            onSubmit={async (value) => {
               setApiKey(value);
               appendTranscript('OpenRouter API key', '********');
-              void onApiKeyCaptured?.(value);
+              try {
+                await onApiKeyCaptured?.(value);
+              } catch (error) {
+                const message = error instanceof Error ? error.message : 'Could not save OpenRouter API key.';
+                setErrorMessage(message);
+                appendTranscript('OpenRouter', message, true);
+                setStage('error');
+                return;
+              }
               setStage('model');
             }}
           />

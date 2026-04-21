@@ -102,6 +102,7 @@ Note:
 - Snoopy uses Reddit public JSON endpoints by default.
 - Optional Reddit OAuth fallback credentials can be configured in `snoopy settings` for environments where unauthenticated access is blocked.
 - `snoopy settings` shows a full settings menu so you can jump directly to any setting and save once.
+- If keychain storage is unavailable, configure secrets with environment variables (`SNOOPY_OPENROUTER_API_KEY`, `SNOOPY_REDDIT_CLIENT_SECRET`).
 
 1. Start interactive setup and create your first job:
 

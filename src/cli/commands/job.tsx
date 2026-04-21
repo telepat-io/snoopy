@@ -7,6 +7,7 @@ import { type RunRow, RunsRepository } from '../../services/db/repositories/runs
 import {
   deleteOpenRouterApiKey,
   getOpenRouterApiKey,
+  isKeytarAvailable,
   setOpenRouterApiKey
 } from '../../services/security/secretStore.js';
 import { getStartupStatus, installStartup } from '../../services/startup/index.js';
@@ -72,6 +73,7 @@ function formatRunDuration(startedAt: string | null, finishedAt: string | null):
 async function runAddFlow(
   hasApiKey: boolean,
   existingApiKey: string | null,
+  keytarAvailable: boolean,
   startupAlreadyEnabled: boolean
 ): Promise<JobAddFlowResult | null> {
   const settingsRepo = new SettingsRepository();
@@ -82,6 +84,7 @@ async function runAddFlow(
     <JobAddFlow
       hasApiKey={hasApiKey}
       existingApiKey={existingApiKey}
+      canPersistApiKey={keytarAvailable}
       startupAlreadyEnabled={startupAlreadyEnabled}
       initialSettings={initialSettings}
       onApiKeyCaptured={(apiKey) => {
@@ -174,17 +177,20 @@ export async function runInitialJobAndEnable(jobRef: string, options: InitialRun
 export async function addJob(): Promise<void> {
   const jobsRepo = new JobsRepository();
   const settingsRepo = new SettingsRepository();
+  const keytarAvailable = await isKeytarAvailable();
   const existingApiKey = await getOpenRouterApiKey();
   const hasApiKey = Boolean(existingApiKey);
   const startupStatus = getStartupStatus();
-  const flowResult = await runAddFlow(hasApiKey, existingApiKey, startupStatus.enabled);
+  const flowResult = await runAddFlow(hasApiKey, existingApiKey, keytarAvailable, startupStatus.enabled);
   if (!flowResult) {
     printWarning('Job creation cancelled.');
     return;
   }
 
   if (flowResult.apiKey) {
-    await setOpenRouterApiKey(flowResult.apiKey);
+    if (keytarAvailable) {
+      await setOpenRouterApiKey(flowResult.apiKey);
+    }
   }
 
   const currentSettings = settingsRepo.getAppSettings();

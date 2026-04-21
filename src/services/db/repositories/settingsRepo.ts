@@ -119,23 +119,7 @@ export class SettingsRepository {
     return generated;
   }
 
-  private async migrateLegacyRedditClientSecret(): Promise<void> {
-    const legacySecret = this.get('reddit_client_secret')?.trim() ?? '';
-    if (!legacySecret) {
-      return;
-    }
-
-    const existingSecret = await getRedditClientSecret();
-    if (!existingSecret) {
-      await setRedditClientSecret(legacySecret);
-    }
-
-    this.delete('reddit_client_secret');
-  }
-
   async getRedditCredentialState(): Promise<RedditCredentialState> {
-    await this.migrateLegacyRedditClientSecret();
-
     const appName = this.getOrCreateRedditAppName();
     const clientId = this.get('reddit_client_id')?.trim() ?? '';
     const clientSecret = await getRedditClientSecret();
@@ -148,8 +132,6 @@ export class SettingsRepository {
   }
 
   async getRedditCredentials(): Promise<RedditCredentials | null> {
-    await this.migrateLegacyRedditClientSecret();
-
     const appName = this.getOrCreateRedditAppName();
     const clientId = this.get('reddit_client_id')?.trim() ?? '';
     const clientSecret = (await getRedditClientSecret())?.trim() ?? '';

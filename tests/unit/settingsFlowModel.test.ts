@@ -43,14 +43,15 @@ describe('settingsFlowModel', () => {
     const items = buildSettingsMenuItems({
       draft,
       draftSecrets: {},
+      keytarAvailable: true,
       currentApiKey: 'or-key-987654',
       hasCurrentRedditClientSecret: true,
       clearedFields: new Set()
     });
 
-    expect(items.find((item) => item.key === 'apiKey')?.summary).toBe('Configured (****7654)');
+    expect(items.find((item) => item.key === 'apiKey')?.summary).toBe('Configured via keychain (****7654)');
     expect(items.find((item) => item.key === 'redditClientId')?.summary).toBe('Configured (****1234)');
-    expect(items.find((item) => item.key === 'redditClientSecret')?.summary).toBe('Configured (hidden)');
+    expect(items.find((item) => item.key === 'redditClientSecret')?.summary).toBe('Configured via keychain (hidden)');
   });
 
   it('returns save payload with changed values and new secrets', () => {
@@ -143,6 +144,7 @@ describe('settingsFlowModel', () => {
     const items = buildSettingsMenuItems({
       draft,
       draftSecrets: {},
+      keytarAvailable: true,
       currentApiKey: 'or-key-987654',
       hasCurrentRedditClientSecret: true,
       clearedFields
@@ -172,6 +174,7 @@ describe('settingsFlowModel', () => {
     const items = buildSettingsMenuItems({
       draft,
       draftSecrets: { apiKey: 'or-draft-key-abcdef', redditClientSecret: 'new-secret' },
+      keytarAvailable: true,
       currentApiKey: null,
       hasCurrentRedditClientSecret: false,
       clearedFields: clearedAppName
@@ -189,6 +192,7 @@ describe('settingsFlowModel', () => {
     const items = buildSettingsMenuItems({
       draft,
       draftSecrets: {},
+      keytarAvailable: true,
       currentApiKey: null,
       hasCurrentRedditClientSecret: false
     });
@@ -206,6 +210,7 @@ describe('settingsFlowModel', () => {
     const items = buildSettingsMenuItems({
       draft,
       draftSecrets: {},
+      keytarAvailable: true,
       currentApiKey: null,
       hasCurrentRedditClientSecret: false
     });
@@ -220,6 +225,7 @@ describe('settingsFlowModel', () => {
     const items = buildSettingsMenuItems({
       draft,
       draftSecrets: {},
+      keytarAvailable: true,
       currentApiKey: null,
       hasCurrentRedditClientSecret: false
     });
@@ -234,6 +240,7 @@ describe('settingsFlowModel', () => {
     const items = buildSettingsMenuItems({
       draft,
       draftSecrets: {},
+      keytarAvailable: true,
       currentApiKey: null,
       hasCurrentRedditClientSecret: false
     });
