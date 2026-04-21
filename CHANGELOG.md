@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.9](https://github.com/telepat-io/snoopy/compare/snoopy-v0.1.8...snoopy-v0.1.9) (2026-04-21)
+
+
+### Features
+
+* refactor secret key handling to support environment variable fallback ([a788e77](https://github.com/telepat-io/snoopy/commit/a788e77330057858e2ea4e4fc0d3cd96c44dcc20))
+
 ## [0.1.8](https://github.com/telepat-io/snoopy/compare/snoopy-v0.1.7...snoopy-v0.1.8) (2026-04-02)
 
 
