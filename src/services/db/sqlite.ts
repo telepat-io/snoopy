@@ -113,6 +113,7 @@ export function getDb(): Database.Database {
   }
 
   db.exec('CREATE UNIQUE INDEX IF NOT EXISTS idx_jobs_slug ON jobs(slug)');
+  db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_job_runs_active_job ON job_runs(job_id) WHERE status = 'running'");
   db.exec("CREATE UNIQUE INDEX IF NOT EXISTS idx_scan_items_dedup ON scan_items(job_id, reddit_post_id, COALESCE(reddit_comment_id, ''))");
   db.exec('CREATE INDEX IF NOT EXISTS idx_scan_items_job_qualified_posted ON scan_items(job_id, qualified, reddit_posted_at DESC, created_at DESC)');
   db.exec('CREATE INDEX IF NOT EXISTS idx_scan_items_job_created ON scan_items(job_id, created_at DESC)');

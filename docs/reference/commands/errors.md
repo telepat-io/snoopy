@@ -34,3 +34,8 @@ Typical use:
 - investigate one noisy job
 - confirm whether a daemon-run job has been failing recently
 - inspect recent failures before opening the full `logs <runId>` output
+
+## Related Run States
+
+- If a job already has an active `running` row, a new `job run` attempt is recorded as `skipped` with an `already active` message.
+- Duplicate scan candidates (same job + post/comment identity) are treated as existing items and do not fail the run.

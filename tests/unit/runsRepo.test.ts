@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import { getDb } from '../../src/services/db/sqlite.js';
-import { RunsRepository } from '../../src/services/db/repositories/runsRepo.js';
+import { ActiveRunConflictError, RunsRepository } from '../../src/services/db/repositories/runsRepo.js';
 
 describe('RunsRepository', () => {
   it('tracks run lifecycle and analytics fields', () => {
@@ -38,6 +38,26 @@ describe('RunsRepository', () => {
     expect(first.completionTokens).toBe(120);
     expect(first.estimatedCostUsd).toBeCloseTo(0.012345, 6);
     expect(first.logFilePath).toBe('/tmp/run-log.log');
+  });
+
+  it('rejects starting a second active run for the same job', () => {
+    const db = getDb();
+    const runsRepo = new RunsRepository();
+    const jobId = crypto.randomUUID();
+
+    db.prepare(
+      `INSERT INTO jobs (
+        id, slug, name, description, qualification_prompt, subreddits_json,
+        schedule_cron, enabled, monitor_comments, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, 1, 1, datetime('now'), datetime('now'))`
+    ).run(jobId, `runs-active-${Date.now()}`, `runs-active-${Date.now()}`, 'desc', 'prompt', JSON.stringify(['node']), '*/15 * * * *');
+
+    const firstRunId = runsRepo.startRun(jobId);
+
+    expect(() => runsRepo.startRun(jobId)).toThrow(ActiveRunConflictError);
+
+    runsRepo.failRun(firstRunId, 'done');
+    expect(() => runsRepo.startRun(jobId)).not.toThrow();
   });
 
   it('supports addRun, failRun, setLogFilePath and lookup helpers', () => {

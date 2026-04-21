@@ -115,6 +115,8 @@ Output notes:
 - Rich TTY runs render post/comment scan updates as compact multi-line blocks with indented fields.
 - Labels are colorized for readability.
 - Qualification status is color-coded: `qualified` (green), `not qualified` (red), `pending` (yellow).
+- If another run is already active for the same job, Snoopy fails fast and marks the new attempt as `skipped` with an `already active` message.
+- Duplicate post/comment candidates discovered during overlap windows are treated as already scanned and do not fail the run.
 
 ### `job runs [jobRef]`
 

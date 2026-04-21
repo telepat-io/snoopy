@@ -152,6 +152,119 @@ describe('ScanItemsRepository', () => {
     );
   });
 
+  it('returns inserted=false for duplicate scan inserts and avoids duplicate thread node writes', () => {
+    const db = getDb();
+    const repo = new ScanItemsRepository();
+
+    const jobId = crypto.randomUUID();
+    const runId = crypto.randomUUID();
+
+    db.prepare(
+      `INSERT INTO jobs (
+        id, slug, name, description, qualification_prompt, subreddits_json,
+        schedule_cron, enabled, monitor_comments, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, 1, 1, datetime('now'), datetime('now'))`
+    ).run(jobId, `job-${Date.now()}-duplicate`, `job-${Date.now()}-duplicate`, 'desc', 'prompt', JSON.stringify(['askreddit']), '*/30 * * * *');
+
+    db.prepare(
+      `INSERT INTO job_runs (
+        id, job_id, status, started_at, finished_at, created_at
+      ) VALUES (?, ?, 'completed', datetime('now'), datetime('now'), datetime('now'))`
+    ).run(runId, jobId);
+
+    const firstResult = repo.createWithStatus({
+      jobId,
+      runId,
+      type: 'comment',
+      redditPostId: 'post-dup',
+      redditCommentId: 'comment-dup',
+      subreddit: 'askreddit',
+      author: 'author-target',
+      title: 'thread title',
+      body: 'target body',
+      url: 'https://reddit.com/post-dup/comment-dup',
+      redditPostedAt: '2026-03-03T00:00:00.000Z',
+      qualified: true,
+      qualificationReason: 'match',
+      commentThreadNodes: [
+        {
+          redditCommentId: 'c1',
+          parentRedditCommentId: null,
+          author: 'author-a',
+          body: 'root',
+          depth: 0,
+          isTarget: false
+        },
+        {
+          redditCommentId: 'comment-dup',
+          parentRedditCommentId: 'c1',
+          author: 'author-target',
+          body: 'target',
+          depth: 1,
+          isTarget: true
+        }
+      ]
+    });
+
+    const secondResult = repo.createWithStatus({
+      jobId,
+      runId,
+      type: 'comment',
+      redditPostId: 'post-dup',
+      redditCommentId: 'comment-dup',
+      subreddit: 'askreddit',
+      author: 'author-target',
+      title: 'thread title',
+      body: 'target body',
+      url: 'https://reddit.com/post-dup/comment-dup',
+      redditPostedAt: '2026-03-03T00:00:00.000Z',
+      qualified: true,
+      qualificationReason: 'match',
+      commentThreadNodes: [
+        {
+          redditCommentId: 'c1',
+          parentRedditCommentId: null,
+          author: 'author-a',
+          body: 'root',
+          depth: 0,
+          isTarget: false
+        },
+        {
+          redditCommentId: 'comment-dup',
+          parentRedditCommentId: 'c1',
+          author: 'author-target',
+          body: 'target',
+          depth: 1,
+          isTarget: true
+        }
+      ]
+    });
+
+    expect(firstResult.inserted).toBe(true);
+    expect(secondResult.inserted).toBe(false);
+    expect(secondResult.id).toBe(firstResult.id);
+
+    const duplicateCount = db
+      .prepare(
+        `SELECT COUNT(*) as count
+         FROM scan_items
+         WHERE job_id = ?
+           AND reddit_post_id = ?
+           AND reddit_comment_id = ?`
+      )
+      .get(jobId, 'post-dup', 'comment-dup') as { count: number };
+    expect(duplicateCount.count).toBe(1);
+
+    const nodeCount = db
+      .prepare(
+        `SELECT COUNT(*) as count
+         FROM comment_thread_nodes
+         WHERE scan_item_id = ?`
+      )
+      .get(firstResult.id) as { count: number };
+    expect(nodeCount.count).toBe(2);
+  });
+
   it('returns qualified items in newest-first order', () => {
     const db = getDb();
     const repo = new ScanItemsRepository();

@@ -114,6 +114,7 @@ Notes:
 - Migration 001 initializes a minimal version.
 - Runtime bootstrap upgrades older local DBs by adding newer analytics columns.
 - `log_file_path` points to the per-run log file under `~/.snoopy/logs/` when detailed logging is available.
+- `idx_job_runs_active_job` enforces at most one `running` row per `job_id` to prevent overlapping runs.
 
 ### scan_items
 

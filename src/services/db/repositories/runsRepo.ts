@@ -1,6 +1,16 @@
 import crypto from 'node:crypto';
 import { getDb } from '../sqlite.js';
 
+export class ActiveRunConflictError extends Error {
+  readonly jobId: string;
+
+  constructor(jobId: string) {
+    super(`A run is already active for job ${jobId}.`);
+    this.name = 'ActiveRunConflictError';
+    this.jobId = jobId;
+  }
+}
+
 export interface RunStats {
   itemsDiscovered: number;
   itemsNew: number;
@@ -89,18 +99,27 @@ export class RunsRepository {
 
   startRun(jobId: string, logFilePath?: string): string {
     const id = crypto.randomUUID();
-    this.db
-      .prepare(
-        `INSERT INTO job_runs (
-          id,
-          job_id,
-          status,
-          started_at,
-          created_at,
-          log_file_path
-        ) VALUES (?, ?, 'running', datetime('now'), datetime('now'), ?)`
-      )
-      .run(id, jobId, logFilePath ?? null);
+
+    try {
+      this.db
+        .prepare(
+          `INSERT INTO job_runs (
+            id,
+            job_id,
+            status,
+            started_at,
+            created_at,
+            log_file_path
+          ) VALUES (?, ?, 'running', datetime('now'), datetime('now'), ?)`
+        )
+        .run(id, jobId, logFilePath ?? null);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (message.includes('idx_job_runs_active_job') || message.includes('UNIQUE constraint failed: job_runs.job_id')) {
+        throw new ActiveRunConflictError(jobId);
+      }
+      throw error;
+    }
 
     return id;
   }

@@ -99,6 +99,11 @@ export interface AnalyticsByJobRow extends AnalyticsTotalsRow {
   jobSlug: string;
 }
 
+export interface CreateScanItemResult {
+  id: string;
+  inserted: boolean;
+}
+
 interface AnalyticsFilter {
   jobId?: string;
   days: number;
@@ -106,6 +111,33 @@ interface AnalyticsFilter {
 
 export class ScanItemsRepository {
   private readonly db = getDb();
+
+  private isDedupConflict(error: unknown): boolean {
+    const message = error instanceof Error ? error.message : String(error);
+    return message.includes('idx_scan_items_dedup');
+  }
+
+  private findExistingScanItemId(jobId: string, postId: string, commentId: string | null): string | null {
+    const query = commentId === null
+      ? `SELECT id
+         FROM scan_items
+         WHERE job_id = ?
+           AND reddit_post_id = ?
+           AND reddit_comment_id IS NULL
+         LIMIT 1`
+      : `SELECT id
+         FROM scan_items
+         WHERE job_id = ?
+           AND reddit_post_id = ?
+           AND reddit_comment_id = ?
+         LIMIT 1`;
+
+    const row = commentId === null
+      ? (this.db.prepare(query).get(jobId, postId) as { id: string } | undefined)
+      : (this.db.prepare(query).get(jobId, postId, commentId) as { id: string } | undefined);
+
+    return row?.id ?? null;
+  }
 
   private mapScanItemRows(
     rows: Array<
@@ -478,13 +510,13 @@ export class ScanItemsRepository {
     return Boolean(row);
   }
 
-  create(item: NewScanItem): string {
+  createWithStatus(item: NewScanItem): CreateScanItemResult {
     const id = crypto.randomUUID();
 
-    const createInTransaction = this.db.transaction((newId: string, newItem: NewScanItem) => {
-      this.db
+    const createInTransaction = this.db.transaction((newId: string, newItem: NewScanItem): CreateScanItemResult => {
+      const insertResult = this.db
         .prepare(
-          `INSERT INTO scan_items (
+          `INSERT OR IGNORE INTO scan_items (
             id,
             job_id,
             run_id,
@@ -531,6 +563,14 @@ export class ScanItemsRepository {
           newItem.qualificationReason
         );
 
+      if (insertResult.changes === 0) {
+        const existingId = this.findExistingScanItemId(newItem.jobId, newItem.redditPostId, newItem.redditCommentId);
+        return {
+          id: existingId ?? newId,
+          inserted: false
+        };
+      }
+
       for (const node of newItem.commentThreadNodes ?? []) {
         this.db
           .prepare(
@@ -557,11 +597,30 @@ export class ScanItemsRepository {
             node.isTarget ? 1 : 0
           );
       }
+
+      return {
+        id: newId,
+        inserted: true
+      };
     });
 
-    createInTransaction(id, item);
+    try {
+      return createInTransaction(id, item);
+    } catch (error) {
+      if (!this.isDedupConflict(error)) {
+        throw error;
+      }
 
-    return id;
+      const existingId = this.findExistingScanItemId(item.jobId, item.redditPostId, item.redditCommentId);
+      return {
+        id: existingId ?? id,
+        inserted: false
+      };
+    }
+  }
+
+  create(item: NewScanItem): string {
+    return this.createWithStatus(item).id;
   }
 
   listCommentThreadNodes(scanItemId: string): CommentThreadNodeRow[] {

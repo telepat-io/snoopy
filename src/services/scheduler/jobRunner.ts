@@ -1,6 +1,6 @@
 import type { Job } from '../../types/job.js';
 import { SettingsRepository } from '../db/repositories/settingsRepo.js';
-import { RunsRepository } from '../db/repositories/runsRepo.js';
+import { ActiveRunConflictError, RunsRepository } from '../db/repositories/runsRepo.js';
 import { ScanItemsRepository } from '../db/repositories/scanItemsRepo.js';
 import { getOpenRouterApiKey } from '../security/secretStore.js';
 import { logger } from '../../utils/logger.js';
@@ -33,7 +33,7 @@ export type JobRunProgressEvent =
     }
   | {
       type: 'run_skipped';
-      reason: 'missing_api_key';
+      reason: 'missing_api_key' | 'already_running';
       message: string;
     }
   | {
@@ -190,7 +190,20 @@ export class JobRunner {
     const appSettings = this.settingsRepo.getAppSettings();
     const model = appSettings.model;
     const modelSettings: ModelSettings = appSettings.modelSettings;
-    const runId = this.runsRepo.startRun(job.id);
+    let runId: string;
+    try {
+      runId = this.runsRepo.startRun(job.id);
+    } catch (error) {
+      if (error instanceof ActiveRunConflictError) {
+        const message = `Skipped job ${job.name} (${job.id}): another run is already active.`;
+        this.runsRepo.addRun(job.id, 'skipped', message);
+        this.emit(options, { type: 'run_skipped', reason: 'already_running', message });
+        logger.warn(message);
+        return;
+      }
+
+      throw error;
+    }
     const runLogger = createRunLogger(runId);
     this.runsRepo.setLogFilePath(runId, runLogger.getLogFilePath());
     const redditTraceHooks = {
@@ -306,7 +319,7 @@ export class JobRunner {
           });
           runLogger.info(JSON.stringify({ event: 'post_qualify_result', postId: post.id, result }, null, 2));
 
-          this.scanItemsRepo.create({
+          const postInsert = this.scanItemsRepo.createWithStatus({
             jobId: job.id,
             runId,
             type: 'post',
@@ -325,24 +338,35 @@ export class JobRunner {
             qualificationReason: result.reason
           });
 
-          runStats.itemsNew += 1;
-          if (result.qualified) {
-            runStats.itemsQualified += 1;
+          if (!postInsert.inserted) {
+            this.emit(options, {
+              type: 'post_scanned',
+              postId: post.id,
+              subreddit: post.subreddit,
+              status: 'existing',
+              itemsNew: runStats.itemsNew,
+              itemsQualified: runStats.itemsQualified
+            });
+          } else {
+            runStats.itemsNew += 1;
+            if (result.qualified) {
+              runStats.itemsQualified += 1;
+            }
+            this.accumulateTokens(runStats, result);
+            this.emit(options, {
+              type: 'post_scanned',
+              postId: post.id,
+              subreddit: post.subreddit,
+              status: 'new',
+              title: post.title,
+              bodySnippet: toSnippet(post.body),
+              postUrl: post.url,
+              qualified: result.qualified,
+              qualificationReason: result.reason,
+              itemsNew: runStats.itemsNew,
+              itemsQualified: runStats.itemsQualified
+            });
           }
-          this.accumulateTokens(runStats, result);
-          this.emit(options, {
-            type: 'post_scanned',
-            postId: post.id,
-            subreddit: post.subreddit,
-            status: 'new',
-            title: post.title,
-            bodySnippet: toSnippet(post.body),
-            postUrl: post.url,
-            qualified: result.qualified,
-            qualificationReason: result.reason,
-            itemsNew: runStats.itemsNew,
-            itemsQualified: runStats.itemsQualified
-          });
         } else {
           this.emit(options, {
             type: 'post_scanned',
@@ -478,7 +502,7 @@ export class JobRunner {
               )
             );
 
-            this.scanItemsRepo.create({
+            const commentInsert = this.scanItemsRepo.createWithStatus({
               jobId: job.id,
               runId,
               type: 'comment',
@@ -505,25 +529,37 @@ export class JobRunner {
               }))
             });
 
-            runStats.itemsNew += 1;
-            if (result.qualified) {
-              runStats.itemsQualified += 1;
+            if (!commentInsert.inserted) {
+              this.emit(options, {
+                type: 'comment_scanned',
+                postId: post.id,
+                commentId: lastComment.id,
+                author,
+                status: 'existing',
+                itemsNew: runStats.itemsNew,
+                itemsQualified: runStats.itemsQualified
+              });
+            } else {
+              runStats.itemsNew += 1;
+              if (result.qualified) {
+                runStats.itemsQualified += 1;
+              }
+              this.accumulateTokens(runStats, result);
+              this.emit(options, {
+                type: 'comment_scanned',
+                postId: post.id,
+                commentId: lastComment.id,
+                author,
+                status: 'new',
+                commentSnippet: toSnippet(lastComment.body),
+                postUrl: post.url,
+                commentUrl: buildCommentUrl(post.url, lastComment),
+                qualified: result.qualified,
+                qualificationReason: result.reason,
+                itemsNew: runStats.itemsNew,
+                itemsQualified: runStats.itemsQualified
+              });
             }
-            this.accumulateTokens(runStats, result);
-            this.emit(options, {
-              type: 'comment_scanned',
-              postId: post.id,
-              commentId: lastComment.id,
-              author,
-              status: 'new',
-              commentSnippet: toSnippet(lastComment.body),
-              postUrl: post.url,
-              commentUrl: buildCommentUrl(post.url, lastComment),
-              qualified: result.qualified,
-              qualificationReason: result.reason,
-              itemsNew: runStats.itemsNew,
-              itemsQualified: runStats.itemsQualified
-            });
           }
         }
       }

@@ -126,6 +126,9 @@ snoopy job run --limit 5
 snoopy job run <jobRef> --limit 5
 ```
 
+If another run is already active for the same job, Snoopy marks the new attempt as `skipped` with an `already active` message.
+Duplicate candidates matching an existing scan item are treated as already scanned and do not fail the run.
+
 If `<jobRef>` is omitted for `job run`, `job enable`, `job disable`, `job delete`, `start`, `stop`, `errors`, or `results`, Snoopy shows your job list and lets you pick with up/down arrows and Enter.
 
 4. View run history:

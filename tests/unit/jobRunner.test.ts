@@ -358,6 +358,14 @@ describe('JobRunner', () => {
         new Date().toISOString(),
         'already scanned'
       );
+    runsRepo.completeRun(seedRunId, {
+      itemsDiscovered: 2,
+      itemsNew: 2,
+      itemsQualified: 0,
+      promptTokens: 0,
+      completionTokens: 0,
+      estimatedCostUsd: 0
+    });
     getDb()
       .prepare(
         `INSERT INTO scan_items (
@@ -422,6 +430,54 @@ describe('JobRunner', () => {
     );
     expect(qualifyPostSpy).not.toHaveBeenCalled();
     expect(qualifyCommentSpy).not.toHaveBeenCalled();
+  });
+
+  it('skips run when the same job already has an active run', async () => {
+    const jobsRepo = new JobsRepository();
+    const runsRepo = new RunsRepository();
+    const job = jobsRepo.create({
+      name: `already-running-${Date.now()}`,
+      description: 'desc',
+      qualificationPrompt: 'prompt',
+      subreddits: ['askreddit'],
+      monitorComments: true
+    });
+
+    runsRepo.startRun(job.id);
+
+    jest.spyOn(secretStore, 'getOpenRouterApiKey').mockResolvedValue('openrouter-key');
+    const postsSpy = jest.spyOn(redditClient, 'getRecentSubredditPosts');
+
+    const events: Array<{ type: string; reason?: string }> = [];
+    const runner = new JobRunner();
+    await runner.run(job, {
+      onProgress: (event) => {
+        events.push({
+          type: event.type,
+          reason: event.type === 'run_skipped' ? event.reason : undefined
+        });
+      }
+    });
+
+    expect(postsSpy).not.toHaveBeenCalled();
+    expect(events).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          type: 'run_skipped',
+          reason: 'already_running'
+        })
+      ])
+    );
+
+    const latestRuns = runsRepo.listByJob(job.id, 2);
+    expect(latestRuns.map((row) => row.status)).toEqual(expect.arrayContaining(['running', 'skipped']));
+    const skippedRun = latestRuns.find((row) => row.status === 'skipped');
+    expect(skippedRun?.message).toContain('already active');
+
+    const activeRunId = latestRuns.find((row) => row.status === 'running')?.id;
+    if (activeRunId) {
+      runsRepo.failRun(activeRunId, 'cleanup');
+    }
   });
 
   it('marks run as failed when subreddit fetch throws', async () => {
