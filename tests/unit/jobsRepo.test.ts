@@ -129,6 +129,40 @@ describe('JobsRepository', () => {
       qualificationReason: 'match'
     });
 
+    scanItemsRepo.create({
+      jobId: created.id,
+      runId,
+      type: 'comment',
+      redditPostId: 'delete-cascade-post',
+      redditCommentId: 'delete-cascade-comment',
+      subreddit: 'askreddit',
+      author: 'comment-author',
+      title: null,
+      body: 'comment body',
+      url: 'https://reddit.com/delete-cascade-comment',
+      redditPostedAt: new Date().toISOString(),
+      qualified: true,
+      qualificationReason: 'match',
+      commentThreadNodes: [
+        {
+          redditCommentId: 'delete-cascade-parent',
+          parentRedditCommentId: null,
+          author: 'parent-author',
+          body: 'parent body',
+          depth: 0,
+          isTarget: false
+        },
+        {
+          redditCommentId: 'delete-cascade-comment',
+          parentRedditCommentId: 'delete-cascade-parent',
+          author: 'comment-author',
+          body: 'comment body',
+          depth: 1,
+          isTarget: true
+        }
+      ]
+    });
+
     expect(runsRepo.listByJob(created.id).length).toBeGreaterThan(0);
     expect(scanItemsRepo.existsPost(created.id, 'delete-cascade-post')).toBe(true);
 
@@ -144,6 +178,17 @@ describe('JobsRepository', () => {
       .prepare('SELECT COUNT(*) as count FROM scan_items WHERE job_id = ?')
       .get(created.id) as { count: number };
     expect(remainingScanItems.count).toBe(0);
+
+    const remainingThreadNodes = db
+      .prepare(
+        `SELECT COUNT(*) as count
+         FROM comment_thread_nodes
+         WHERE scan_item_id IN (
+           SELECT id FROM scan_items WHERE job_id = ?
+         )`
+      )
+      .get(created.id) as { count: number };
+    expect(remainingThreadNodes.count).toBe(0);
 
     fs.unlinkSync(csvPath);
     fs.unlinkSync(jsonPath);

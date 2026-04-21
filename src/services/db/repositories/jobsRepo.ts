@@ -72,6 +72,14 @@ export class JobsRepository {
       }
     }
 
+    this.db
+      .prepare(
+        `DELETE FROM comment_thread_nodes
+         WHERE scan_item_id IN (
+           SELECT id FROM scan_items WHERE job_id = ?
+         )`
+      )
+      .run(jobId);
     this.db.prepare('DELETE FROM scan_items WHERE job_id = ?').run(jobId);
     this.db.prepare('DELETE FROM job_runs WHERE job_id = ?').run(jobId);
     this.db.prepare('DELETE FROM jobs WHERE id = ?').run(jobId);
