@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.11](https://github.com/telepat-io/snoopy/compare/snoopy-v0.1.10...snoopy-v0.1.11) (2026-04-21)
+
+
+### Features
+
+* implement active run conflict handling to prevent overlapping job runs ([1d855fb](https://github.com/telepat-io/snoopy/commit/1d855fb95e47632375c2dd6819956a2801930b7e))
+
 ## [0.1.10](https://github.com/telepat-io/snoopy/compare/snoopy-v0.1.9...snoopy-v0.1.10) (2026-04-21)
 
 
