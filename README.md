@@ -1,10 +1,6 @@
-```text
-┌─┐┌┐┌┌─┐┌─┐┌─┐┬ ┬
-└─┐││││ ││ │├─┘└┬┘
-└─┘┘└┘└─┘└─┘┴   ┴ 
-```
-
-# Monitor Reddit Conversations With AI
+<p align="center"><img src="./snoopy.webp" width="128" alt="Snoopy"></p>
+<h1 align="center">Snoopy</h1>
+<p align="center"><em>Sniff out the conversations that matter.</em></p>
 
 [![Build](https://img.shields.io/github/actions/workflow/status/telepat-io/snoopy/ci.yml?branch=main&label=build)](https://github.com/telepat-io/snoopy/actions/workflows/ci.yml)
 [![Coverage](https://codecov.io/gh/telepat-io/snoopy/graph/badge.svg)](https://codecov.io/gh/telepat-io/snoopy)
