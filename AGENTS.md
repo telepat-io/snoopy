@@ -26,9 +26,11 @@ Keep test coverage high. Add tests for all meaningful behavior changes.
 
 ## Database and Schema Rules
 
-- If schema changes are needed, add/update SQL migration files.
-- Keep runtime DB bootstrap and migration SQL aligned.
+- If schema changes are needed, add a TypeScript migration module under `src/services/db/migrations/`.
+- Migrations are executed by `src/services/db/migrations/runner.ts` which tracks applied migrations in a `migrations` table.
+- All migrations must be idempotent so they can safely re-run.
 - Preserve backward compatibility for existing local DBs.
+- The baseline migration (`001_baseline.ts`) contains the full current schema and is idempotent for all DB states.
 
 ## Command Surface Discipline
 
@@ -54,6 +56,10 @@ Current command areas to check:
   - new recurring engineering rules
   - major feature patterns worth preserving
 - Keep AGENTS.md updates extremely concise.
+
+## Commits and Releases
+
+Use Conventional Commits (`fix:`, `feat:`, `docs:`, etc.). This repo uses a release-please driven workflow, so commit messages directly affect changelogs and version bumps.
 
 ## Implementation Notes
 
