@@ -1,12 +1,18 @@
 <p align="center"><img src="./snoopy-logo.webp" width="128" alt="Snoopy"></p>
 <h1 align="center">Snoopy</h1>
+<hr>
 <p align="center"><em>Sniff out the conversations that matter.</em></p>
 
-[![Build](https://img.shields.io/github/actions/workflow/status/telepat-io/snoopy/ci.yml?branch=main&label=build)](https://github.com/telepat-io/snoopy/actions/workflows/ci.yml)
-[![Coverage](https://codecov.io/gh/telepat-io/snoopy/graph/badge.svg)](https://codecov.io/gh/telepat-io/snoopy)
-[![npm](https://img.shields.io/npm/v/@telepat/snoopy)](https://www.npmjs.com/package/@telepat/snoopy)
+<p align="center">
+  <a href="https://docs.telepat.io/snoopy">📖 Docs</a>
+</p>
 
-📖 [Full documentation](https://docs.telepat.io/ideon/)
+<p align="center">
+  <a href="https://github.com/telepat-io/snoopy/actions/workflows/ci.yml"><img src="https://github.com/telepat-io/snoopy/actions/workflows/ci.yml/badge.svg?branch=main" alt="Build"></a>
+  <a href="https://codecov.io/gh/telepat-io/snoopy"><img src="https://codecov.io/gh/telepat-io/snoopy/graph/badge.svg" alt="Codecov"></a>
+  <a href="https://www.npmjs.com/package/@telepat/snoopy"><img src="https://img.shields.io/npm/v/@telepat/snoopy" alt="npm"></a>
+  <a href="https://github.com/telepat-io/snoopy/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-yellow.svg" alt="License"></a>
+</p>
 
 Snoopy helps you monitor Reddit for high-intent conversations that match your business goals.
 
