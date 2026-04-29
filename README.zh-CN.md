@@ -1,6 +1,5 @@
 <p align="center"><img src="./snoopy-logo.webp" width="128" alt="Snoopy"></p>
 <h1 align="center">Snoopy</h1>
-<hr>
 <p align="center"><em>嗅出重要的对话。</em></p>
 
 <p align="center">
