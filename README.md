@@ -1,6 +1,5 @@
 <p align="center"><img src="./snoopy-logo.webp" width="128" alt="Snoopy"></p>
 <h1 align="center">Snoopy</h1>
-<hr>
 <p align="center"><em>Sniff out the conversations that matter.</em></p>
 
 <p align="center">
