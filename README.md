@@ -1,4 +1,4 @@
-<p align="center"><img src="./snoopy.webp" width="128" alt="Snoopy"></p>
+<p align="center"><img src="./snoopy-logo.webp" width="128" alt="Snoopy"></p>
 <h1 align="center">Snoopy</h1>
 <p align="center"><em>Sniff out the conversations that matter.</em></p>
 
