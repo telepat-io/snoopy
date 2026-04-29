@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.12](https://github.com/telepat-io/snoopy/compare/snoopy-v0.1.11...snoopy-v0.1.12) (2026-04-29)
+
+
+### Features
+
+* add consume command for read-once qualified results ([a9fdc22](https://github.com/telepat-io/snoopy/commit/a9fdc226d0f4b60465fbab1a0bdc7f31fac79fc0))
+
 ## [0.1.11](https://github.com/telepat-io/snoopy/compare/snoopy-v0.1.10...snoopy-v0.1.11) (2026-04-21)
 
 
