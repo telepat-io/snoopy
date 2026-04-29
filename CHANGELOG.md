@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.13](https://github.com/telepat-io/snoopy/compare/snoopy-v0.1.12...snoopy-v0.1.13) (2026-04-29)
+
+
+### Features
+
+* add migration runner with e2e tests ([cf84fd4](https://github.com/telepat-io/snoopy/commit/cf84fd4b5e5b06c0c6e800041a6194c231b340ba))
+
 ## [0.1.12](https://github.com/telepat-io/snoopy/compare/snoopy-v0.1.11...snoopy-v0.1.12) (2026-04-29)
 
 
