@@ -100,7 +100,6 @@ To report a security issue, open a private report through the repository securit
 - [Agent Operations](https://docs.telepat.io/snoopy/guides/agent-operations)
 - [Scheduling & Daemon](https://docs.telepat.io/snoopy/guides/scheduling-and-startup)
 - [Security](https://docs.telepat.io/snoopy/technical/security)
-- Language support: English and Simplified Chinese
 - [Repository](https://github.com/telepat-io/snoopy)
 - [npm package](https://www.npmjs.com/package/@telepat/snoopy)
 

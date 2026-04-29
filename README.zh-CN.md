@@ -100,7 +100,6 @@ Snoopy 专为无界面自动化和智能体驱动的监控设计：
 - [Agent Operations](https://docs.telepat.io/snoopy/guides/agent-operations)
 - [调度与守护进程](https://docs.telepat.io/snoopy/guides/scheduling-and-startup)
 - [安全](https://docs.telepat.io/snoopy/technical/security)
-- 语言支持：English 与 简体中文
 - [仓库](https://github.com/telepat-io/snoopy)
 - [npm 包](https://www.npmjs.com/package/@telepat/snoopy)
 
