@@ -7,6 +7,7 @@ import { daemonReload, daemonRun, daemonStart, daemonStatus, daemonStop } from '
 import { showRunLogs } from './commands/logs.js';
 import { showJobErrors } from './commands/errors.js';
 import { exportCsv } from './commands/export.js';
+import { consumeResults } from './commands/consume.js';
 import { showAnalytics } from './commands/analytics.js';
 import { showResults } from './commands/results.js';
 import {
@@ -164,6 +165,17 @@ program
   .option('--limit <count>', 'Maximum rows per job file (default: 100)', parsePositiveInteger, 100)
   .action((jobRef: string | undefined, options: { csv?: boolean; json?: boolean; lastRun?: boolean; limit: number }) => {
     exportCsv(jobRef, options);
+  });
+
+program
+  .command('consume')
+  .argument('[jobRef]', 'Optional job ID or slug')
+  .description('List and mark unconsumed qualified results')
+  .option('--limit <count>', 'Maximum number of results to consume', parsePositiveInteger)
+  .option('--json', 'Output raw JSON array to stdout')
+  .option('--dry-run', 'Preview results without marking them consumed')
+  .action((jobRef: string | undefined, options: { limit?: number; json?: boolean; dryRun?: boolean }) => {
+    consumeResults(jobRef, options);
   });
 
 program.parseAsync(process.argv).catch((error: unknown) => {

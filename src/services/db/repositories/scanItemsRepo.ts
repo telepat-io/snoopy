@@ -19,6 +19,7 @@ export interface NewScanItem {
   viewed?: boolean;
   validated?: boolean;
   processed?: boolean;
+  consumed?: boolean;
   promptTokens?: number;
   completionTokens?: number;
   estimatedCostUsd?: number | null;
@@ -53,6 +54,7 @@ export interface QualifiedScanItemRow {
   viewed: boolean;
   validated: boolean;
   processed: boolean;
+  consumed: boolean;
   qualificationReason: string | null;
   createdAt: string;
 }
@@ -74,6 +76,7 @@ export interface ScanItemRow {
   viewed: boolean;
   validated: boolean;
   processed: boolean;
+  consumed: boolean;
   qualificationReason: string | null;
   promptTokens: number;
   completionTokens: number;
@@ -141,11 +144,12 @@ export class ScanItemsRepository {
 
   private mapScanItemRows(
     rows: Array<
-      Omit<ScanItemRow, 'qualified' | 'viewed' | 'validated' | 'processed'> & {
+      Omit<ScanItemRow, 'qualified' | 'viewed' | 'validated' | 'processed' | 'consumed'> & {
           qualified: number;
           viewed: number;
           validated: number;
           processed: number;
+          consumed: number;
         }
     >
   ): ScanItemRow[] {
@@ -154,7 +158,8 @@ export class ScanItemsRepository {
       qualified: row.qualified === 1,
       viewed: row.viewed === 1,
       validated: row.validated === 1,
-      processed: row.processed === 1
+      processed: row.processed === 1,
+      consumed: row.consumed === 1
     }));
   }
 
@@ -205,6 +210,7 @@ export class ScanItemsRepository {
            viewed,
            validated,
            processed,
+           consumed,
            qualification_reason as qualificationReason,
            created_at as createdAt
          FROM scan_items
@@ -214,10 +220,11 @@ export class ScanItemsRepository {
          LIMIT ?`
       )
       .all(jobId, boundedLimit) as Array<
-      Omit<QualifiedScanItemRow, 'viewed' | 'validated' | 'processed'> & {
+      Omit<QualifiedScanItemRow, 'viewed' | 'validated' | 'processed' | 'consumed'> & {
           viewed: number;
           validated: number;
           processed: number;
+          consumed: number;
         }
     >;
 
@@ -225,7 +232,8 @@ export class ScanItemsRepository {
       ...row,
       viewed: row.viewed === 1,
       validated: row.validated === 1,
-      processed: row.processed === 1
+      processed: row.processed === 1,
+      consumed: row.consumed === 1
     }));
   }
 
@@ -245,6 +253,7 @@ export class ScanItemsRepository {
            viewed,
            validated,
            processed,
+           consumed,
            qualification_reason as qualificationReason,
            created_at as createdAt
          FROM scan_items
@@ -255,10 +264,11 @@ export class ScanItemsRepository {
          LIMIT ?`
       )
       .all(jobId, runId, boundedLimit) as Array<
-      Omit<QualifiedScanItemRow, 'viewed' | 'validated' | 'processed'> & {
+      Omit<QualifiedScanItemRow, 'viewed' | 'validated' | 'processed' | 'consumed'> & {
           viewed: number;
           validated: number;
           processed: number;
+          consumed: number;
         }
     >;
 
@@ -266,7 +276,8 @@ export class ScanItemsRepository {
       ...row,
       viewed: row.viewed === 1,
       validated: row.validated === 1,
-      processed: row.processed === 1
+      processed: row.processed === 1,
+      consumed: row.consumed === 1
     }));
   }
 
@@ -290,6 +301,7 @@ export class ScanItemsRepository {
            viewed,
            validated,
            processed,
+           consumed,
            qualification_reason as qualificationReason,
            prompt_tokens as promptTokens,
            completion_tokens as completionTokens,
@@ -300,11 +312,12 @@ export class ScanItemsRepository {
          ORDER BY datetime(reddit_posted_at) DESC, datetime(created_at) DESC, id DESC`
       )
       .all(jobId) as Array<
-      Omit<ScanItemRow, 'qualified' | 'viewed' | 'validated' | 'processed'> & {
+      Omit<ScanItemRow, 'qualified' | 'viewed' | 'validated' | 'processed' | 'consumed'> & {
           qualified: number;
           viewed: number;
           validated: number;
           processed: number;
+          consumed: number;
         }
     >;
 
@@ -346,6 +359,7 @@ export class ScanItemsRepository {
            viewed,
            validated,
            processed,
+           consumed,
            qualification_reason as qualificationReason,
            prompt_tokens as promptTokens,
            completion_tokens as completionTokens,
@@ -357,11 +371,12 @@ export class ScanItemsRepository {
          LIMIT ? OFFSET ?`
       )
       .all(jobId, boundedLimit, boundedOffset) as Array<
-      Omit<ScanItemRow, 'qualified' | 'viewed' | 'validated' | 'processed'> & {
+      Omit<ScanItemRow, 'qualified' | 'viewed' | 'validated' | 'processed' | 'consumed'> & {
           qualified: number;
           viewed: number;
           validated: number;
           processed: number;
+          consumed: number;
         }
     >;
 
@@ -510,6 +525,74 @@ export class ScanItemsRepository {
     return Boolean(row);
   }
 
+  listUnconsumedQualified(jobId?: string, limit?: number): QualifiedScanItemRow[] {
+    const hasJobId = Boolean(jobId);
+    const hasLimit = limit !== undefined && limit !== null;
+    const boundedLimit = hasLimit ? Math.max(1, Math.floor(limit)) : undefined;
+
+    let query = `SELECT
+           id,
+           job_id as jobId,
+           run_id as runId,
+           author,
+           title,
+           body,
+           url,
+           reddit_posted_at as redditPostedAt,
+           viewed,
+           validated,
+           processed,
+           consumed,
+           qualification_reason as qualificationReason,
+           created_at as createdAt
+         FROM scan_items
+         WHERE qualified = 1 AND consumed = 0`;
+
+    const params: Array<string | number> = [];
+
+    if (hasJobId) {
+      query += ' AND job_id = ?';
+      params.push(jobId!);
+    }
+
+    query += ' ORDER BY datetime(created_at) DESC, id DESC';
+
+    if (boundedLimit !== undefined) {
+      query += ' LIMIT ?';
+      params.push(boundedLimit);
+    }
+
+    const rows = this.db.prepare(query).all(...params) as Array<
+      Omit<QualifiedScanItemRow, 'viewed' | 'validated' | 'processed' | 'consumed'> & {
+          viewed: number;
+          validated: number;
+          processed: number;
+          consumed: number;
+        }
+    >;
+
+    return rows.map((row) => ({
+      ...row,
+      viewed: row.viewed === 1,
+      validated: row.validated === 1,
+      processed: row.processed === 1,
+      consumed: row.consumed === 1
+    }));
+  }
+
+  markConsumed(ids: string[]): number {
+    if (ids.length === 0) {
+      return 0;
+    }
+
+    const placeholders = ids.map(() => '?').join(',');
+    const result = this.db
+      .prepare(`UPDATE scan_items SET consumed = 1 WHERE id IN (${placeholders})`)
+      .run(...ids);
+
+    return Number(result.changes);
+  }
+
   createWithStatus(item: NewScanItem): CreateScanItemResult {
     const id = crypto.randomUUID();
 
@@ -533,12 +616,13 @@ export class ScanItemsRepository {
             viewed,
             validated,
             processed,
+            consumed,
             prompt_tokens,
             completion_tokens,
             estimated_cost_usd,
             qualification_reason,
             created_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`
         )
         .run(
           newId,
@@ -557,6 +641,7 @@ export class ScanItemsRepository {
           newItem.viewed ? 1 : 0,
           newItem.validated ? 1 : 0,
           newItem.processed ? 1 : 0,
+          newItem.consumed ? 1 : 0,
           newItem.promptTokens ?? 0,
           newItem.completionTokens ?? 0,
           newItem.estimatedCostUsd ?? null,

@@ -71,6 +71,7 @@ export function getDb(): Database.Database {
       viewed INTEGER NOT NULL DEFAULT 0,
       validated INTEGER NOT NULL DEFAULT 0,
       processed INTEGER NOT NULL DEFAULT 0,
+      consumed INTEGER NOT NULL DEFAULT 0,
       prompt_tokens INTEGER NOT NULL DEFAULT 0,
       completion_tokens INTEGER NOT NULL DEFAULT 0,
       estimated_cost_usd REAL,
@@ -210,6 +211,14 @@ export function getDb(): Database.Database {
   } catch {
     // Column already exists.
   }
+
+  try {
+    db.exec('ALTER TABLE scan_items ADD COLUMN consumed INTEGER NOT NULL DEFAULT 0');
+  } catch {
+    // Column already exists.
+  }
+
+  db.exec('CREATE INDEX IF NOT EXISTS idx_scan_items_consumed ON scan_items(job_id, qualified, consumed, created_at DESC)');
 
   return db;
 }

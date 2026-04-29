@@ -37,6 +37,7 @@ describe('JsonResultsExporter', () => {
       viewed: false,
       validated: false,
       processed: false,
+      consumed: false,
       qualificationReason: 'fit',
       createdAt: '2026-02-01 00:00:00',
       ...overrides

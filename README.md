@@ -155,7 +155,15 @@ snoopy export
 snoopy export <jobRef> --json --last-run
 ```
 
-8. Inspect one run's detailed log output:
+8. Consume unconsumed qualified results (read-once, most recent first):
+
+```bash
+snoopy consume
+snoopy consume <jobRef> --limit 10
+snoopy consume <jobRef> --json --dry-run
+```
+
+9. Inspect one run's detailed log output:
 
 ```bash
 snoopy logs
@@ -165,13 +173,13 @@ snoopy logs <runId> --raw
 
 When `runId` is omitted for `logs`, Snoopy first prompts for a job, then prompts for a run from that job (up/down arrows + Enter).
 
-9. Show recent errors for one job:
+10. Show recent errors for one job:
 
 ```bash
 snoopy errors <jobRef>
 ```
 
-10. Enable daemon mode:
+11. Enable daemon mode:
 
 ```bash
 snoopy daemon start
@@ -187,6 +195,7 @@ snoopy daemon reload
 - `analytics [jobRef] --days <N>`
 - `results [jobRef]`
 - `export [jobRef] --csv|--json [--last-run]`
+- `consume [jobRef] [--limit <N>] [--json] [--dry-run]`
 - `logs [runId]`
 - `errors [jobRef] --hours <N>`
 - `start [jobRef]` / `stop [jobRef]`

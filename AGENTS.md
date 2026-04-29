@@ -46,6 +46,8 @@ Current command areas to check:
 
 - Update README.md for any user-visible feature, workflow, command, or config change.
 - Keep README.md user-facing; put exhaustive technical detail under `docs/`.
+- Update any relevant docs topic pages under `docs/` when making changes (e.g., schema docs for DB changes, command references for CLI changes, guides for workflow changes).
+- Also update `docs/reference/cli-reference.md` and any per-command pages under `docs/reference/commands/` when adding or changing commands.
 - Docusaurus site lives under `website/` and renders the root `docs/` folder.
 - Update AGENTS.md only when needed:
   - architectural shifts

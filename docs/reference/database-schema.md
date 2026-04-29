@@ -141,12 +141,14 @@ Columns:
 - `viewed INTEGER NOT NULL DEFAULT 0`
 - `validated INTEGER NOT NULL DEFAULT 0`
 - `processed INTEGER NOT NULL DEFAULT 0`
+- `consumed INTEGER NOT NULL DEFAULT 0`
 - `qualification_reason TEXT`
 - `created_at TEXT NOT NULL DEFAULT datetime('now')`
 
 Indexes:
 
 - `idx_scan_items_dedup` unique index on `(job_id, reddit_post_id, COALESCE(reddit_comment_id,''))`
+- `idx_scan_items_consumed` index on `(job_id, qualified, consumed, created_at DESC)`
 
 Behavior:
 
@@ -156,6 +158,7 @@ Behavior:
 	- `viewed = 1` result has been reviewed by an operator or agent
 	- `validated = 1` result has been quality-checked/accepted
 	- `processed = 1` result has been handed off to downstream workflow
+	- `consumed = 1` result has been returned by the `consume` command and will not appear again
 
 Notes:
 

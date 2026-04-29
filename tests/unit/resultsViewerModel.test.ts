@@ -25,6 +25,7 @@ function buildItem(overrides: Partial<ResultsViewerItem> = {}): ResultsViewerIte
     viewed: false,
     validated: false,
     processed: false,
+    consumed: false,
     qualificationReason: 'Good fit',
     promptTokens: 12,
     completionTokens: 7,

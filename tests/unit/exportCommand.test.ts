@@ -88,6 +88,7 @@ describe('export command', () => {
       viewed: false,
       validated: false,
       processed: false,
+      consumed: false,
       qualificationReason: 'fit',
       createdAt: '2026-03-31T00:00:00.000Z'
     };
