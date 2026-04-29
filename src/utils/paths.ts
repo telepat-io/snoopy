@@ -12,7 +12,7 @@ export interface AppPaths {
 }
 
 export function getAppPaths(): AppPaths {
-  const rootDir = process.env.SNOOPY_ROOT_DIR || path.join(os.homedir(), '.snoopy');
+  const rootDir = process.env.SNOOPY_E2E_ROOT_DIR || process.env.SNOOPY_ROOT_DIR || path.join(os.homedir(), '.snoopy');
   return {
     rootDir,
     dbPath: path.join(rootDir, 'snoopy.db'),

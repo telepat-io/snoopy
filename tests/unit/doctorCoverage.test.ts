@@ -101,7 +101,8 @@ describe('runDoctor coverage', () => {
     });
     mockGetDb.mockReturnValue({
       prepare: () => ({
-        get: () => ({ ok: 1 })
+        get: () => ({ ok: 1 }),
+        all: () => [{ id: 1, name: 'baseline', appliedAt: '2026-01-01T00:00:00.000Z' }]
       })
     });
     mockJobsList.mockReturnValue([

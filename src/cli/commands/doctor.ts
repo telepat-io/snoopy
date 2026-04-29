@@ -1,5 +1,6 @@
 import fs from 'node:fs';
 import { getDb } from '../../services/db/sqlite.js';
+import { getAppliedMigrations, getPendingMigrations } from '../../services/db/migrations/runner.js';
 import { JobsRepository } from '../../services/db/repositories/jobsRepo.js';
 import { RunsRepository } from '../../services/db/repositories/runsRepo.js';
 import { extractErrorEntries, readRunLog } from '../../services/logging/logReader.js';
@@ -52,8 +53,9 @@ export async function runDoctor(): Promise<void> {
 
   let dbOk = false;
   let dbDetails = `DB file: ${paths.dbPath}`;
+  let db: ReturnType<typeof getDb> | null = null;
   try {
-    const db = getDb();
+    db = getDb();
     db.prepare('SELECT 1').get();
     dbOk = true;
     dbDetails = `DB reachable at ${paths.dbPath}`;
@@ -74,8 +76,18 @@ export async function runDoctor(): Promise<void> {
   printKeyValue('Platform', process.platform);
   printKeyValue('Node', process.version);
 
-  if (dbOk) {
+  if (dbOk && db) {
     printSuccess(`Database: ${dbDetails}`);
+
+    const applied = getAppliedMigrations(db);
+    const pending = getPendingMigrations(db);
+
+    if (pending.length === 0) {
+      printSuccess(`Migrations: ${applied.length} applied, 0 pending`);
+    } else {
+      printWarning(`Migrations: ${applied.length} applied, ${pending.length} pending`);
+      pending.forEach((m) => printMuted(`  → pending: ${m.id} ${m.name}`));
+    }
   } else {
     printError(`Database: ${dbDetails}`);
     printMuted(`  → Check that ${paths.dbPath} is accessible and not corrupted`);

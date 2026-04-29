@@ -33,8 +33,9 @@ Then DB path becomes:
 
 ## Schema Sources
 
-- Migration SQL files in `src/services/db/migrations/`
-- Runtime bootstrap in `src/services/db/sqlite.ts` for backward-compatible column additions
+- TypeScript migration modules in `src/services/db/migrations/`
+- Migration runner in `src/services/db/migrations/runner.ts`
+- Database bootstrap in `src/services/db/sqlite.ts` (WAL mode + runner invocation only)
 
 ## Tables
 
@@ -176,6 +177,24 @@ Columns:
 - `id INTEGER PRIMARY KEY CHECK (id = 1)`
 - `is_running INTEGER NOT NULL`
 - `updated_at TEXT NOT NULL DEFAULT datetime('now')`
+
+### migrations
+
+Purpose:
+
+- tracks which schema migrations have been applied by the migration runner
+
+Columns:
+
+- `id INTEGER PRIMARY KEY`
+- `name TEXT NOT NULL`
+- `applied_at TEXT NOT NULL DEFAULT datetime('now')`
+
+Notes:
+
+- created automatically by the migration runner on first DB access
+- each row represents one applied migration module
+- `snoopy doctor` reports pending vs applied migrations
 
 ## Deletion and Data Lifecycle
 

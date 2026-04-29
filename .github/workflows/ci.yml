@@ -43,3 +43,6 @@ jobs:
           fail_ci_if_error: false
           disable_search: true
           verbose: true
+
+      - name: E2E tests
+        run: npm run e2e
