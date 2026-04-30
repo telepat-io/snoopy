@@ -178,6 +178,45 @@ program
     consumeResults(jobRef, options);
   });
 
+// --- MCP server ---
+program
+  .command('mcp')
+  .description('Start MCP server for agent integration (stdio transport)')
+  .action(async () => {
+    const { startSnoopyMcpServer } = await import('../mcp/server.js');
+    await startSnoopyMcpServer();
+  });
+
+// --- Agent framework registration ---
+const agent = program.command('agent').description('Manage agent framework integrations');
+agent
+  .command('install')
+  .argument('<runtime>', 'Agent runtime (claude, claude-desktop, chatgpt, gemini, codex, cursor, vscode, opencode, generic-mcp)')
+  .description('Register Snoopy MCP server with an agent framework')
+  .action(async (runtime: string) => {
+    const { agentInstall } = await import('../agent/install.js');
+    await agentInstall(runtime);
+  });
+agent
+  .command('uninstall')
+  .argument('<runtime>', 'Agent runtime')
+  .description('Remove Snoopy MCP server from an agent framework')
+  .action(async (runtime: string) => {
+    const { agentUninstall } = await import('../agent/install.js');
+    await agentUninstall(runtime);
+  });
+agent
+  .command('status')
+  .description('Show agent framework registration status')
+  .action(async () => {
+    const { agentStatus } = await import('../agent/install.js');
+    const status = await agentStatus();
+    for (const entry of status.runtimes) {
+      const marker = entry.installed ? '✓' : '·';
+      console.log(`${marker} ${entry.runtime.padEnd(16)} ${entry.configPath}`);
+    }
+  });
+
 program.parseAsync(process.argv).catch((error: unknown) => {
   console.error(`Error: ${String(error)}`);
   process.exit(1);

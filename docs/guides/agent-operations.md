@@ -5,6 +5,10 @@ sidebar_position: 7
 
 # Agent Operations
 
+:::tip New: For Agents section
+For MCP server setup, agent framework registration, and skill packages, see the [For Agents](../for-agents/index.md) section. This guide covers the full CLI operations runbook and direct database access patterns.
+:::
+
 This guide is for AI agents and automation scripts operating Snoopy end-to-end. It covers installation, credential setup, every command available, and direct database access patterns for cases where the CLI is not sufficient.
 
 ---

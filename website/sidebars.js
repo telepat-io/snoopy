@@ -40,6 +40,16 @@ module.exports = {
       type: 'category',
       label: 'Contributing',
       items: ['contributing/development', 'contributing/releasing-and-docs-deploy']
+    },
+    {
+      type: 'category',
+      label: 'For Agents',
+      items: [
+        'for-agents/index',
+        'for-agents/mcp-server',
+        'for-agents/agent-setup',
+        'for-agents/skills'
+      ]
     }
   ]
 };

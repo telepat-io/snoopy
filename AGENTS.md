@@ -68,3 +68,9 @@ Use Conventional Commits (`fix:`, `feat:`, `docs:`, etc.). This repo uses a rele
 - Keep job references supporting both ID and slug where applicable.
 - For quick live end-to-end verification, run `npm run e2e:smoke` (create temp job -> manual run limit 5 -> delete job and related analytics).
 - Qualification reliability: this model may exhaust completion tokens before emitting tool/json output; preserve truncation-aware retries when touching OpenRouter qualification flow.
+
+## MCP and Agent Integration Sync Policy
+
+- When MCP tool surface changes, update in the same change: `src/mcp/tools.ts`, `src/mcp/server.ts`, `docs/for-agents/mcp-server.md`, and `snoopy-cli-skill/SKILL.md`.
+- When agent install targets change, update `src/agent/install.ts`, `docs/for-agents/agent-setup.md`, and `snoopy-cli-skill/SKILL.md`.
+- Keep `snoopy-cli-skill/references/command-catalog.md` synchronized with actual CLI command surface.
