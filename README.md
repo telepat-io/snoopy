@@ -1,6 +1,6 @@
 <p align="center"><img src="./assets/avatar/snoopy-logo.webp" width="128" alt="Snoopy"></p>
 <h1 align="center">Snoopy</h1>
-<p align="center"><em>Sniff out the conversations that matter.</em></p>
+<p align="center"><em>Monitor online conversations for high-intent signals with AI — plain language criteria, continuous scanning, zero infrastructure.</em></p>
 
 <p align="center">
   <a href="https://docs.telepat.io/snoopy">📖 Docs</a>
@@ -15,17 +15,22 @@
   <a href="https://github.com/telepat-io/snoopy/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-yellow.svg" alt="License"></a>
 </p>
 
-Snoopy helps you monitor Reddit for high-intent conversations that match your business goals.
+Snoopy monitors online conversations for high-intent signals that match your business goals.
 
-Define what you care about in plain language, let Snoopy create a monitoring job, and continuously scan and qualify posts and comments so you can focus on response and outreach.
+Define what you care about in plain language, let Snoopy create a monitoring job, and continuously scan and qualify conversations so you can focus on response and outreach.
 
-## What It Solves
+Built for founders, marketers, and sales teams who need to find genuine opportunities in online communities without manually scrolling.
 
-- Turn broad Reddit traffic into a focused stream of opportunities.
-- Define qualification logic once, then run continuously.
-- Trigger manual runs when you want quick validation.
-- Track run analytics (discovered, new, qualified items, token usage, cost estimate).
-- Run cross-platform with startup-on-reboot support.
+## Features
+
+- **Plain language job creation** — Describe what you're looking for in plain language. Snoopy builds an AI-assisted monitoring job. No regex, no keyword configs.
+- **AI qualification, not keyword matching** — Conversations are evaluated against your intent. Snoopy understands context — not just pattern matching.
+- **Continuous daemon monitoring** — Set a cron schedule and let Snoopy scan in the background. `snoopy daemon start`
+- **Code-driven efficiency** — Deterministic code handles scraping, scheduling, state management, and SQLite persistence. Tokens only spent on qualification.
+- **Local & private** — SQLite database on your machine. No cloud dependency. Export to CSV or JSON on demand.
+- **Cost-aware analytics** — Token usage, cost estimates, and qualified items per run. `snoopy analytics --days 7`
+- **Agent & CI ready** — MCP server, direct SQLite access, non-interactive mode, machine-readable output.
+- **Cross-platform** — macOS, Linux, Windows. Startup-on-reboot. `snoopy startup install`
 
 ## Quick Start
 

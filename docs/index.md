@@ -10,30 +10,11 @@ sidebar_position: 1
 └─┘┘└┘└─┘└─┘┴   ┴ 
 ```
 
-# Monitor Reddit Conversations With AI
+# Find High-Intent Conversations With AI
 
-Snoopy helps you monitor Reddit for high-intent conversations that match your business goals.
+Snoopy monitors online conversations for high-intent signals that match your business goals.
 
-Define what you care about in plain language, let Snoopy create a monitoring job, and continuously scan and qualify posts/comments so you can focus on response and outreach.
-
-## Why Use Snoopy
-
-- Turn broad Reddit traffic into a focused stream of opportunities.
-- Define qualification logic once, then run continuously.
-- Trigger manual runs when you want quick validation.
-- Track run analytics (discovered/new/qualified items, token usage, cost estimate).
-- Run cross-platform with startup-on-reboot support.
-
-## What It Does
-
-- Interactive job creation flow from natural-language criteria.
-- AI-assisted clarification and job spec generation.
-- Qualification against your prompt for posts (and comments when enabled).
-- Local SQLite persistence for jobs, runs, and scan items.
-- Built-in daemon for scheduled scanning (cron expressions).
-- On-demand CSV export of qualified results per job.
-- Startup registration for macOS, Linux, and Windows.
-- Health checks via the doctor command.
+Define what you care about in plain language, let Snoopy create a monitoring job, and continuously scan and qualify conversations so you can focus on response and outreach.
 
 ## Install
 

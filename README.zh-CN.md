@@ -1,6 +1,6 @@
 <p align="center"><img src="./assets/avatar/snoopy-logo.webp" width="128" alt="Snoopy"></p>
 <h1 align="center">Snoopy</h1>
-<p align="center"><em>嗅出重要的对话。</em></p>
+<p align="center"><em>使用 AI 监控在线对话中的高意向信号——自然语言标准，持续扫描，零基础设施。</em></p>
 
 <p align="center">
   <a href="https://docs.telepat.io/snoopy">📖 文档</a>
@@ -15,17 +15,22 @@
   <a href="https://github.com/telepat-io/snoopy/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-yellow.svg" alt="License"></a>
 </p>
 
-Snoopy 帮助你监控 Reddit，找到与业务目标高度相关的对话。
+Snoopy 监控在线对话中的高意向信号，匹配您的业务目标。
 
-用自然语言定义你关心的内容，让 Snoopy 创建监控任务，然后持续扫描和评估帖子和评论，让你专注于回复和外联。
+用自然语言定义您关心的内容，让 Snoopy 创建监控任务，持续扫描和评估对话，让您专注于回复和外联。
 
-## 它能解决什么问题
+专为需要发现真正机会而无需手动浏览在线社区的创始人、营销人员和销售团队打造。
 
-- 将广泛的 Reddit 流量转化为聚焦的机会流。
-- 一次性定义评估逻辑，然后持续运行。
-- 需要快速验证时触发手动运行。
-- 跟踪运行分析数据（发现、新增、符合条件的项目、token 用量、成本估算）。
-- 跨平台运行，支持开机自启。
+## 功能特性
+
+- **自然语言任务创建** — 用自然语言描述您正在寻找的内容。Snoopy 构建 AI 辅助的监控任务。无需正则表达式，无需关键字配置。
+- **AI 评估，而非关键词匹配** — 对话会对照您的意图进行评估。Snoopy 理解上下文——不仅仅是模式匹配。
+- **持续守护进程监控** — 设置 cron 计划，让 Snoopy 在后台扫描。`snoopy daemon start`
+- **代码驱动的高效率** — 确定性代码处理数据抓取、调度、状态管理和 SQLite 持久化。Token 仅用于评估。
+- **本地化与隐私保护** — SQLite 数据库存储在您的机器上。无云依赖。按需导出为 CSV 或 JSON。
+- **成本感知分析** — 每次运行的 Token 使用量、成本估算和符合条件的项目。`snoopy analytics --days 7`
+- **智能体与 CI 就绪** — MCP 服务器、直接 SQLite 访问、非交互模式、机器可读输出。
+- **跨平台** — macOS、Linux、Windows。支持开机自启。`snoopy startup install`
 
 ## 快速开始
 

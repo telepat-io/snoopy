@@ -47,7 +47,7 @@ function parsePositiveInteger(value: string): number {
 }
 
 const program = new Command();
-program.name('snoopy').description('Monitor Reddit conversations with natural language job definitions.').version(readVersion());
+program.name('snoopy').description('Monitor online conversations for high-intent signals with AI — plain language criteria, continuous scanning, zero infrastructure.').version(readVersion());
 
 const job = program.command('job').description('Manage monitoring jobs');
 job.command('add').description('Add a monitoring job').action(async () => {

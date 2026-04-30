@@ -8,7 +8,7 @@ const baseUrl = localMode ? '/' : process.env.DOCS_BASE_URL || '/snoopy/';
 /** @type {import('@docusaurus/types').Config} */
 const config = {
   title: 'Snoopy Docs',
-  tagline: 'Monitor Reddit conversations and qualify intent with AI.',
+  tagline: 'Monitor online conversations for high-intent signals with AI — plain language criteria, continuous scanning, zero infrastructure.',
   url,
   baseUrl,
   organizationName: githubOwner,

@@ -2,6 +2,7 @@
 module.exports = {
   docsSidebar: [
     'index',
+    'features',
     {
       type: 'category',
       label: 'Getting Started',
