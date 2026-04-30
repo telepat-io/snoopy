@@ -47,7 +47,7 @@ const config = {
       title: 'Snoopy',
       logo: {
         alt: 'Snoopy Logo',
-        src: 'img/logo.svg'
+        src: 'img/snoopy-avatar.webp'
       },
       items: [
         {
