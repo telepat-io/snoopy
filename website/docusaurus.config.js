@@ -21,7 +21,7 @@ const config = {
       onBrokenMarkdownLinks: 'throw'
     }
   },
-  favicon: 'img/favicon.svg',
+  favicon: 'img/snoopy-favicon.png',
   presets: [
     [
       'classic',
