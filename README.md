@@ -1,6 +1,6 @@
 <p align="center"><img src="./assets/avatar/snoopy-logo.webp" width="128" alt="Snoopy"></p>
 <h1 align="center">Snoopy</h1>
-<p align="center"><em>Monitor online conversations for high-intent signals with AI — plain language criteria, continuous scanning, zero infrastructure.</em></p>
+<p align="center"><em>Monitor online conversations for high-intent signals with AI. Plain language criteria, continuous scanning, zero infrastructure.</em></p>
 
 <p align="center">
   <a href="https://docs.telepat.io/snoopy">📖 Docs</a>
