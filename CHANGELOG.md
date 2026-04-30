@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.14](https://github.com/telepat-io/snoopy/compare/snoopy-v0.1.13...snoopy-v0.1.14) (2026-04-30)
+
+
+### Features
+
+* add MCP server and tools for Snoopy management ([e64dd75](https://github.com/telepat-io/snoopy/commit/e64dd75f344b3374d8f4d8abacecfe1f5634af30))
+
 ## [0.1.13](https://github.com/telepat-io/snoopy/compare/snoopy-v0.1.12...snoopy-v0.1.13) (2026-04-29)
 
 
