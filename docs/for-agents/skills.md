@@ -15,9 +15,9 @@ Snoopy ships a skill package that provides AI agents with zero-context workflow 
 
 ## Primary skill package
 
-The `snoopy-cli-skill/` package is the installable skill bundle for Snoopy.
+The `skill/snoopy-cli/` package is the installable skill bundle for Snoopy.
 
-- **Location**: `snoopy-cli-skill/SKILL.md` (repository root)
+- **Location**: `skill/snoopy-cli/SKILL.md` (repository root)
 - **Purpose**: Guides agents through install, setup, job management, debugging, and MCP integration
 - **Format**: Agent Skills specification compliant
 
@@ -32,7 +32,7 @@ The `snoopy-cli-skill/` package is the installable skill bundle for Snoopy.
 
 ### Core file
 
-`snoopy-cli-skill/SKILL.md` contains:
+`skill/snoopy-cli/SKILL.md` contains:
 
 - Installation and setup instructions (interactive + non-interactive)
 - Deterministic workflow for all operations
@@ -51,21 +51,21 @@ The `snoopy-cli-skill/` package is the installable skill bundle for Snoopy.
 
 ### Project scope
 
-- `.agents/skills/snoopy-cli-skill/`
-- `.github/skills/snoopy-cli-skill/`
-- `.cursor/skills/snoopy-cli-skill/`
+- `.agents/skills/snoopy-cli/`
+- `.github/skills/snoopy-cli/`
+- `.cursor/skills/snoopy-cli/`
 
 ### User scope
 
-- `~/.agents/skills/snoopy-cli-skill/`
-- `~/.copilot/skills/snoopy-cli-skill/`
-- `~/.claude/skills/snoopy-cli-skill/`
+- `~/.agents/skills/snoopy-cli/`
+- `~/.copilot/skills/snoopy-cli/`
+- `~/.claude/skills/snoopy-cli/`
 
 ## Required skill contract
 
 Each shipped skill must document:
 
-1. **Name**: `snoopy-cli-skill` (kebab-case, matches directory)
+1. **Name**: `snoopy-cli` (kebab-case, matches directory)
 2. **Inputs**: OpenRouter API key, subreddits, qualification prompt, job name, schedule
 3. **Guardrails**: always require API key, daemon must be running for scheduled jobs
 4. **Outputs**: job runs, qualified results, analytics, error reports
@@ -86,13 +86,13 @@ When MCP tool surface changes, update in the same change:
 1. `src/mcp/tools.ts` (schemas and contracts)
 2. `src/mcp/server.ts` (handlers)
 3. `docs/for-agents/mcp-server.md` (MCP docs)
-4. `snoopy-cli-skill/SKILL.md` (skill docs)
+4. `skill/snoopy-cli/SKILL.md` (skill docs)
 
 When agent install targets change, update:
 
 1. `src/agent/install.ts` (install logic)
 2. `docs/for-agents/agent-setup.md` (setup docs)
-3. `snoopy-cli-skill/SKILL.md` (skill docs)
+3. `skill/snoopy-cli/SKILL.md` (skill docs)
 
 ## Related pages
 

@@ -71,6 +71,6 @@ Use Conventional Commits (`fix:`, `feat:`, `docs:`, etc.). This repo uses a rele
 
 ## MCP and Agent Integration Sync Policy
 
-- When MCP tool surface changes, update in the same change: `src/mcp/tools.ts`, `src/mcp/server.ts`, `docs/for-agents/mcp-server.md`, and `snoopy-cli-skill/SKILL.md`.
-- When agent install targets change, update `src/agent/install.ts`, `docs/for-agents/agent-setup.md`, and `snoopy-cli-skill/SKILL.md`.
-- Keep `snoopy-cli-skill/references/command-catalog.md` synchronized with actual CLI command surface.
+- When MCP tool surface changes, update in the same change: `src/mcp/tools.ts`, `src/mcp/server.ts`, `docs/for-agents/mcp-server.md`, and `skill/snoopy-cli/SKILL.md`.
+- When agent install targets change, update `src/agent/install.ts`, `docs/for-agents/agent-setup.md`, and `skill/snoopy-cli/SKILL.md`.
+- Keep `skill/snoopy-cli/references/command-catalog.md` synchronized with actual CLI command surface.

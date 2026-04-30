@@ -1,5 +1,5 @@
 ---
-name: snoopy-cli-skill
+name: snoopy-cli
 description: Use this skill when users need to install, configure, run, automate, debug, and troubleshoot the Snoopy CLI for Reddit conversation monitoring (including MCP server and agent framework registration) from zero context.
 ---
 
