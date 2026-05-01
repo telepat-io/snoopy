@@ -1,0 +1,26 @@
+{
+  "sidebar.docsSidebar.category.Getting Started": {
+    "message": "快速入门",
+    "description": "The label for category Getting Started in sidebar docsSidebar"
+  },
+  "sidebar.docsSidebar.category.Guides": {
+    "message": "指南",
+    "description": "The label for category Guides in sidebar docsSidebar"
+  },
+  "sidebar.docsSidebar.category.Reference": {
+    "message": "参考",
+    "description": "The label for category Reference in sidebar docsSidebar"
+  },
+  "sidebar.docsSidebar.category.Technical": {
+    "message": "技术",
+    "description": "The label for category Technical in sidebar docsSidebar"
+  },
+  "sidebar.docsSidebar.category.Contributing": {
+    "message": "贡献",
+    "description": "The label for category Contributing in sidebar docsSidebar"
+  },
+  "sidebar.docsSidebar.category.For Agents": {
+    "message": "面向智能体",
+    "description": "The label for category For Agents in sidebar docsSidebar"
+  }
+}

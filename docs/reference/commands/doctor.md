@@ -1,6 +1,8 @@
 ---
 title: doctor
 sidebar_position: 10
+description: CLI reference for the doctor command used to run health checks on the Snoopy Reddit monitoring environment.
+keywords: [reddit, monitoring, cli, doctor, health, diagnostics]
 ---
 
 # `doctor`

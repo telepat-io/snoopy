@@ -1,6 +1,8 @@
 ---
 title: Results
 sidebar_position: 8
+description: CLI reference for the results command used to browse Reddit monitoring scan items in an interactive viewer.
+keywords: [reddit, monitoring, cli, ai, results, viewer]
 ---
 
 # Results

@@ -14,6 +14,10 @@ const config = {
   organizationName: githubOwner,
   projectName: githubRepo,
   deploymentBranch: process.env.GH_PAGES_BRANCH || 'gh-pages',
+  i18n: {
+    defaultLocale: 'en',
+    locales: ['en', 'zh-CN']
+  },
   trailingSlash: false,
   onBrokenLinks: 'throw',
   markdown: {
@@ -65,6 +69,10 @@ const config = {
           to: '/technical/security',
           label: 'Technical',
           position: 'left'
+        },
+        {
+          type: 'localeDropdown',
+          position: 'right'
         },
         {
           href: `https://github.com/${githubOwner}/${githubRepo}`,

@@ -1,5 +1,7 @@
 ---
 title: Quick Start
+description: Run through the minimum path to validate Snoopy's Reddit monitoring and AI qualification pipeline end-to-end.
+keywords: [reddit, monitoring, cli, ai, quickstart, validation]
 ---
 
 # Quick Start

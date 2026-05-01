@@ -1,6 +1,8 @@
 ---
 title: logs
 sidebar_position: 8
+description: CLI reference for the logs command used to inspect job run timelines for scheduled Reddit monitoring jobs.
+keywords: [reddit, monitoring, cli, scheduler, logs, debugging]
 ---
 
 # `logs [runId]`

@@ -1,5 +1,7 @@
 ---
 title: Development
+description: Contributing guide for local development setup and quality gates when working on the Snoopy Reddit monitoring CLI.
+keywords: [reddit, monitoring, cli, ai, contributing, development]
 ---
 
 # Contributing: Development

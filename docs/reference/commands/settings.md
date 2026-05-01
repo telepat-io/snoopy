@@ -1,6 +1,8 @@
 ---
 title: settings
 sidebar_position: 5
+description: CLI reference for the settings command used to configure Snoopy's Reddit monitoring and AI qualification options.
+keywords: [reddit, monitoring, cli, ai, settings, configuration]
 ---
 
 # `settings`

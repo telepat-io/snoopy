@@ -1,6 +1,8 @@
 ---
 title: Installation & Setup
 sidebar_position: 2
+description: Install the Snoopy CLI tool and set up AI-powered Reddit monitoring with your first scheduler job.
+keywords: [reddit, monitoring, cli, ai, scheduler, installation, setup]
 ---
 
 # Installation & Setup

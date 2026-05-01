@@ -1,6 +1,8 @@
 ---
 title: CLI Reference
 sidebar_position: 1
+description: Complete CLI reference for the Snoopy Reddit monitoring tool, organized by command group.
+keywords: [reddit, monitoring, cli, ai, reference, commands]
 ---
 
 # CLI Reference

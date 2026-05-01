@@ -1,6 +1,8 @@
 ---
 title: consume
 sidebar_position: 9
+description: CLI reference for the consume command used to mark AI-qualified Reddit monitoring results as consumed.
+keywords: [reddit, monitoring, cli, ai, consume, results]
 ---
 
 # `consume`

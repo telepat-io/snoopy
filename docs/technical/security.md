@@ -1,6 +1,8 @@
 ---
 title: Security
 sidebar_position: 5
+description: How Snoopy stores secrets and operational data for AI-powered Reddit monitoring, including API keys and scheduling persistence.
+keywords: [reddit, monitoring, cli, ai, security, secrets, storage]
 ---
 
 # Security and Secret Storage

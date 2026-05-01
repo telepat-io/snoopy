@@ -1,5 +1,7 @@
 ---
 title: Overview
+description: Learn what Snoopy is and how to get started with AI-powered Reddit conversation monitoring from the CLI.
+keywords: [reddit, monitoring, cli, ai, overview, getting started]
 ---
 
 # Getting Started Overview

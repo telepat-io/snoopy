@@ -1,6 +1,8 @@
 ---
 title: analytics
 sidebar_position: 8
+description: CLI reference for the analytics command used to inspect Reddit scanning volume and AI usage metrics.
+keywords: [reddit, monitoring, cli, ai, analytics, metrics]
 ---
 
 # analytics

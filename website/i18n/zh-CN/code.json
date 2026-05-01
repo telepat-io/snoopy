@@ -1,0 +1,54 @@
+{
+  "theme.common.editThisPage": {
+    "message": "编辑此页",
+    "description": "The link label to edit the current page"
+  },
+  "theme.common.skipToMainContent": {
+    "message": "跳转到主要内容",
+    "description": "The skip to content label used for accessibility"
+  },
+  "theme.SearchBar.label": {
+    "message": "搜索",
+    "description": "The ARIA label and placeholder for search button"
+  },
+  "theme.SearchBar.placeholder": {
+    "message": "搜索文档",
+    "description": "The placeholder of the search input"
+  },
+  "theme.SearchPage.documentsFound.plurals": {
+    "message": "找到 {count} 篇文档",
+    "description": "Pluralized label for \"{count} documents found\". Use as much plural forms (separated by \"|\") as needed"
+  },
+  "theme.SearchPage.noResultsText": {
+    "message": "未找到相关文档",
+    "description": "The paragraph for empty search result"
+  },
+  "theme.LastUpdated.atDate": {
+    "message": " 于 {date} ",
+    "description": "The words used to describe on which date a page was last updated"
+  },
+  "theme.LastUpdated.byUser": {
+    "message": " 由 {user} ",
+    "description": "The words used to describe by who the page was last updated"
+  },
+  "theme.LastUpdated.lastUpdatedAtBy": {
+    "message": "最后{byUser}在{atDate}更新",
+    "description": "The sentence used to display when a page has been last updated, and by who"
+  },
+  "theme.common.prev": {
+    "message": "上一页",
+    "description": "The label for the previous page link"
+  },
+  "theme.common.next": {
+    "message": "下一页",
+    "description": "The label for the next page link"
+  },
+  "theme.docs.sidebar.collapseButtonTitle": {
+    "message": "收起侧边栏",
+    "description": "The title attribute for collapse button of doc sidebar"
+  },
+  "theme.docs.sidebar.expandButtonTitle": {
+    "message": "展开侧边栏",
+    "description": "The title attribute for expand button of doc sidebar"
+  }
+}

@@ -1,6 +1,8 @@
 ---
 title: Database Schema
 sidebar_position: 3
+description: Reference for Snoopy's local SQLite database schema used to store Reddit monitoring jobs, runs, and AI qualification results.
+keywords: [reddit, monitoring, cli, ai, database, schema, sqlite]
 ---
 
 # Database Schema

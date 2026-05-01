@@ -1,6 +1,8 @@
 ---
 title: startup
 sidebar_position: 7
+description: CLI reference for the startup command used to register the Snoopy scheduler to run on system reboot or login.
+keywords: [reddit, monitoring, cli, scheduler, startup, reboot]
 ---
 
 # `startup`

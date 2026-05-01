@@ -1,6 +1,8 @@
 ---
 title: daemon
 sidebar_position: 6
+description: CLI reference for the daemon command used to manage the long-running Snoopy scheduler process.
+keywords: [reddit, monitoring, cli, scheduler, daemon]
 ---
 
 # `daemon`

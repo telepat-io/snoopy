@@ -1,6 +1,8 @@
 ---
 title: job
 sidebar_position: 2
+description: CLI reference for the job command used to create, manage, and schedule Reddit monitoring jobs.
+keywords: [reddit, monitoring, cli, scheduler, job, create, manage]
 ---
 
 # `job`

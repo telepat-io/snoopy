@@ -1,6 +1,8 @@
 ---
 title: E2E Smoke Testing
 sidebar_position: 6
+description: Guide for running end-to-end smoke tests to validate the Reddit monitoring and AI qualification pipeline from job creation through results.
+keywords: [reddit, monitoring, cli, ai, testing, e2e, smoke]
 ---
 
 # E2E Smoke Testing Guide

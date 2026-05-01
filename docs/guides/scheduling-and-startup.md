@@ -1,6 +1,8 @@
 ---
 title: Scheduling and Startup
 sidebar_position: 4
+description: Understand how the Snoopy scheduler runs Reddit monitoring jobs continuously and survives system reboots.
+keywords: [reddit, monitoring, scheduler, cli, daemon, startup, cron]
 ---
 
 # Scheduling, Cron, Daemon, and Startup

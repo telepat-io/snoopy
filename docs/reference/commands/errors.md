@@ -1,6 +1,8 @@
 ---
 title: errors
 sidebar_position: 9
+description: CLI reference for the errors command used to show failed or errored Reddit monitoring runs.
+keywords: [reddit, monitoring, cli, errors, debugging, runs]
 ---
 
 # `errors [jobRef]`

@@ -1,5 +1,7 @@
 ---
 title: Releasing and Docs Deploy
+description: Guide for releasing new versions and deploying documentation for the Snoopy Reddit monitoring CLI scheduler.
+keywords: [reddit, monitoring, cli, scheduler, releasing, deploy, docs]
 ---
 
 # Releasing and Docs Deploy

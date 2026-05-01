@@ -5,7 +5,8 @@
     "start": "docusaurus start --host 0.0.0.0",
     "build": "docusaurus build",
     "serve": "docusaurus serve build --host 0.0.0.0",
-    "deploy": "docusaurus deploy"
+    "deploy": "docusaurus deploy",
+    "write-translations": "docusaurus write-translations"
   },
   "dependencies": {
     "@docusaurus/core": "^3.9.2",

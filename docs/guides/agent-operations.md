@@ -1,6 +1,8 @@
 ---
 title: Agent Operations
 sidebar_position: 7
+description: Detailed operations runbook for managing Snoopy Reddit monitoring agents via the CLI and direct database access.
+keywords: [reddit, monitoring, cli, ai, agent, operations, database]
 ---
 
 # Agent Operations

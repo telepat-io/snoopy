@@ -1,6 +1,8 @@
 ---
 title: export
 sidebar_position: 8
+description: CLI reference for the export command used to regenerate data artifacts from Reddit monitoring results.
+keywords: [reddit, monitoring, cli, ai, export, data]
 ---
 
 # `export`

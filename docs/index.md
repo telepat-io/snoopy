@@ -2,6 +2,8 @@
 title: Snoopy
 slug: /
 sidebar_position: 1
+description: Monitor Reddit conversations with AI qualification, run repeatable scanning jobs on a schedule, and manage everything from the CLI.
+keywords: [reddit, monitoring, cli, scheduler, ai, documentation]
 ---
 
 ```text
