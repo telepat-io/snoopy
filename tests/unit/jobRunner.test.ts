@@ -26,7 +26,7 @@ describe('JobRunner', () => {
 
     const settingsRepo = new SettingsRepository();
     settingsRepo.setAppSettings({
-      model: 'moonshotai/kimi-k2.5',
+      model: 'deepseek/deepseek-v4-pro',
       modelSettings: {
         temperature: 0.2,
         maxTokens: 500,
@@ -617,7 +617,7 @@ describe('JobRunner', () => {
   it('sends a notification when notificationsEnabled is true', async () => {
     const settingsRepo = new SettingsRepository();
     settingsRepo.setAppSettings({
-      model: 'moonshotai/kimi-k2.5',
+      model: 'deepseek/deepseek-v4-pro',
       modelSettings: { temperature: 0.2, maxTokens: 500, topP: 1 },
       cronIntervalMinutes: 30,
       jobTimeoutMs: 600000,
@@ -653,7 +653,7 @@ describe('JobRunner', () => {
   it('does not send a notification when notificationsEnabled is false', async () => {
     const settingsRepo = new SettingsRepository();
     settingsRepo.setAppSettings({
-      model: 'moonshotai/kimi-k2.5',
+      model: 'deepseek/deepseek-v4-pro',
       modelSettings: { temperature: 0.2, maxTokens: 500, topP: 1 },
       cronIntervalMinutes: 30,
       jobTimeoutMs: 600000,

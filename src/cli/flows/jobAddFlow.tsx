@@ -257,7 +257,7 @@ export function JobAddFlow({
     return (
       <FlowFrame transcript={transcript} statusText="Choose model" statusTone="info">
         <Panel title="Step 3: Model">
-          <Text color={uiTheme.ink.warning}>Model selection (default moonshotai/kimi-k2.5)</Text>
+          <Text color={uiTheme.ink.warning}>Model selection (default deepseek/deepseek-v4-pro)</Text>
           <TextPrompt
             label="Model ID"
             initialValue={model.trim() || defaultModel}

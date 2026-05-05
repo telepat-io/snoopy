@@ -10,7 +10,7 @@ import type { AppSettings, RedditCredentialState } from '../../src/types/setting
 
 function createCurrentSettings(): AppSettings {
   return {
-    model: 'moonshotai/kimi-k2.5',
+    model: 'deepseek/deepseek-v4-pro',
     modelSettings: {
       temperature: 0.2,
       maxTokens: 800,

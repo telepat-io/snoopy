@@ -52,7 +52,7 @@ const store = {
   jobsById: new Map<string, StoredJob>(),
   jobsBySlug: new Map<string, StoredJob>(),
   settings: {
-    model: 'moonshotai/kimi-k2.5',
+    model: 'deepseek/deepseek-v4-pro',
     modelSettings: {
       temperature: 0.2,
       maxTokens: 800,
@@ -67,7 +67,7 @@ const store = {
 const baseFlowResult = {
   installStartup: false,
   settings: {
-    model: 'moonshotai/kimi-k2.5',
+    model: 'deepseek/deepseek-v4-pro',
     modelSettings: {
       temperature: 0.2,
       maxTokens: 800,
@@ -192,7 +192,7 @@ describe('addJob startup registration prompt', () => {
     store.jobsById.clear();
     store.jobsBySlug.clear();
     store.settings = {
-      model: 'moonshotai/kimi-k2.5',
+      model: 'deepseek/deepseek-v4-pro',
       modelSettings: {
         temperature: 0.2,
         maxTokens: 800,

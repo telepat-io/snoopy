@@ -134,7 +134,7 @@ jest.mock('../../src/services/db/repositories/settingsRepo.js', () => ({
   SettingsRepository: class {
     getAppSettings() {
       return {
-        model: 'moonshotai/kimi-k2.5',
+        model: 'deepseek/deepseek-v4-pro',
         modelSettings: {
           temperature: 0.2,
           maxTokens: 800,

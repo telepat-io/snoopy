@@ -370,7 +370,7 @@ All settings are stored in the database (`settings` table). Secrets (API key, Re
 | Setting | Default | Notes |
 |---|---|---|
 | OpenRouter API Key | (required) | Stored in system keychain / encrypted file |
-| Default Model | `moonshotai/kimi-k2.5` | LLM model used for qualification |
+| Default Model | `deepseek/deepseek-v4-pro` | LLM model used for qualification |
 | Temperature | `0.0` | Range 0.0–2.0 |
 | Max Tokens | — | Per-request token limit |
 | Top P | — | Nucleus sampling, range 0.0–1.0 |

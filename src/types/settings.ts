@@ -1,4 +1,4 @@
-export const DEFAULT_MODEL = 'moonshotai/kimi-k2.5';
+export const DEFAULT_MODEL = 'deepseek/deepseek-v4-pro';
 export const DEFAULT_CRON_INTERVAL_MINUTES = 30;
 export const DEFAULT_JOB_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
 

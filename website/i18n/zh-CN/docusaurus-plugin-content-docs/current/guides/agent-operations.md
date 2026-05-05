@@ -368,7 +368,7 @@ snoopy settings
 | 设置项 | 默认值 | 说明 |
 |---|---|---|
 | OpenRouter API Key | （必需） | 存储在系统钥匙串/加密文件中 |
-| Default Model | `moonshotai/kimi-k2.5` | 用于资格判定的 LLM 模型 |
+| Default Model | `deepseek/deepseek-v4-pro` | 用于资格判定的 LLM 模型 |
 | Temperature | `0.0` | 范围 0.0–2.0 |
 | Max Tokens | — | 每个请求的 Token 限制 |
 | Top P | — | 核采样，范围 0.0–1.0 |

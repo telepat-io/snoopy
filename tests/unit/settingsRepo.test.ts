@@ -9,7 +9,7 @@ describe('SettingsRepository', () => {
   it('saves and reads app settings', () => {
     const repo = new SettingsRepository();
     repo.setAppSettings({
-      model: 'moonshotai/kimi-k2.5',
+      model: 'deepseek/deepseek-v4-pro',
       modelSettings: {
         temperature: 0.2,
         maxTokens: 700,
@@ -21,7 +21,7 @@ describe('SettingsRepository', () => {
     });
 
     const result = repo.getAppSettings();
-    expect(result.model).toBe('moonshotai/kimi-k2.5');
+    expect(result.model).toBe('deepseek/deepseek-v4-pro');
     expect(result.modelSettings.maxTokens).toBe(700);
     expect(result.cronIntervalMinutes).toBe(15);
     expect(result.jobTimeoutMs).toBe(300000);

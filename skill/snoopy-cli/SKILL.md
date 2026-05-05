@@ -40,7 +40,7 @@ snoopy settings
 
 This opens an interactive TUI to configure:
 - OpenRouter API key (stored in system keychain or `SNOOPY_OPENROUTER_API_KEY`)
-- LLM model (default: `moonshotai/kimi-k2.5`)
+- LLM model (default: `deepseek/deepseek-v4-pro`)
 - Temperature, max tokens, topP
 - Scan interval (default: 30 minutes)
 - Job timeout (default: 10 minutes)
