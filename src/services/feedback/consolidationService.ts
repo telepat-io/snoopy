@@ -63,6 +63,10 @@ function toJobPromptResult(result: ConsolidatedPromptResult): Pick<
   };
 }
 
+function hasInvalidationReason(row: QualifiedScanItemRow): boolean {
+  return row.isValidReason !== null && row.isValidReason.trim().length > 0;
+}
+
 export async function consolidateFeedback(
   options: ConsolidateFeedbackOptions = {},
 ): Promise<ConsolidateFeedbackResult> {
@@ -127,12 +131,29 @@ export async function consolidateFeedback(
     }
 
     try {
+      const rowsForPrompt = rows.filter((row) => !row.isValid && hasInvalidationReason(row));
+
+      if (rowsForPrompt.length === 0) {
+        const consolidatedCount = scanItemsRepo.markFeedbackConsolidated(rows.map((row) => row.id));
+        totalConsolidated += consolidatedCount;
+
+        jobResults.push({
+          jobId: job.id,
+          jobSlug: job.slug,
+          jobName: job.name,
+          pendingCount: rows.length,
+          consolidatedCount,
+          promptUpdated: false,
+        });
+        continue;
+      }
+
       const oldPrompt = job.qualificationPrompt;
       const result = await openRouterClient.consolidateQualificationPrompt({
         model: appSettings.model,
         modelSettings: appSettings.modelSettings,
         currentQualificationPrompt: oldPrompt,
-        feedbackItems: rows.map(toFeedbackItem),
+        feedbackItems: rowsForPrompt.map(toFeedbackItem),
       });
 
       const newPrompt = result.revisedQualificationPrompt;

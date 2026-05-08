@@ -132,10 +132,7 @@ describe('consolidationService', () => {
     expect(mockConsolidateQualificationPrompt).toHaveBeenCalledWith(
       expect.objectContaining({
         currentQualificationPrompt: 'Current prompt',
-        feedbackItems: expect.arrayContaining([
-          expect.objectContaining({ id: 'r1', userIsValid: false, userReason: 'No buying intent' }),
-          expect.objectContaining({ id: 'r2', userIsValid: true, userReason: null })
-        ])
+        feedbackItems: [expect.objectContaining({ id: 'r1', userIsValid: false, userReason: 'No buying intent' })]
       })
     );
     expect(mockJobsUpdateQualificationPromptById).toHaveBeenCalledWith('job-1', 'Improved prompt');
@@ -150,6 +147,28 @@ describe('consolidationService', () => {
         consolidatedCount: 2,
         promptUpdated: true,
         changeSummary: ['Added clearer disqualifier']
+      })
+    );
+  });
+
+  it('skips prompt update when pending feedback has no invalid items with reasons', async () => {
+    mockScanListPendingFeedbackConsolidation.mockReturnValue([
+      makeRow('r1', { jobId: 'job-1', isValid: true, isValidReason: null }),
+      makeRow('r2', { jobId: 'job-1', isValid: false, isValidReason: '   ' }),
+    ]);
+    mockScanMarkFeedbackConsolidated.mockReturnValue(2);
+    mockScanCountPendingFeedbackConsolidation.mockReturnValue(0);
+
+    const result = await consolidateFeedback();
+
+    expect(mockConsolidateQualificationPrompt).not.toHaveBeenCalled();
+    expect(mockJobsUpdateQualificationPromptById).not.toHaveBeenCalled();
+    expect(mockScanMarkFeedbackConsolidated).toHaveBeenCalledWith(['r1', 'r2']);
+    expect(result.jobs[0]).toEqual(
+      expect.objectContaining({
+        jobId: 'job-1',
+        consolidatedCount: 2,
+        promptUpdated: false,
       })
     );
   });
