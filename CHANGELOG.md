@@ -1,5 +1,16 @@
 # Changelog
 
+## [0.1.15](https://github.com/telepat-io/snoopy/compare/snoopy-v0.1.14...snoopy-v0.1.15) (2026-05-08)
+
+
+### Features
+
+* add prompt diff output for feedback consolidation and integrate jest-diff for comparison ([93c80f8](https://github.com/telepat-io/snoopy/commit/93c80f8a6c6074199186f97f96c8ef35f2959c1d))
+* add prompt management commands for viewing and updating job qualification prompts ([07ae77f](https://github.com/telepat-io/snoopy/commit/07ae77f74c6edbfcb71522d7b71784aaedf09f18))
+* enhance end-to-end tests to validate migration counts and database integrity ([40a2265](https://github.com/telepat-io/snoopy/commit/40a2265c5c63d38e8316c812b979a39e86f22293))
+* implement feedback ([80445ff](https://github.com/telepat-io/snoopy/commit/80445ff3b2e574fef995ac3d7b39783879b36d7d))
+* update default model from moonshotai/kimi-k2.5 to deepseek/deepseek-v4-pro across documentation and code ([866dd78](https://github.com/telepat-io/snoopy/commit/866dd78b8b9f67384240da1561711faf8a659e67))
+
 ## [0.1.14](https://github.com/telepat-io/snoopy/compare/snoopy-v0.1.13...snoopy-v0.1.14) (2026-04-30)
 
 

@@ -1,6 +1,6 @@
 {
   "name": "@telepat/snoopy",
-  "version": "0.1.14",
+  "version": "0.1.15",
   "description": "Snoopy CLI for Reddit conversation monitoring jobs.",
   "type": "module",
   "main": "dist/src/index.js",
