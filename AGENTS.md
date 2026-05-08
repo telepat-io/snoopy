@@ -20,6 +20,12 @@ If docs/site files changed, also run:
 npm run docs:build
 ```
 
+If code changes affect CLI behavior, migrations/database access, daemon flows, or MCP tooling, also run:
+
+```bash
+npm run e2e
+```
+
 **Important:** Run them in order (lint → build → test). Fix any failures immediately—do not skip or bypass checks.
 
 Keep test coverage high. Add tests for all meaningful behavior changes.

@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import Database from 'better-sqlite3';
+import { migrations } from '../../src/services/db/migrations/index.js';
 
 function runDoctor(rootDir: string): string {
   const result = execSync('npx tsx src/cli/index.ts doctor', {
@@ -152,7 +153,7 @@ function main(): void {
     // Run the CLI doctor command, which triggers getDb() → runMigrations()
     const stdout = runDoctor(rootDir);
 
-    assertContains(stdout, 'Migrations: 1 applied, 0 pending', 'migration state');
+    assertContains(stdout, `Migrations: ${migrations.length} applied, 0 pending`, 'migration state');
     console.log('[e2e:upgrade] ✅ Doctor reports migrations are up to date');
 
     // Verify the upgrade happened
@@ -163,11 +164,20 @@ function main(): void {
     }
     console.log('[e2e:upgrade] ✅ consumed column was added');
 
-    const migrationsRow = upgradedDb
+    const baselineRow = upgradedDb
       .prepare('SELECT id, name FROM migrations WHERE id = 1')
       .get() as { id: number; name: string } | undefined;
-    if (!migrationsRow || migrationsRow.name !== 'baseline') {
+    if (!baselineRow || baselineRow.name !== 'baseline') {
       throw new Error('Upgraded database should track the baseline migration');
+    }
+
+    const migrationCount = upgradedDb
+      .prepare('SELECT COUNT(*) as count FROM migrations')
+      .get() as { count: number };
+    if (migrationCount.count !== migrations.length) {
+      throw new Error(
+        `Expected ${migrations.length} applied migrations in upgraded database, found ${migrationCount.count}`
+      );
     }
     console.log('[e2e:upgrade] ✅ baseline migration is tracked');
 

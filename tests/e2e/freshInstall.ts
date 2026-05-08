@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import Database from 'better-sqlite3';
+import { migrations } from '../../src/services/db/migrations/index.js';
 
 function runDoctor(rootDir: string): string {
   const result = execSync('npx tsx src/cli/index.ts doctor', {
@@ -41,7 +42,7 @@ function main(): void {
   try {
     const stdout = runDoctor(rootDir);
 
-    assertContains(stdout, 'Migrations: 1 applied, 0 pending', 'migration state');
+    assertContains(stdout, `Migrations: ${migrations.length} applied, 0 pending`, 'migration state');
     console.log('[e2e:fresh] ✅ Doctor reports migrations are up to date');
 
     // Verify the DB file was created and has all expected tables
@@ -61,6 +62,13 @@ function main(): void {
       if (!tableNames.includes(table)) {
         throw new Error(`Expected table "${table}" not found in fresh database. Found: ${tableNames.join(', ')}`);
       }
+    }
+
+    const migrationCount = db.prepare('SELECT COUNT(*) as count FROM migrations').get() as { count: number };
+    if (migrationCount.count !== migrations.length) {
+      throw new Error(
+        `Expected ${migrations.length} applied migrations in fresh database, found ${migrationCount.count}`
+      );
     }
 
     console.log('[e2e:fresh] ✅ All expected tables exist in the database');
