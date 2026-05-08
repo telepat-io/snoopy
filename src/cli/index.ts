@@ -11,6 +11,7 @@ import { consumeResults } from './commands/consume.js';
 import { feedbackConsolidate, feedbackReview, feedbackSubmit } from './commands/feedback.js';
 import { showAnalytics } from './commands/analytics.js';
 import { showResults } from './commands/results.js';
+import { showPrompt, setPrompt } from './commands/prompt.js';
 import {
   disableStartupCommand,
   enableStartupCommand,
@@ -211,6 +212,25 @@ feedback
   .option('--json', 'Output machine-readable JSON status')
   .action(async (jobRef: string | undefined, options: { limit?: number; json?: boolean }) => {
     await feedbackConsolidate(jobRef, options);
+  });
+
+const prompt = program.command('prompt').description('View and update job qualification prompts');
+
+prompt
+  .argument('<jobRef>', 'Job ID or slug')
+  .description('View the qualification prompt for a specific job')
+  .option('--raw', 'Output only the prompt text and exit')
+  .action(async (jobRef: string, options: { raw?: boolean }) => {
+    await showPrompt(jobRef, options);
+  });
+
+prompt
+  .command('set')
+  .argument('<jobRef>', 'Job ID or slug')
+  .argument('<prompt>', 'New qualification prompt text')
+  .description('Set a new qualification prompt for a specific job')
+  .action(async (jobRef: string, promptText: string) => {
+    await setPrompt(jobRef, promptText);
   });
 
 // --- MCP server ---

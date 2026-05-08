@@ -190,6 +190,15 @@ snoopy feedback submit <resultId> --invalid --reason "Not actually buying intent
 snoopy feedback consolidate <jobRef>
 snoopy feedback consolidate --json
 
+# View a job's qualification prompt
+snoopy prompt <jobRef>
+
+# Prompt text only (programmatic)
+snoopy prompt <jobRef> --raw
+
+# Direct prompt update
+snoopy prompt set <jobRef> "New plain-language criteria"
+
 # View errors
 snoopy errors <jobRef> --hours 48
 
@@ -311,6 +320,13 @@ Feedback:
 - `snoopy feedback review --json` is preferred for agent parsing.
 - `snoopy feedback submit <resultId> --valid|--invalid --reason <text>` enforces exactly one verdict; `--reason` is required for invalid.
 - `snoopy feedback consolidate [jobRef] [--limit <count>]` rewrites qualification prompts from pending feedback.
+
+Prompt management:
+
+- `snoopy prompt <jobRef>` shows current prompt and can open interactive multiline edit mode.
+- Interactive edit keys: `Enter` submit, `Shift+Enter` newline, `Up/Down` move cursor, `Esc` cancel.
+- `snoopy prompt <jobRef> --raw` prints prompt text only for programmatic access.
+- `snoopy prompt set <jobRef> <prompt>` applies direct non-interactive updates.
 
 ## Configuration precedence and discovery
 

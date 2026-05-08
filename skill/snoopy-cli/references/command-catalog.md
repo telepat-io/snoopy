@@ -32,6 +32,8 @@ Full command and argument matrix for the Snoopy CLI.
 | `snoopy feedback review [jobRef]` | Review unvalidated qualified results |
 | `snoopy feedback submit <resultId>` | Submit valid/invalid feedback for one result |
 | `snoopy feedback consolidate [jobRef]` | Consolidate feedback into improved qualification prompts |
+| `snoopy prompt <jobRef>` | View prompt for a specific job (interactive with optional edit) |
+| `snoopy prompt set <jobRef> <prompt>` | Directly set a new qualification prompt |
 | `snoopy mcp` | Start MCP server (stdio) |
 | `snoopy agent install <runtime>` | Register with agent framework |
 | `snoopy agent uninstall <runtime>` | Remove from agent framework |
@@ -128,6 +130,24 @@ snoopy feedback consolidate [jobRef] [--limit <count>] [--json]
 - `jobRef`: Job ID or slug (optional; omit for all jobs)
 - `--limit <count>`: Max pending feedback items to process
 - `--json`: Output per-job consolidation results and pending counts
+
+### snoopy prompt
+
+```
+snoopy prompt <jobRef> [--raw]
+```
+
+- `jobRef`: Job ID or slug
+- `--raw`: Print only prompt text and exit (best for scripting)
+
+### snoopy prompt set
+
+```
+snoopy prompt set <jobRef> <prompt>
+```
+
+- `jobRef`: Job ID or slug
+- `prompt`: New qualification prompt text
 
 ### snoopy analytics
 

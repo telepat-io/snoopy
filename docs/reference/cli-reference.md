@@ -29,6 +29,8 @@ This section documents the Snoopy CLI one command group at a time.
 - `logs [runId]`
 - `errors [jobRef]`
 - `doctor`
+- `prompt <jobRef>`
+- `prompt set <jobRef> <prompt>`
 
 `<jobRef>` accepts either a job UUID or a slug.
 
@@ -47,6 +49,7 @@ For commands with `[jobRef]` or `[runId]`, omitting the argument starts an inter
 - [Logs](commands/logs.md)
 - [Errors](commands/errors.md)
 - [Doctor](commands/doctor.md)
+- [Prompt](commands/prompt.md)
 
 ## Top-Level Aliases
 
@@ -109,6 +112,9 @@ snoopy consume <jobRef> --json --dry-run
 snoopy logs
 snoopy logs <runId>
 snoopy errors <jobRef>
+snoopy prompt <jobRef>
+snoopy prompt <jobRef> --raw
+snoopy prompt set <jobRef> "Refined qualification criteria"
 snoopy daemon start
 snoopy doctor
 ```

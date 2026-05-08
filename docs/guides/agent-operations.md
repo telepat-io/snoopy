@@ -188,6 +188,26 @@ Options:
 
 Output includes: run ID, items discovered/new/qualified, token usage, estimated cost USD, log file path.
 
+### View or update qualification prompt
+
+```bash
+# View (interactive + optional edit)
+snoopy prompt <jobRef>
+
+# Prompt text only (programmatic)
+snoopy prompt <jobRef> --raw
+
+# Direct non-interactive update
+snoopy prompt set <jobRef> "New qualification criteria"
+```
+
+Interactive editor keys:
+
+- `Enter`: submit
+- `Shift+Enter`: newline
+- `Up`/`Down`: move cursor vertically
+- `Esc`: cancel
+
 ### View run history
 
 ```bash
