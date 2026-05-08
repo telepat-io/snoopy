@@ -20,6 +20,8 @@ export interface ConsolidateFeedbackJobResult {
   pendingCount: number;
   consolidatedCount: number;
   promptUpdated: boolean;
+  oldPrompt?: string;
+  newPrompt?: string;
   changeSummary?: string[];
   rationale?: string;
   promptTokens?: number;
@@ -125,14 +127,16 @@ export async function consolidateFeedback(
     }
 
     try {
+      const oldPrompt = job.qualificationPrompt;
       const result = await openRouterClient.consolidateQualificationPrompt({
         model: appSettings.model,
         modelSettings: appSettings.modelSettings,
-        currentQualificationPrompt: job.qualificationPrompt,
+        currentQualificationPrompt: oldPrompt,
         feedbackItems: rows.map(toFeedbackItem),
       });
 
-      jobsRepo.updateQualificationPromptById(job.id, result.revisedQualificationPrompt);
+      const newPrompt = result.revisedQualificationPrompt;
+      jobsRepo.updateQualificationPromptById(job.id, newPrompt);
       const consolidatedCount = scanItemsRepo.markFeedbackConsolidated(rows.map((row) => row.id));
       totalConsolidated += consolidatedCount;
 
@@ -143,6 +147,8 @@ export async function consolidateFeedback(
         pendingCount: rows.length,
         consolidatedCount,
         promptUpdated: true,
+        oldPrompt,
+        newPrompt,
         ...toJobPromptResult(result),
       });
     } catch (error) {

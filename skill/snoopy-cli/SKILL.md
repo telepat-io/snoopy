@@ -471,22 +471,38 @@ Agent guardrails:
 #### Step 3: Consolidate (Apply Learning)
 
 ```bash
+snoopy feedback consolidate <jobRef>
+
+# Standard console output now includes a per-job prompt diff section when prompt text changed.
+# Agents should summarize that diff for the user.
+
+# Optional machine-readable mode:
 snoopy feedback consolidate <jobRef> --json
 
-# Output: JSON with updated prompt
+# Output (JSON mode): per-job consolidation status with prompt fields
 {
-  "oldPrompt": "Original criteria...",
-  "newPrompt": "Updated criteria incorporating feedback patterns...",
-  "changesApplied": [
-    "Added disqualifier: 'Not buying intent'",
-    "Strengthened signal: 'X mentioned specifically'",
-    ...
+  "totalPendingBefore": 3,
+  "totalPendingAfter": 0,
+  "totalConsolidated": 3,
+  "requiresConsolidation": false,
+  "jobs": [
+    {
+      "jobSlug": "my-job",
+      "promptUpdated": true,
+      "oldPrompt": "Original criteria...",
+      "newPrompt": "Updated criteria...",
+      "changeSummary": [
+        "Added disqualifier for non-buying intent"
+      ]
+    }
   ],
   "requiresConsolidation": false
 }
 ```
 
 Agent flow after consolidate:
+- In standard mode, read the end-of-run prompt diff and summarize concrete changes for the user.
+- In JSON mode, compare `oldPrompt` and `newPrompt` (or `changeSummary`) and summarize concrete changes for the user.
 - Confirm to user: "Prompt improved. Changes: [list]"
 - Offer: "Run a test job to validate improved prompt? (yes/no)"
 - If yes, go to Workflow 4c (run job manually)
@@ -876,7 +892,7 @@ snoopy doctor  # Verify success
 
 **Problem:** After `snoopy feedback submit`, results are marked validated but prompt quality does NOT change until consolidate runs.
 
-**Mitigation:** Always call `snoopy feedback consolidate` after collecting feedback. Workflow is atomic: review → submit → consolidate.
+**Mitigation:** Always call `snoopy feedback consolidate` after collecting feedback. Workflow is atomic: review → submit → consolidate. After consolidate finishes, inform the user of the prompt diff/changes before ending the session.
 
 ### 5. Daemon Reload Required
 
@@ -1064,6 +1080,7 @@ END: Report outcome
 - [ ] Collect explicit user verdict for EACH result
 - [ ] Submit each result (`feedback submit`)
 - [ ] Run consolidate (`feedback consolidate`)
+- [ ] Summarize prompt diff/changes to user after consolidate completes
 - [ ] NEVER skip consolidate step
 
 **After any failure:**

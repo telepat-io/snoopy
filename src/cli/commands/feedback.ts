@@ -1,4 +1,5 @@
 import { createInterface } from 'node:readline/promises';
+import { diff } from 'jest-diff';
 import type { CommentThreadNodeRow } from '../../services/db/repositories/scanItemsRepo.js';
 import { JobsRepository } from '../../services/db/repositories/jobsRepo.js';
 import { ScanItemsRepository, type QualifiedScanItemRow } from '../../services/db/repositories/scanItemsRepo.js';
@@ -30,6 +31,30 @@ interface FeedbackReviewOptions {
 interface FeedbackConsolidateOptions {
   limit?: number;
   json?: boolean;
+}
+
+const MAX_DIFF_OUTPUT_LINES = 120;
+
+function formatPromptDiff(oldPrompt: string, newPrompt: string): { text: string; truncated: boolean } | null {
+  const output = diff(oldPrompt, newPrompt, {
+    aAnnotation: 'old prompt',
+    bAnnotation: 'new prompt',
+    expand: false,
+  });
+
+  if (!output) {
+    return null;
+  }
+
+  const lines = output.split('\n');
+  if (lines.length <= MAX_DIFF_OUTPUT_LINES) {
+    return { text: output, truncated: false };
+  }
+
+  return {
+    text: lines.slice(0, MAX_DIFF_OUTPUT_LINES).join('\n'),
+    truncated: true,
+  };
 }
 
 async function promptLine(message: string): Promise<string> {
@@ -307,6 +332,27 @@ export async function feedbackConsolidate(jobRef?: string, options: FeedbackCons
 
     if (jobResult.changeSummary && jobResult.changeSummary.length > 0) {
       printKeyValue('Changes', jobResult.changeSummary.join(' | '));
+    }
+
+    if (!jobResult.promptUpdated || !jobResult.oldPrompt || !jobResult.newPrompt) {
+      return;
+    }
+
+    if (jobResult.oldPrompt === jobResult.newPrompt) {
+      printMuted('Prompt did not change.');
+      return;
+    }
+
+    const promptDiff = formatPromptDiff(jobResult.oldPrompt, jobResult.newPrompt);
+    if (!promptDiff) {
+      printMuted('Prompt updated, but no textual diff was produced.');
+      return;
+    }
+
+    printSection(`Prompt diff (${jobResult.jobSlug})`);
+    console.log(promptDiff.text);
+    if (promptDiff.truncated) {
+      printWarning(`Prompt diff truncated to ${MAX_DIFF_OUTPUT_LINES} lines.`);
     }
   });
 

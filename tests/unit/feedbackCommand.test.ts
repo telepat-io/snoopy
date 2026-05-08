@@ -14,6 +14,11 @@ const mockScanGetQualifiedById = jest.fn();
 const mockScanSubmitFeedback = jest.fn();
 const mockScanCountPendingFeedbackConsolidation = jest.fn();
 const mockConsolidateFeedback = jest.fn();
+const mockDiff = jest.fn();
+
+jest.mock('jest-diff', () => ({
+  diff: mockDiff
+}));
 
 jest.mock('../../src/cli/ui/consoleUi.js', () => ({
   printCommandScreen: mockPrintCommandScreen,
@@ -90,6 +95,7 @@ describe('feedback command', () => {
       requiresConsolidation: false,
       jobs: []
     });
+    mockDiff.mockReturnValue('- old prompt\n+ new prompt');
   });
 
   it('returns empty array in review --json mode when queue is empty and does not print command screen', async () => {
@@ -151,5 +157,132 @@ describe('feedback command', () => {
 
     expect(mockConsolidateFeedback).toHaveBeenCalledWith({ jobRef: undefined, limit: undefined });
     expect(mockPrintInfo).toHaveBeenCalledWith('No pending feedback to consolidate.');
+  });
+
+  it('prints prompt diff for consolidated jobs when prompt changes', async () => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    mockConsolidateFeedback.mockResolvedValue({
+      totalPendingBefore: 1,
+      totalPendingAfter: 0,
+      totalConsolidated: 1,
+      requiresConsolidation: false,
+      jobs: [
+        {
+          jobId: 'job-1',
+          jobSlug: 'alpha',
+          jobName: 'Alpha',
+          pendingCount: 1,
+          consolidatedCount: 1,
+          promptUpdated: true,
+          oldPrompt: 'old prompt',
+          newPrompt: 'new prompt',
+          changeSummary: ['tightened qualifiers']
+        }
+      ]
+    });
+
+    await feedbackConsolidate();
+
+    expect(mockDiff).toHaveBeenCalledWith('old prompt', 'new prompt', {
+      aAnnotation: 'old prompt',
+      bAnnotation: 'new prompt',
+      expand: false,
+    });
+    expect(mockPrintSection).toHaveBeenCalledWith('Prompt diff (alpha)');
+    expect(consoleSpy).toHaveBeenCalledWith('- old prompt\n+ new prompt');
+    consoleSpy.mockRestore();
+  });
+
+  it('does not print prompt diff when prompts are unchanged', async () => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    mockConsolidateFeedback.mockResolvedValue({
+      totalPendingBefore: 1,
+      totalPendingAfter: 0,
+      totalConsolidated: 1,
+      requiresConsolidation: false,
+      jobs: [
+        {
+          jobId: 'job-1',
+          jobSlug: 'alpha',
+          jobName: 'Alpha',
+          pendingCount: 1,
+          consolidatedCount: 1,
+          promptUpdated: true,
+          oldPrompt: 'same prompt',
+          newPrompt: 'same prompt',
+        }
+      ]
+    });
+
+    await feedbackConsolidate();
+
+    expect(mockDiff).not.toHaveBeenCalled();
+    expect(mockPrintMuted).toHaveBeenCalledWith('Prompt did not change.');
+    expect(consoleSpy).not.toHaveBeenCalledWith('- old prompt\n+ new prompt');
+    consoleSpy.mockRestore();
+  });
+
+  it('keeps json mode output structured and skips diff rendering', async () => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    mockConsolidateFeedback.mockResolvedValue({
+      totalPendingBefore: 1,
+      totalPendingAfter: 0,
+      totalConsolidated: 1,
+      requiresConsolidation: false,
+      jobs: [
+        {
+          jobId: 'job-1',
+          jobSlug: 'alpha',
+          jobName: 'Alpha',
+          pendingCount: 1,
+          consolidatedCount: 1,
+          promptUpdated: true,
+          oldPrompt: 'old prompt',
+          newPrompt: 'new prompt',
+        }
+      ]
+    });
+
+    await feedbackConsolidate(undefined, { json: true });
+
+    expect(mockDiff).not.toHaveBeenCalled();
+    const payload = JSON.parse(String(consoleSpy.mock.calls[0]?.[0] ?? '{}')) as Record<string, unknown>;
+    expect(payload).toEqual(
+      expect.objectContaining({
+        totalConsolidated: 1,
+        requiresConsolidation: false,
+      })
+    );
+    consoleSpy.mockRestore();
+  });
+
+  it('prints truncation warning when prompt diff is long', async () => {
+    const consoleSpy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    const veryLongDiff = Array.from({ length: 130 }, (_, index) => `line-${index + 1}`).join('\n');
+    mockDiff.mockReturnValue(veryLongDiff);
+    mockConsolidateFeedback.mockResolvedValue({
+      totalPendingBefore: 1,
+      totalPendingAfter: 0,
+      totalConsolidated: 1,
+      requiresConsolidation: false,
+      jobs: [
+        {
+          jobId: 'job-1',
+          jobSlug: 'alpha',
+          jobName: 'Alpha',
+          pendingCount: 1,
+          consolidatedCount: 1,
+          promptUpdated: true,
+          oldPrompt: 'old prompt',
+          newPrompt: 'new prompt',
+        }
+      ]
+    });
+
+    await feedbackConsolidate();
+
+    expect(mockPrintWarning).toHaveBeenCalledWith('Prompt diff truncated to 120 lines.');
+    expect(consoleSpy).toHaveBeenCalled();
+    consoleSpy.mockRestore();
   });
 });
