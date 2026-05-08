@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.1.16](https://github.com/telepat-io/snoopy/compare/snoopy-v0.1.15...snoopy-v0.1.16) (2026-05-08)
+
+
+### Features
+
+* add validation for feedback items and skip prompt update when no valid reasons are present ([e61cf62](https://github.com/telepat-io/snoopy/commit/e61cf62e85db5c60a49aef7d10f5048adf8316c0))
+* implement structured response formats for clarification questions, job specs, and consolidation prompts ([651e4ad](https://github.com/telepat-io/snoopy/commit/651e4adc5c9a95bbe630cf5b88319466c8f99985))
+
 ## [0.1.15](https://github.com/telepat-io/snoopy/compare/snoopy-v0.1.14...snoopy-v0.1.15) (2026-05-08)
 
 
