@@ -29,6 +29,9 @@ Full command and argument matrix for the Snoopy CLI.
 | `snoopy results [jobRef]` | Browse results (interactive TUI) |
 | `snoopy export [jobRef]` | Export qualified results |
 | `snoopy consume [jobRef]` | List and mark results consumed |
+| `snoopy feedback review [jobRef]` | Review unvalidated qualified results |
+| `snoopy feedback submit <resultId>` | Submit valid/invalid feedback for one result |
+| `snoopy feedback consolidate [jobRef]` | Consolidate feedback into improved qualification prompts |
 | `snoopy mcp` | Start MCP server (stdio) |
 | `snoopy agent install <runtime>` | Register with agent framework |
 | `snoopy agent uninstall <runtime>` | Remove from agent framework |
@@ -89,6 +92,43 @@ snoopy errors [jobRef] [--hours <count>]
 - `jobRef`: Job ID or slug
 - `--hours <count>`: Look back window in hours (default: 24)
 
+### snoopy feedback review
+
+```
+snoopy feedback review [jobRef] [--json] [--limit <count>]
+```
+
+- `jobRef`: Job ID or slug (optional; omit for all jobs)
+- `--json`: Output machine-readable queue for agents
+- `--limit <count>`: Max unvalidated qualified results (default: 10)
+
+### snoopy feedback submit
+
+```
+snoopy feedback submit <resultId> [--valid] [--invalid] [--reason <text>] [--json]
+```
+
+- `resultId`: Qualified result ID
+- `--valid`: Mark result as valid
+- `--invalid`: Mark result as invalid
+- `--reason <text>`: Required when `--invalid` is used
+- `--json`: Output machine-readable status including consolidation hints
+
+Constraints:
+
+- Exactly one of `--valid` or `--invalid` is required.
+- `--reason` is mandatory when `--invalid` is selected.
+
+### snoopy feedback consolidate
+
+```
+snoopy feedback consolidate [jobRef] [--limit <count>] [--json]
+```
+
+- `jobRef`: Job ID or slug (optional; omit for all jobs)
+- `--limit <count>`: Max pending feedback items to process
+- `--json`: Output per-job consolidation results and pending counts
+
 ### snoopy analytics
 
 ```
@@ -126,6 +166,9 @@ snoopy logs [runId] [--raw]
 | `snoopy_analytics` | — | `jobRef`, `days` |
 | `snoopy_export` | — | `jobRef`, `format`, `lastRun`, `limit` |
 | `snoopy_consume` | — | `jobRef`, `limit`, `dryRun` |
+| `snoopy_feedback_review` | — | `jobRef`, `limit` |
+| `snoopy_feedback_submit` | `resultId`, `isValid` | `reason` |
+| `snoopy_feedback_consolidate` | — | `jobRef`, `limit` |
 | `snoopy_errors` | `jobRef` | `hours` |
 | `snoopy_logs` | `runId` | — |
 | `snoopy_settings_get` | — | — |

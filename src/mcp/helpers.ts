@@ -1,10 +1,12 @@
-import { createRequire } from 'node:module';
+import fs from 'node:fs';
+import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { getDb } from '../services/db/sqlite.js';
 import { JobsRepository } from '../services/db/repositories/jobsRepo.js';
 import { RunsRepository } from '../services/db/repositories/runsRepo.js';
 import { ScanItemsRepository } from '../services/db/repositories/scanItemsRepo.js';
 import { SettingsRepository } from '../services/db/repositories/settingsRepo.js';
+import { consolidateFeedback } from '../services/feedback/consolidationService.js';
 import { AnalyticsService } from '../services/analytics/analyticsService.js';
 import { extractErrorEntries, readRunLog } from '../services/logging/logReader.js';
 import { getOpenRouterApiKey, isKeytarAvailable } from '../services/security/secretStore.js';
@@ -12,13 +14,27 @@ import { getStartupStatus } from '../services/startup/index.js';
 import { isDaemonRunning, ensureDaemonRunning, requestDaemonReload } from '../services/daemonControl.js';
 import { ensureAppDirs } from '../utils/paths.js';
 
-const require = createRequire(import.meta.url);
-
 export function getSnoopyVersion(): string {
-  for (const rel of ['../../../package.json', '../../package.json']) {
+  const envVersion = process.env.npm_package_version;
+  if (envVersion) {
+    return envVersion;
+  }
+
+  const argvDir = process.argv[1] ? path.dirname(process.argv[1]) : process.cwd();
+  const candidates = [
+    path.resolve(process.cwd(), 'package.json'),
+    path.resolve(process.cwd(), 'snoopy/package.json'),
+    path.resolve(argvDir, '../package.json'),
+    path.resolve(argvDir, '../../package.json'),
+  ];
+
+  for (const candidate of candidates) {
     try {
-      const pkg = require(rel) as { name?: string; version?: string };
-      if (pkg.name === '@telepat/snoopy') return pkg.version ?? '0.0.0';
+      const raw = fs.readFileSync(candidate, 'utf8');
+      const pkg = JSON.parse(raw) as { name?: string; version?: string };
+      if (pkg.name === '@telepat/snoopy') {
+        return pkg.version ?? '0.0.0';
+      }
     } catch { /* try next depth */ }
   }
   return '0.0.0';
@@ -351,6 +367,73 @@ export function consumeReport(jobRef?: string, limit?: number, dryRun?: boolean)
 
   const consumedCount = scanItemsRepo.markConsumed(rows.map((r) => r.id));
   return { consumed: consumedCount, items: rows };
+}
+
+export function feedbackReviewReport(jobRef?: string, limit?: number): Record<string, unknown> {
+  const jobsRepo = new JobsRepository();
+  const scanItemsRepo = new ScanItemsRepository();
+
+  let jobId: string | undefined;
+  if (jobRef) {
+    const job = jobsRepo.getByRef(jobRef);
+    if (!job) {
+      throw new Error(`Job not found: ${jobRef}`);
+    }
+    jobId = job.id;
+  }
+
+  const boundedLimit = limit ?? 10;
+  const items = scanItemsRepo.listUnvalidatedQualified(jobId, boundedLimit);
+  return {
+    count: items.length,
+    limit: boundedLimit,
+    items,
+    workflow: {
+      nextStep: 'collect-user-feedback-and-call-snoopy_feedback_submit',
+      then: 'call-snoopy_feedback_consolidate'
+    }
+  };
+}
+
+export function feedbackSubmitReport(resultId: string, isValid: boolean, reason?: string): Record<string, unknown> {
+  const scanItemsRepo = new ScanItemsRepository();
+  const row = scanItemsRepo.getQualifiedById(resultId);
+  if (!row) {
+    throw new Error(`Qualified result not found: ${resultId}`);
+  }
+
+  const normalizedReason = reason?.trim() ?? '';
+  if (!isValid && normalizedReason.length === 0) {
+    throw new Error('reason is required when isValid=false');
+  }
+
+  const updated = scanItemsRepo.submitFeedback(resultId, isValid, isValid ? null : normalizedReason);
+  if (!updated) {
+    throw new Error(`Failed to save feedback for result: ${resultId}`);
+  }
+
+  const pendingFeedbackConsolidationCount = scanItemsRepo.countPendingFeedbackConsolidation(row.jobId);
+  return {
+    resultId,
+    saved: true,
+    feedback: {
+      validated: true,
+      isValid,
+      isValidReason: isValid ? null : normalizedReason,
+      feedbackConsolidated: false,
+    },
+    pendingFeedbackConsolidationCount,
+    requiresConsolidation: pendingFeedbackConsolidationCount > 0,
+    recommendedNextCommand: 'snoopy feedback consolidate',
+  };
+}
+
+export async function feedbackConsolidateReport(jobRef?: string, limit?: number): Promise<Record<string, unknown>> {
+  const result = await consolidateFeedback({ jobRef, limit });
+  return {
+    ...result,
+    recommendedNextAction: result.requiresConsolidation ? 'run snoopy feedback consolidate again' : 'none',
+  };
 }
 
 export function errorsReport(jobRef: string, hours?: number): Record<string, unknown> {

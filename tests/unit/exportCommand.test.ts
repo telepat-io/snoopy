@@ -80,6 +80,8 @@ describe('export command', () => {
       id,
       jobId: 'job-1',
       runId: 'run-1',
+      type: 'post',
+      subreddit: 'askreddit',
       author: 'author',
       title: 'Title',
       body: 'Body',
@@ -87,8 +89,11 @@ describe('export command', () => {
       redditPostedAt: '2026-03-31T00:00:00.000Z',
       viewed: false,
       validated: false,
+      isValid: false,
+      isValidReason: null,
       processed: false,
       consumed: false,
+      feedbackConsolidated: false,
       qualificationReason: 'fit',
       createdAt: '2026-03-31T00:00:00.000Z'
     };

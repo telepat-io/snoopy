@@ -116,6 +116,7 @@ Do not use this skill when:
    - Run job: `snoopy job run <jobRef>` or `snoopy_job_run`
    - Check analytics: `snoopy analytics` or `snoopy_analytics`
    - Export results: `snoopy export <jobRef> --json --last-run` or `snoopy_export`
+   - Improve qualification quality with feedback loop: `snoopy feedback review --json` -> `snoopy feedback submit ...` -> `snoopy feedback consolidate`
    - View errors: `snoopy errors <jobRef>` or `snoopy_errors`
    - Start daemon: `snoopy daemon start` or `snoopy_daemon_start`
    - Start MCP server: `snoopy mcp`
@@ -177,6 +178,18 @@ snoopy export <jobRef> --json --last-run
 # Consume (mark results as processed)
 snoopy consume <jobRef> --limit 50
 
+# Review unvalidated qualified results
+snoopy feedback review <jobRef> --limit 10
+snoopy feedback review <jobRef> --json --limit 10
+
+# Submit per-result feedback
+snoopy feedback submit <resultId> --valid
+snoopy feedback submit <resultId> --invalid --reason "Not actually buying intent"
+
+# Consolidate feedback into updated qualification prompt
+snoopy feedback consolidate <jobRef>
+snoopy feedback consolidate --json
+
 # View errors
 snoopy errors <jobRef> --hours 48
 
@@ -219,7 +232,42 @@ Documented MCP characteristics:
 
 - Transport: stdio
 - Intended usage: local process-spawned MCP clients
-- Tool set (19 tools): `snoopy_doctor`, `snoopy_daemon_status`, `snoopy_daemon_start`, `snoopy_daemon_stop`, `snoopy_daemon_reload`, `snoopy_job_list`, `snoopy_job_runs`, `snoopy_job_add`, `snoopy_job_delete`, `snoopy_job_enable`, `snoopy_job_disable`, `snoopy_job_run`, `snoopy_analytics`, `snoopy_export`, `snoopy_consume`, `snoopy_errors`, `snoopy_logs`, `snoopy_settings_get`, `snoopy_settings_set`
+- Tool set (22 tools): `snoopy_doctor`, `snoopy_daemon_status`, `snoopy_daemon_start`, `snoopy_daemon_stop`, `snoopy_daemon_reload`, `snoopy_job_list`, `snoopy_job_runs`, `snoopy_job_add`, `snoopy_job_delete`, `snoopy_job_enable`, `snoopy_job_disable`, `snoopy_job_run`, `snoopy_analytics`, `snoopy_export`, `snoopy_consume`, `snoopy_feedback_review`, `snoopy_feedback_submit`, `snoopy_feedback_consolidate`, `snoopy_errors`, `snoopy_logs`, `snoopy_settings_get`, `snoopy_settings_set`
+
+## Agentic feedback flow (human-in-the-loop)
+
+Use this when an agent should help a user improve qualification quality over time.
+
+Required sequence:
+
+1. Review queue in deterministic JSON:
+
+```bash
+snoopy feedback review --json --limit 10
+```
+
+2. Collect explicit user judgment for each result (`valid` or `invalid`) + reason if invalid.
+
+3. Submit each result immediately:
+
+```bash
+snoopy feedback submit <resultId> --valid
+snoopy feedback submit <resultId> --invalid --reason "Not actually buying intent"
+```
+
+4. Run consolidation to apply learning:
+
+```bash
+snoopy feedback consolidate
+```
+
+Agent guardrails:
+
+- Never fabricate feedback. The user must provide each verdict.
+- Invalid verdicts require a concrete reason.
+- Treat `review -> submit -> consolidate` as one workflow, not independent commands.
+- If a review exits early, explicitly ask to run consolidate before ending.
+- After submit, use status fields (`requiresConsolidation`, `recommendedNextCommand`) to decide whether to consolidate now.
 
 Agent framework registration:
 
@@ -256,6 +304,13 @@ Daemon:
 - `snoopy daemon start` spawns a detached background process.
 - `snoopy daemon reload` sends SIGUSR2 for hot-reload.
 - `snoopy daemon stop` sends SIGTERM.
+
+Feedback:
+
+- `snoopy feedback review [jobRef] --limit <count>` lists unvalidated qualified results (default: 10).
+- `snoopy feedback review --json` is preferred for agent parsing.
+- `snoopy feedback submit <resultId> --valid|--invalid --reason <text>` enforces exactly one verdict; `--reason` is required for invalid.
+- `snoopy feedback consolidate [jobRef] [--limit <count>]` rewrites qualification prompts from pending feedback.
 
 ## Configuration precedence and discovery
 
@@ -297,6 +352,8 @@ Common exit semantics:
 - **DB migrations**: All migrations are idempotent. If you see `pending migrations` in `snoopy doctor`, they will run on next DB access.
 - **Daemon reload after changes**: After `snoopy job enable/disable`, run `snoopy daemon reload` to apply changes without restart.
 - **Startup registration**: `snoopy startup enable` registers OS-level auto-start (launchd on macOS, systemd on Linux, Task Scheduler on Windows). This is separate from `snoopy daemon start`.
+- **Feedback not consolidated yet**: `feedback submit` marks results validated but prompt quality only changes after `feedback consolidate`.
+- **Early exit from review**: If review is stopped early, always confirm whether to run consolidate now.
 
 ## Clarifying questions for risky operations
 
@@ -316,6 +373,13 @@ Job configuration:
 2. What qualification criteria should the LLM use? (Be specific to reduce false positives.)
 3. Should comments also be monitored, or only posts?
 
+Feedback workflow:
+
+1. Do you want to review all jobs or a specific job?
+2. For this result, should it be marked valid or invalid?
+3. If invalid, what reusable reason should become a disqualifier?
+4. Should we run consolidate now before ending this session?
+
 ## Failure handling
 
 | Failure | Action |
@@ -325,6 +389,8 @@ Job configuration:
 | Job run failed | Check `snoopy errors <jobRef>` and `snoopy logs <runId>` |
 | Token truncation in qualification | The flow retries automatically; check logs if persistent |
 | DB locked | Another process may be writing; retry after a moment |
+| Feedback submit rejected | Ensure exactly one of `--valid` or `--invalid`; include `--reason` when invalid |
+| Consolidation did not change quality | Verify enough validated feedback exists; run `snoopy feedback review --json` and then `snoopy feedback consolidate` |
 | Startup registration failed | Check platform support; `snoopy doctor` shows current state |
 
 For all failures: run `snoopy doctor` first to get a system health overview.
@@ -336,6 +402,7 @@ Should trigger:
 1. Set up Snoopy for Reddit monitoring from scratch.
 2. Run Snoopy MCP server and register with Claude/Cursor/VS Code.
 3. Debug a failed Snoopy job run using errors and logs.
+4. Run an agent-guided feedback session: review queue, collect user verdicts, submit, and consolidate.
 
 Should not trigger:
 
@@ -352,7 +419,9 @@ Should not trigger:
 
 - CLI entrypoint: `src/cli/index.ts`
 - CLI commands: `src/cli/commands/*.ts`
+- Feedback CLI: `src/cli/commands/feedback.ts`
 - DB repositories: `src/services/db/repositories/*.ts`
+- Feedback consolidation service: `src/services/feedback/consolidationService.ts`
 - Analytics service: `src/services/analytics/analyticsService.ts`
 - Daemon control: `src/services/daemonControl.ts`
 - Secret store: `src/services/security/secretStore.ts`

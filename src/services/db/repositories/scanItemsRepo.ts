@@ -18,6 +18,9 @@ export interface NewScanItem {
   qualified: boolean;
   viewed?: boolean;
   validated?: boolean;
+  isValid?: boolean;
+  isValidReason?: string | null;
+  feedbackConsolidated?: boolean;
   processed?: boolean;
   consumed?: boolean;
   promptTokens?: number;
@@ -46,6 +49,8 @@ export interface QualifiedScanItemRow {
   id: string;
   jobId: string;
   runId: string;
+  type: ScanItemType;
+  subreddit: string;
   author: string;
   title: string | null;
   body: string;
@@ -53,6 +58,9 @@ export interface QualifiedScanItemRow {
   redditPostedAt: string;
   viewed: boolean;
   validated: boolean;
+  isValid: boolean;
+  isValidReason: string | null;
+  feedbackConsolidated: boolean;
   processed: boolean;
   consumed: boolean;
   qualificationReason: string | null;
@@ -75,6 +83,9 @@ export interface ScanItemRow {
   qualified: boolean;
   viewed: boolean;
   validated: boolean;
+  isValid: boolean;
+  isValidReason: string | null;
+  feedbackConsolidated: boolean;
   processed: boolean;
   consumed: boolean;
   qualificationReason: string | null;
@@ -144,10 +155,12 @@ export class ScanItemsRepository {
 
   private mapScanItemRows(
     rows: Array<
-      Omit<ScanItemRow, 'qualified' | 'viewed' | 'validated' | 'processed' | 'consumed'> & {
+      Omit<ScanItemRow, 'qualified' | 'viewed' | 'validated' | 'isValid' | 'feedbackConsolidated' | 'processed' | 'consumed'> & {
           qualified: number;
           viewed: number;
           validated: number;
+          isValid: number;
+          feedbackConsolidated: number;
           processed: number;
           consumed: number;
         }
@@ -158,6 +171,8 @@ export class ScanItemsRepository {
       qualified: row.qualified === 1,
       viewed: row.viewed === 1,
       validated: row.validated === 1,
+      isValid: row.isValid === 1,
+      feedbackConsolidated: row.feedbackConsolidated === 1,
       processed: row.processed === 1,
       consumed: row.consumed === 1
     }));
@@ -202,6 +217,8 @@ export class ScanItemsRepository {
            id,
            job_id as jobId,
            run_id as runId,
+            type,
+            subreddit,
            author,
            title,
            body,
@@ -209,6 +226,9 @@ export class ScanItemsRepository {
            reddit_posted_at as redditPostedAt,
            viewed,
            validated,
+            is_valid as isValid,
+            is_valid_reason as isValidReason,
+            feedback_consolidated as feedbackConsolidated,
            processed,
            consumed,
            qualification_reason as qualificationReason,
@@ -220,9 +240,11 @@ export class ScanItemsRepository {
          LIMIT ?`
       )
       .all(jobId, boundedLimit) as Array<
-      Omit<QualifiedScanItemRow, 'viewed' | 'validated' | 'processed' | 'consumed'> & {
+        Omit<QualifiedScanItemRow, 'viewed' | 'validated' | 'isValid' | 'feedbackConsolidated' | 'processed' | 'consumed'> & {
           viewed: number;
           validated: number;
+          isValid: number;
+          feedbackConsolidated: number;
           processed: number;
           consumed: number;
         }
@@ -232,6 +254,8 @@ export class ScanItemsRepository {
       ...row,
       viewed: row.viewed === 1,
       validated: row.validated === 1,
+      isValid: row.isValid === 1,
+      feedbackConsolidated: row.feedbackConsolidated === 1,
       processed: row.processed === 1,
       consumed: row.consumed === 1
     }));
@@ -245,6 +269,8 @@ export class ScanItemsRepository {
            id,
            job_id as jobId,
            run_id as runId,
+            type,
+            subreddit,
            author,
            title,
            body,
@@ -252,6 +278,9 @@ export class ScanItemsRepository {
            reddit_posted_at as redditPostedAt,
            viewed,
            validated,
+            is_valid as isValid,
+            is_valid_reason as isValidReason,
+            feedback_consolidated as feedbackConsolidated,
            processed,
            consumed,
            qualification_reason as qualificationReason,
@@ -264,9 +293,11 @@ export class ScanItemsRepository {
          LIMIT ?`
       )
       .all(jobId, runId, boundedLimit) as Array<
-      Omit<QualifiedScanItemRow, 'viewed' | 'validated' | 'processed' | 'consumed'> & {
+        Omit<QualifiedScanItemRow, 'viewed' | 'validated' | 'isValid' | 'feedbackConsolidated' | 'processed' | 'consumed'> & {
           viewed: number;
           validated: number;
+          isValid: number;
+          feedbackConsolidated: number;
           processed: number;
           consumed: number;
         }
@@ -276,6 +307,8 @@ export class ScanItemsRepository {
       ...row,
       viewed: row.viewed === 1,
       validated: row.validated === 1,
+      isValid: row.isValid === 1,
+      feedbackConsolidated: row.feedbackConsolidated === 1,
       processed: row.processed === 1,
       consumed: row.consumed === 1
     }));
@@ -300,6 +333,9 @@ export class ScanItemsRepository {
            qualified,
            viewed,
            validated,
+           is_valid as isValid,
+           is_valid_reason as isValidReason,
+           feedback_consolidated as feedbackConsolidated,
            processed,
            consumed,
            qualification_reason as qualificationReason,
@@ -312,10 +348,12 @@ export class ScanItemsRepository {
          ORDER BY datetime(reddit_posted_at) DESC, datetime(created_at) DESC, id DESC`
       )
       .all(jobId) as Array<
-      Omit<ScanItemRow, 'qualified' | 'viewed' | 'validated' | 'processed' | 'consumed'> & {
+        Omit<ScanItemRow, 'qualified' | 'viewed' | 'validated' | 'isValid' | 'feedbackConsolidated' | 'processed' | 'consumed'> & {
           qualified: number;
           viewed: number;
           validated: number;
+          isValid: number;
+          feedbackConsolidated: number;
           processed: number;
           consumed: number;
         }
@@ -358,6 +396,9 @@ export class ScanItemsRepository {
            qualified,
            viewed,
            validated,
+           is_valid as isValid,
+           is_valid_reason as isValidReason,
+           feedback_consolidated as feedbackConsolidated,
            processed,
            consumed,
            qualification_reason as qualificationReason,
@@ -371,10 +412,12 @@ export class ScanItemsRepository {
          LIMIT ? OFFSET ?`
       )
       .all(jobId, boundedLimit, boundedOffset) as Array<
-      Omit<ScanItemRow, 'qualified' | 'viewed' | 'validated' | 'processed' | 'consumed'> & {
+        Omit<ScanItemRow, 'qualified' | 'viewed' | 'validated' | 'isValid' | 'feedbackConsolidated' | 'processed' | 'consumed'> & {
           qualified: number;
           viewed: number;
           validated: number;
+          isValid: number;
+          feedbackConsolidated: number;
           processed: number;
           consumed: number;
         }
@@ -534,6 +577,8 @@ export class ScanItemsRepository {
            id,
            job_id as jobId,
            run_id as runId,
+          type,
+          subreddit,
            author,
            title,
            body,
@@ -541,6 +586,9 @@ export class ScanItemsRepository {
            reddit_posted_at as redditPostedAt,
            viewed,
            validated,
+          is_valid as isValid,
+          is_valid_reason as isValidReason,
+          feedback_consolidated as feedbackConsolidated,
            processed,
            consumed,
            qualification_reason as qualificationReason,
@@ -563,9 +611,11 @@ export class ScanItemsRepository {
     }
 
     const rows = this.db.prepare(query).all(...params) as Array<
-      Omit<QualifiedScanItemRow, 'viewed' | 'validated' | 'processed' | 'consumed'> & {
+        Omit<QualifiedScanItemRow, 'viewed' | 'validated' | 'isValid' | 'feedbackConsolidated' | 'processed' | 'consumed'> & {
           viewed: number;
           validated: number;
+          isValid: number;
+          feedbackConsolidated: number;
           processed: number;
           consumed: number;
         }
@@ -575,9 +625,227 @@ export class ScanItemsRepository {
       ...row,
       viewed: row.viewed === 1,
       validated: row.validated === 1,
+      isValid: row.isValid === 1,
+      feedbackConsolidated: row.feedbackConsolidated === 1,
       processed: row.processed === 1,
       consumed: row.consumed === 1
     }));
+  }
+
+  getQualifiedById(id: string): QualifiedScanItemRow | null {
+    const rows = this.db
+      .prepare(
+        `SELECT
+           id,
+           job_id as jobId,
+           run_id as runId,
+           type,
+           subreddit,
+           author,
+           title,
+           body,
+           url,
+           reddit_posted_at as redditPostedAt,
+           viewed,
+           validated,
+           is_valid as isValid,
+           is_valid_reason as isValidReason,
+           feedback_consolidated as feedbackConsolidated,
+           processed,
+           consumed,
+           qualification_reason as qualificationReason,
+           created_at as createdAt
+         FROM scan_items
+         WHERE id = ?
+           AND qualified = 1
+         LIMIT 1`
+      )
+      .all(id) as Array<
+      Omit<QualifiedScanItemRow, 'viewed' | 'validated' | 'isValid' | 'feedbackConsolidated' | 'processed' | 'consumed'> & {
+          viewed: number;
+          validated: number;
+          isValid: number;
+          feedbackConsolidated: number;
+          processed: number;
+          consumed: number;
+        }
+    >;
+
+    const row = rows[0];
+    if (!row) {
+      return null;
+    }
+
+    return {
+      ...row,
+      viewed: row.viewed === 1,
+      validated: row.validated === 1,
+      isValid: row.isValid === 1,
+      feedbackConsolidated: row.feedbackConsolidated === 1,
+      processed: row.processed === 1,
+      consumed: row.consumed === 1
+    };
+  }
+
+  listUnvalidatedQualified(jobId?: string, limit = 10): QualifiedScanItemRow[] {
+    const boundedLimit = Math.max(1, Math.floor(limit));
+    const rows = this.db
+      .prepare(
+        `SELECT
+           id,
+           job_id as jobId,
+           run_id as runId,
+           type,
+           subreddit,
+           author,
+           title,
+           body,
+           url,
+           reddit_posted_at as redditPostedAt,
+           viewed,
+           validated,
+           is_valid as isValid,
+           is_valid_reason as isValidReason,
+           feedback_consolidated as feedbackConsolidated,
+           processed,
+           consumed,
+           qualification_reason as qualificationReason,
+           created_at as createdAt
+         FROM scan_items
+         WHERE qualified = 1
+           AND validated = 0
+           ${jobId ? 'AND job_id = ?' : ''}
+         ORDER BY datetime(created_at) DESC, id DESC
+         LIMIT ?`
+      )
+      .all(...(jobId ? [jobId, boundedLimit] : [boundedLimit])) as Array<
+      Omit<QualifiedScanItemRow, 'viewed' | 'validated' | 'isValid' | 'feedbackConsolidated' | 'processed' | 'consumed'> & {
+          viewed: number;
+          validated: number;
+          isValid: number;
+          feedbackConsolidated: number;
+          processed: number;
+          consumed: number;
+        }
+    >;
+
+    return rows.map((row) => ({
+      ...row,
+      viewed: row.viewed === 1,
+      validated: row.validated === 1,
+      isValid: row.isValid === 1,
+      feedbackConsolidated: row.feedbackConsolidated === 1,
+      processed: row.processed === 1,
+      consumed: row.consumed === 1
+    }));
+  }
+
+  submitFeedback(resultId: string, isValid: boolean, reason: string | null): boolean {
+    const normalizedReason = reason?.trim() ?? null;
+    const result = this.db
+      .prepare(
+        `UPDATE scan_items
+         SET validated = 1,
+             is_valid = ?,
+             is_valid_reason = ?,
+             feedback_consolidated = 0
+         WHERE id = ?
+           AND qualified = 1`
+      )
+      .run(isValid ? 1 : 0, normalizedReason, resultId);
+
+    return Number(result.changes) > 0;
+  }
+
+  listPendingFeedbackConsolidation(jobId?: string, limit?: number): QualifiedScanItemRow[] {
+    const hasLimit = limit !== undefined && limit !== null;
+    const boundedLimit = hasLimit ? Math.max(1, Math.floor(limit)) : undefined;
+
+    let query = `SELECT
+           id,
+           job_id as jobId,
+           run_id as runId,
+           type,
+           subreddit,
+           author,
+           title,
+           body,
+           url,
+           reddit_posted_at as redditPostedAt,
+           viewed,
+           validated,
+           is_valid as isValid,
+           is_valid_reason as isValidReason,
+           feedback_consolidated as feedbackConsolidated,
+           processed,
+           consumed,
+           qualification_reason as qualificationReason,
+           created_at as createdAt
+         FROM scan_items
+         WHERE qualified = 1
+           AND validated = 1
+           AND feedback_consolidated = 0`;
+
+    const params: Array<string | number> = [];
+    if (jobId) {
+      query += ' AND job_id = ?';
+      params.push(jobId);
+    }
+
+    query += ' ORDER BY datetime(created_at) DESC, id DESC';
+    if (boundedLimit !== undefined) {
+      query += ' LIMIT ?';
+      params.push(boundedLimit);
+    }
+
+    const rows = this.db.prepare(query).all(...params) as Array<
+      Omit<QualifiedScanItemRow, 'viewed' | 'validated' | 'isValid' | 'feedbackConsolidated' | 'processed' | 'consumed'> & {
+          viewed: number;
+          validated: number;
+          isValid: number;
+          feedbackConsolidated: number;
+          processed: number;
+          consumed: number;
+        }
+    >;
+
+    return rows.map((row) => ({
+      ...row,
+      viewed: row.viewed === 1,
+      validated: row.validated === 1,
+      isValid: row.isValid === 1,
+      feedbackConsolidated: row.feedbackConsolidated === 1,
+      processed: row.processed === 1,
+      consumed: row.consumed === 1
+    }));
+  }
+
+  countPendingFeedbackConsolidation(jobId?: string): number {
+    const row = this.db
+      .prepare(
+        `SELECT COUNT(*) as count
+         FROM scan_items
+         WHERE qualified = 1
+           AND validated = 1
+           AND feedback_consolidated = 0
+           ${jobId ? 'AND job_id = ?' : ''}`
+      )
+      .get(...(jobId ? [jobId] : [])) as { count: number } | undefined;
+
+    return Number(row?.count ?? 0);
+  }
+
+  markFeedbackConsolidated(ids: string[]): number {
+    if (ids.length === 0) {
+      return 0;
+    }
+
+    const placeholders = ids.map(() => '?').join(',');
+    const result = this.db
+      .prepare(`UPDATE scan_items SET feedback_consolidated = 1 WHERE id IN (${placeholders})`)
+      .run(...ids);
+
+    return Number(result.changes);
   }
 
   markConsumed(ids: string[]): number {
@@ -615,6 +883,9 @@ export class ScanItemsRepository {
             qualified,
             viewed,
             validated,
+            is_valid,
+            is_valid_reason,
+            feedback_consolidated,
             processed,
             consumed,
             prompt_tokens,
@@ -622,7 +893,7 @@ export class ScanItemsRepository {
             estimated_cost_usd,
             qualification_reason,
             created_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))`
         )
         .run(
           newId,
@@ -640,6 +911,9 @@ export class ScanItemsRepository {
           newItem.qualified ? 1 : 0,
           newItem.viewed ? 1 : 0,
           newItem.validated ? 1 : 0,
+          newItem.isValid ? 1 : 0,
+          newItem.isValidReason ?? null,
+          newItem.feedbackConsolidated ? 1 : 0,
           newItem.processed ? 1 : 0,
           newItem.consumed ? 1 : 0,
           newItem.promptTokens ?? 0,

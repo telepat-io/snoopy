@@ -62,6 +62,22 @@ export const snoopyConsumeToolInputSchema = {
   dryRun: z.boolean().optional().describe('Preview without marking consumed.'),
 };
 
+export const snoopyFeedbackReviewToolInputSchema = {
+  jobRef: z.string().optional().describe('Job ID or slug. If omitted, review queue spans all jobs.'),
+  limit: z.coerce.number().int().positive().optional().describe('Max unvalidated results to return. Default: 10.'),
+};
+
+export const snoopyFeedbackSubmitToolInputSchema = {
+  resultId: z.string().min(1).describe('Qualified result ID to update.'),
+  isValid: z.boolean().describe('Whether the result should be considered valid.'),
+  reason: z.string().optional().describe('Required when isValid=false; ignored when isValid=true.'),
+};
+
+export const snoopyFeedbackConsolidateToolInputSchema = {
+  jobRef: z.string().optional().describe('Job ID or slug. If omitted, consolidates across all jobs.'),
+  limit: z.coerce.number().int().positive().optional().describe('Max pending feedback items to process.'),
+};
+
 export const snoopyErrorsToolInputSchema = {
   jobRef: z.string().min(1).describe('Job ID or slug.'),
   hours: z.coerce.number().int().positive().optional().describe('Look back hours. Default: 24.'),
@@ -108,6 +124,9 @@ export const snoopyToolContracts: ToolContract[] = [
   { name: 'snoopy_analytics', required: [], enums: {} },
   { name: 'snoopy_export', required: [], enums: { format: ['json', 'csv'] } },
   { name: 'snoopy_consume', required: [], enums: {} },
+  { name: 'snoopy_feedback_review', required: [], enums: {} },
+  { name: 'snoopy_feedback_submit', required: ['resultId', 'isValid'], enums: {} },
+  { name: 'snoopy_feedback_consolidate', required: [], enums: {} },
   { name: 'snoopy_errors', required: ['jobRef'], enums: {} },
   { name: 'snoopy_logs', required: ['runId'], enums: {} },
   { name: 'snoopy_settings_get', required: [], enums: {} },

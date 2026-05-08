@@ -206,4 +206,58 @@ describe('migration upgrade e2e', () => {
     };
     expect(count.count).toBe(1);
   });
+
+  it('applies feedback migration on databases that already recorded baseline', () => {
+    const db = createTestDb();
+
+    // Simulate a DB that already ran baseline before feedback fields existed.
+    db.exec(`
+      CREATE TABLE migrations (
+        id INTEGER PRIMARY KEY,
+        name TEXT NOT NULL,
+        applied_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+      INSERT INTO migrations (id, name) VALUES (1, 'baseline');
+
+      CREATE TABLE scan_items (
+        id TEXT PRIMARY KEY,
+        job_id TEXT NOT NULL,
+        run_id TEXT NOT NULL,
+        type TEXT NOT NULL CHECK (type IN ('post', 'comment')),
+        reddit_post_id TEXT NOT NULL,
+        reddit_comment_id TEXT,
+        subreddit TEXT NOT NULL,
+        author TEXT NOT NULL,
+        title TEXT,
+        body TEXT NOT NULL,
+        url TEXT NOT NULL,
+        reddit_posted_at TEXT NOT NULL,
+        qualified INTEGER NOT NULL DEFAULT 0,
+        viewed INTEGER NOT NULL DEFAULT 0,
+        validated INTEGER NOT NULL DEFAULT 0,
+        processed INTEGER NOT NULL DEFAULT 0,
+        consumed INTEGER NOT NULL DEFAULT 0,
+        prompt_tokens INTEGER NOT NULL DEFAULT 0,
+        completion_tokens INTEGER NOT NULL DEFAULT 0,
+        estimated_cost_usd REAL,
+        qualification_reason TEXT,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+      );
+    `);
+
+    expect(columnExists(db, 'scan_items', 'is_valid')).toBe(false);
+    expect(columnExists(db, 'scan_items', 'is_valid_reason')).toBe(false);
+    expect(columnExists(db, 'scan_items', 'feedback_consolidated')).toBe(false);
+    expect(indexExists(db, 'idx_scan_items_feedback_pending')).toBe(false);
+
+    runMigrations(db);
+
+    expect(columnExists(db, 'scan_items', 'is_valid')).toBe(true);
+    expect(columnExists(db, 'scan_items', 'is_valid_reason')).toBe(true);
+    expect(columnExists(db, 'scan_items', 'feedback_consolidated')).toBe(true);
+    expect(indexExists(db, 'idx_scan_items_feedback_pending')).toBe(true);
+
+    const applied = getAppliedMigrations(db);
+    expect(applied.map((item) => item.id)).toEqual([1, 2]);
+  });
 });

@@ -204,6 +204,27 @@ export class JobsRepository {
     return this.getById(job.id);
   }
 
+  updateQualificationPromptById(id: string, qualificationPrompt: string): Job | null {
+    this.db
+      .prepare(
+        `UPDATE jobs
+         SET qualification_prompt = ?, updated_at = datetime('now')
+         WHERE id = ?`
+      )
+      .run(qualificationPrompt, id);
+
+    return this.getById(id);
+  }
+
+  updateQualificationPromptByRef(ref: string, qualificationPrompt: string): Job | null {
+    const job = this.getByRef(ref);
+    if (!job) {
+      return null;
+    }
+
+    return this.updateQualificationPromptById(job.id, qualificationPrompt);
+  }
+
   remove(id: string): void {
     this.removeCascadeStmt(id);
   }

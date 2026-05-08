@@ -25,6 +25,7 @@ Built for founders, marketers, and sales teams who need to find genuine opportun
 
 - **Plain language job creation** — Describe what you're looking for in plain language. Snoopy builds an AI-assisted monitoring job. No regex, no keyword configs.
 - **AI qualification, not keyword matching** — Conversations are evaluated against your intent. Snoopy understands context — not just pattern matching.
+- **Feedback-driven prompt learning** — Review results, submit valid/invalid feedback, and consolidate updates so your qualification prompt gets smarter over time.
 - **Continuous daemon monitoring** — Set a cron schedule and let Snoopy scan in the background. `snoopy daemon start`
 - **Code-driven efficiency** — Deterministic code handles scraping, scheduling, state management, and SQLite persistence. Tokens only spent on qualification.
 - **Local & private** — SQLite database on your machine. No cloud dependency. Export to CSV or JSON on demand.
@@ -83,9 +84,28 @@ Snoopy is built for headless automation and agent-driven monitoring:
 
 - **Non-interactive CLI** — Most commands support omitting `<jobRef>` to get an interactive picker, but automation can pass refs directly for zero-prompt execution.
 - **Machine-readable output** — `snoopy export --json --last-run` and `snoopy consume --json` produce structured data for downstream agents.
+- **Feedback loop for continuous quality** — Agents can run `snoopy feedback review --json`, collect human feedback, submit with `snoopy feedback submit`, and finalize with `snoopy feedback consolidate`.
 - **Direct database access** — SQLite at `~/.snoopy/snoopy.db` (or `$SNOOPY_ROOT_DIR/snoopy.db`) with a documented schema. Agents can insert jobs, query results, and update lifecycle flags directly.
 - **Environment variables** — `SNOOPY_OPENROUTER_API_KEY`, `SNOOPY_REDDIT_CLIENT_SECRET`, and `SNOOPY_ROOT_DIR` remove all interactive credential prompts.
 - **Agent docs** — [Agent Operations](https://docs.telepat.io/snoopy/guides/agent-operations) provides a complete runbook for automation, including SQL schema, lifecycle flags, and recommended workflows.
+
+## Feedback Workflow
+
+Use the feedback commands to improve qualification quality over time:
+
+```bash
+# 1) Review unvalidated qualified results (agent-safe JSON)
+snoopy feedback review --json --limit 10
+
+# 2) Submit per-result feedback
+snoopy feedback submit <resultId> --valid
+snoopy feedback submit <resultId> --invalid --reason "Not actually a buying signal"
+
+# 3) Consolidate feedback into an updated qualification prompt
+snoopy feedback consolidate
+```
+
+Interactive `snoopy feedback review` sessions also prompt to run consolidation before exiting early.
 
 ## Security And Trust
 

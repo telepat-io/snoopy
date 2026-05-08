@@ -8,6 +8,7 @@ import { showRunLogs } from './commands/logs.js';
 import { showJobErrors } from './commands/errors.js';
 import { exportCsv } from './commands/export.js';
 import { consumeResults } from './commands/consume.js';
+import { feedbackConsolidate, feedbackReview, feedbackSubmit } from './commands/feedback.js';
 import { showAnalytics } from './commands/analytics.js';
 import { showResults } from './commands/results.js';
 import {
@@ -176,6 +177,40 @@ program
   .option('--dry-run', 'Preview results without marking them consumed')
   .action((jobRef: string | undefined, options: { limit?: number; json?: boolean; dryRun?: boolean }) => {
     consumeResults(jobRef, options);
+  });
+
+const feedback = program.command('feedback').description('Collect qualification feedback and consolidate prompt improvements');
+
+feedback
+  .command('review')
+  .argument('[jobRef]', 'Optional job ID or slug')
+  .description('Review unvalidated qualified results and submit feedback')
+  .option('--json', 'Output raw JSON array to stdout')
+  .option('--limit <count>', 'Maximum number of results to review (default: 10)', parsePositiveInteger, 10)
+  .action(async (jobRef: string | undefined, options: { json?: boolean; limit?: number }) => {
+    await feedbackReview(jobRef, options);
+  });
+
+feedback
+  .command('submit')
+  .argument('<resultId>', 'Qualified result ID')
+  .description('Submit validity feedback for a qualified result')
+  .option('--valid', 'Mark this result as valid')
+  .option('--invalid', 'Mark this result as invalid')
+  .option('--reason <text>', 'Reason for invalid feedback (required with --invalid)')
+  .option('--json', 'Output machine-readable JSON status')
+  .action(async (resultId: string, options: { valid?: boolean; invalid?: boolean; reason?: string; json?: boolean }) => {
+    await feedbackSubmit(resultId, options);
+  });
+
+feedback
+  .command('consolidate')
+  .argument('[jobRef]', 'Optional job ID or slug')
+  .description('Consolidate user feedback into improved qualification prompts')
+  .option('--limit <count>', 'Maximum pending feedback items to process', parsePositiveInteger)
+  .option('--json', 'Output machine-readable JSON status')
+  .action(async (jobRef: string | undefined, options: { limit?: number; json?: boolean }) => {
+    await feedbackConsolidate(jobRef, options);
   });
 
 // --- MCP server ---

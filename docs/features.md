@@ -35,6 +35,24 @@ Configure your qualification prompt once. Snoopy applies it to every post and co
 
 ---
 
+## Feedback-Driven Prompt Learning
+
+Snoopy now supports a full feedback loop so qualification quality improves over time:
+
+1. Review recent unvalidated qualified results
+2. Submit valid/invalid feedback per result
+3. Consolidate that feedback to produce a smarter qualification prompt
+
+```bash
+snoopy feedback review --json
+snoopy feedback submit <resultId> --invalid --reason "Not actually buying intent"
+snoopy feedback consolidate
+```
+
+For interactive reviews, Snoopy asks whether to run consolidation before exiting early, so prompt updates are not forgotten.
+
+---
+
 ## Continuous Daemon Monitoring
 
 Once configured, Snoopy scans on cron schedules in the background. Set your cadence and let it run. Trigger manual scans for quick validation.

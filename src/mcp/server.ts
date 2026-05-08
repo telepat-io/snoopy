@@ -16,6 +16,9 @@ import {
   snoopyAnalyticsToolInputSchema,
   snoopyExportToolInputSchema,
   snoopyConsumeToolInputSchema,
+  snoopyFeedbackReviewToolInputSchema,
+  snoopyFeedbackSubmitToolInputSchema,
+  snoopyFeedbackConsolidateToolInputSchema,
   snoopyErrorsToolInputSchema,
   snoopyLogsToolInputSchema,
   snoopySettingsGetToolInputSchema,
@@ -40,6 +43,9 @@ import {
   analyticsReport,
   exportReport,
   consumeReport,
+  feedbackReviewReport,
+  feedbackSubmitReport,
+  feedbackConsolidateReport,
   errorsReport,
   logsReport,
   settingsGetReport,
@@ -241,6 +247,45 @@ export async function startSnoopyMcpServer(): Promise<void> {
   }, (input) => {
     try {
       return formatToolResult(consumeReport(input.jobRef, input.limit, input.dryRun));
+    } catch (error) {
+      return formatToolError(error);
+    }
+  });
+
+  // --- snoopy_feedback_review ---
+  server.registerTool('snoopy_feedback_review', {
+    title: 'Review Feedback Queue',
+    description: 'List unvalidated qualified results for user feedback collection.',
+    inputSchema: snoopyFeedbackReviewToolInputSchema,
+  }, (input) => {
+    try {
+      return formatToolResult(feedbackReviewReport(input.jobRef, input.limit));
+    } catch (error) {
+      return formatToolError(error);
+    }
+  });
+
+  // --- snoopy_feedback_submit ---
+  server.registerTool('snoopy_feedback_submit', {
+    title: 'Submit Feedback',
+    description: 'Submit validity feedback for a qualified result.',
+    inputSchema: snoopyFeedbackSubmitToolInputSchema,
+  }, (input) => {
+    try {
+      return formatToolResult(feedbackSubmitReport(input.resultId, input.isValid, input.reason));
+    } catch (error) {
+      return formatToolError(error);
+    }
+  });
+
+  // --- snoopy_feedback_consolidate ---
+  server.registerTool('snoopy_feedback_consolidate', {
+    title: 'Consolidate Feedback',
+    description: 'Consolidate feedback into improved qualification prompts.',
+    inputSchema: snoopyFeedbackConsolidateToolInputSchema,
+  }, async (input) => {
+    try {
+      return formatToolResult(await feedbackConsolidateReport(input.jobRef, input.limit));
     } catch (error) {
       return formatToolError(error);
     }

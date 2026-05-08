@@ -24,9 +24,34 @@ const qualifySchema = z.object({
   reason: z.string().min(1).max(80)
 });
 
+const consolidatePromptSchema = z.object({
+  revisedQualificationPrompt: z.string().min(8),
+  changeSummary: z.array(z.string().min(1)).max(10),
+  rationale: z.string().min(1)
+});
+
 export interface QualificationResult {
   qualified: boolean;
   reason: string;
+  promptTokens: number;
+  completionTokens: number;
+}
+
+export interface ConsolidationFeedbackItem {
+  id: string;
+  type: 'post' | 'comment';
+  subreddit: string;
+  title: string | null;
+  body: string;
+  qualificationReason: string | null;
+  userIsValid: boolean;
+  userReason: string | null;
+}
+
+export interface ConsolidatedPromptResult {
+  revisedQualificationPrompt: string;
+  changeSummary: string[];
+  rationale: string;
   promptTokens: number;
   completionTokens: number;
 }
@@ -356,6 +381,77 @@ export class OpenRouterClient {
         )
       };
     } catch (error) {
+      throw toOpenRouterError(error);
+    }
+  }
+
+  async consolidateQualificationPrompt(input: {
+    model: string;
+    modelSettings: ModelSettings;
+    currentQualificationPrompt: string;
+    feedbackItems: ConsolidationFeedbackItem[];
+  }): Promise<ConsolidatedPromptResult> {
+    const feedbackJson = JSON.stringify(input.feedbackItems, null, 2);
+    const userMessage = [
+      'Current qualification prompt:',
+      input.currentQualificationPrompt,
+      '',
+      'User feedback examples (JSON):',
+      feedbackJson,
+      '',
+      'Revise by extracting general, reusable rules from feedback patterns.',
+      'Do not optimize for any single example or subreddit-specific edge case unless repeatedly supported.',
+      'Prefer consolidating with existing lines over adding many new lines.',
+      'Add a new line only when it represents a clearly distinct rule.',
+      'Return JSON with keys: revisedQualificationPrompt, changeSummary, rationale.'
+    ].join('\n');
+
+    const systemMessage = [
+      'You improve qualification prompts using user feedback.',
+      'Goal: make minimal but meaningful edits that improve classification quality over time.',
+      'Primary behavior: infer generally applicable decision rules, not one-off fixes.',
+      'Rules:',
+      '- Keep the revised prompt concise and practical; remove redundancy where possible.',
+      '- Generalize from repeated patterns in feedback rather than specific single examples.',
+      '- Avoid overfitting to named entities, exact wording, or one result unless it represents a broader rule.',
+      '- Preserve existing intent unless feedback clearly indicates a problem.',
+      '- Consolidate edits into existing points when semantically compatible; do not append endlessly.',
+      '- Introduce new lines only for genuinely new criteria not already covered.',
+      '- Incorporate invalid-case reasons as clear disqualifiers when they reflect reusable logic.',
+      '- Do not mention JSON, tooling, or implementation details in the revised prompt.',
+      '- Return valid JSON only with: revisedQualificationPrompt, changeSummary, rationale.'
+    ].join('\n');
+
+    try {
+      const payload: ChatCompletionCreateParamsNonStreaming = {
+        model: input.model,
+        temperature: input.modelSettings.temperature,
+        top_p: input.modelSettings.topP,
+        max_tokens: Math.max(600, input.modelSettings.maxTokens),
+        response_format: {
+          type: 'json_object'
+        },
+        messages: [
+          { role: 'system', content: systemMessage },
+          { role: 'user', content: userMessage }
+        ]
+      };
+
+      this.traceRequest('chat.completions.create.consolidate_prompt', payload);
+      const completion = (await this.client.chat.completions.create(payload)) as CompletionLike;
+      this.traceResponse('chat.completions.create.consolidate_prompt', completion);
+
+      const raw = completion.choices?.[0]?.message?.content ?? '';
+      const parsed = consolidatePromptSchema.parse(parseStructuredJson(raw));
+      return {
+        revisedQualificationPrompt: parsed.revisedQualificationPrompt,
+        changeSummary: parsed.changeSummary,
+        rationale: parsed.rationale,
+        promptTokens: completion.usage?.prompt_tokens ?? 0,
+        completionTokens: completion.usage?.completion_tokens ?? 0
+      };
+    } catch (error) {
+      this.traceError('chat.completions.create.consolidate_prompt', error);
       throw toOpenRouterError(error);
     }
   }

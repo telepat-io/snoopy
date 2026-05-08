@@ -25,6 +25,7 @@ Snoopy 监控在线对话中的高意向信号，匹配您的业务目标。
 
 - **自然语言任务创建** — 用自然语言描述您正在寻找的内容。Snoopy 构建 AI 辅助的监控任务。无需正则表达式，无需关键字配置。
 - **AI 评估，而非关键词匹配** — 对话会对照您的意图进行评估。Snoopy 理解上下文——不仅仅是模式匹配。
+- **反馈驱动的提示词进化** — 审阅结果、提交有效/无效反馈，并执行 consolidate，让评估提示词随时间持续优化。
 - **持续守护进程监控** — 设置 cron 计划，让 Snoopy 在后台扫描。`snoopy daemon start`
 - **代码驱动的高效率** — 确定性代码处理数据抓取、调度、状态管理和 SQLite 持久化。Token 仅用于评估。
 - **本地化与隐私保护** — SQLite 数据库存储在您的机器上。无云依赖。按需导出为 CSV 或 JSON。
@@ -83,9 +84,28 @@ Snoopy 专为无界面自动化和智能体驱动的监控设计：
 
 - **非交互式 CLI** — 大多数命令支持省略 `<jobRef>` 以交互式选择，但自动化可以直接传入 ref 实现零提示执行。
 - **机器可读输出** — `snoopy export --json --last-run` 和 `snoopy consume --json` 生成结构化数据，供下游智能体消费。
+- **持续质量反馈闭环** — 智能体可执行 `snoopy feedback review --json`，收集人工反馈后调用 `snoopy feedback submit`，最后执行 `snoopy feedback consolidate`。
 - **直接数据库访问** — SQLite 位于 `~/.snoopy/snoopy.db`（或 `$SNOOPY_ROOT_DIR/snoopy.db`），拥有完整文档化的 schema。智能体可以直接插入任务、查询结果并更新生命周期标志。
 - **环境变量** — `SNOOPY_OPENROUTER_API_KEY`、`SNOOPY_REDDIT_CLIENT_SECRET` 和 `SNOOPY_ROOT_DIR` 可移除所有交互式凭证提示。
 - **Agent 文档** — [Agent Operations](https://docs.telepat.io/snoopy/guides/agent-operations) 提供完整的自动化手册，包括 SQL schema、生命周期标志和推荐工作流。
+
+## 反馈工作流
+
+使用反馈命令持续提升评估质量：
+
+```bash
+# 1）审阅未验证的合格结果（适合智能体的 JSON）
+snoopy feedback review --json --limit 10
+
+# 2）逐条提交反馈
+snoopy feedback submit <resultId> --valid
+snoopy feedback submit <resultId> --invalid --reason "这不是实际购买意图"
+
+# 3）合并反馈并更新评估提示词
+snoopy feedback consolidate
+```
+
+在交互式 `snoopy feedback review` 中，若提前退出会提示是否先执行 consolidate。
 
 ## 安全与信任
 

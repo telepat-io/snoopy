@@ -7,5 +7,6 @@ export interface Migration {
 }
 
 import baseline from './001_baseline.js';
+import feedbackFields from './002_feedback_fields.js';
 
-export const migrations: Migration[] = [baseline];
+export const migrations: Migration[] = [baseline, feedbackFields];

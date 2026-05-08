@@ -35,6 +35,24 @@ Snoopy 会提出澄清问题，优化您的标准，并生成一个即可运行�
 
 ---
 
+## 反馈驱动的提示词进化
+
+Snoopy 支持完整反馈闭环，让评估质量随时间持续提升：
+
+1. 审阅最近未验证的合格结果
+2. 按结果提交有效/无效反馈
+3. 合并反馈，生成更优的评估提示词
+
+```bash
+snoopy feedback review --json
+snoopy feedback submit <resultId> --invalid --reason "并非真实购买意图"
+snoopy feedback consolidate
+```
+
+在交互式审阅中，如果用户提前退出，Snoopy 会提示是否先运行 consolidate，避免遗漏提示词更新。
+
+---
+
 ## 持续守护进程监控
 
 配置完成后，Snoopy 在后台按 cron 计划进行扫描。设置您的频次，让它持续运行。需要快速验证时触发手动扫描。
