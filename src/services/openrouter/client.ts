@@ -11,6 +11,40 @@ const clarificationSchema = z.object({
   questions: z.array(z.object({ id: z.string(), question: z.string() })).min(1)
 });
 
+const clarificationResponseFormat = {
+  type: 'json_schema' as const,
+  json_schema: {
+    name: 'clarification_questions',
+    strict: true,
+    schema: {
+      type: 'object',
+      properties: {
+        questions: {
+          type: 'array',
+          minItems: 1,
+          items: {
+            type: 'object',
+            properties: {
+              id: {
+                type: 'string',
+                description: 'Short stable identifier for the question.'
+              },
+              question: {
+                type: 'string',
+                description: 'The clarification question to ask the user.'
+              }
+            },
+            required: ['id', 'question'],
+            additionalProperties: false
+          }
+        }
+      },
+      required: ['questions'],
+      additionalProperties: false
+    }
+  }
+} as const;
+
 const specSchema = z.object({
   name: z.string().min(3),
   slug: z.string().min(2),
@@ -18,6 +52,50 @@ const specSchema = z.object({
   qualificationPrompt: z.string().min(8),
   suggestedSubreddits: z.array(z.string().min(2)).min(1)
 });
+
+const specResponseFormat = {
+  type: 'json_schema' as const,
+  json_schema: {
+    name: 'job_spec',
+    strict: true,
+    schema: {
+      type: 'object',
+      properties: {
+        name: {
+          type: 'string',
+          minLength: 3,
+          description: 'Human-readable job name.'
+        },
+        slug: {
+          type: 'string',
+          minLength: 2,
+          description: 'URL-friendly job slug.'
+        },
+        description: {
+          type: 'string',
+          minLength: 5,
+          description: 'Short job description.'
+        },
+        qualificationPrompt: {
+          type: 'string',
+          minLength: 8,
+          description: 'Qualification prompt for the job.'
+        },
+        suggestedSubreddits: {
+          type: 'array',
+          minItems: 1,
+          items: {
+            type: 'string',
+            minLength: 2
+          },
+          description: 'Suggested subreddits for the job.'
+        }
+      },
+      required: ['name', 'slug', 'description', 'qualificationPrompt', 'suggestedSubreddits'],
+      additionalProperties: false
+    }
+  }
+} as const;
 
 const qualifySchema = z.object({
   qualified: z.boolean(),
@@ -29,6 +107,40 @@ const consolidatePromptSchema = z.object({
   changeSummary: z.array(z.string().min(1)).max(10),
   rationale: z.string().min(1)
 });
+
+const consolidatePromptResponseFormat = {
+  type: 'json_schema' as const,
+  json_schema: {
+    name: 'consolidate_qualification_prompt',
+    strict: true,
+    schema: {
+      type: 'object',
+      properties: {
+        revisedQualificationPrompt: {
+          type: 'string',
+          minLength: 8,
+          description: 'The revised qualification prompt.'
+        },
+        changeSummary: {
+          type: 'array',
+          items: {
+            type: 'string',
+            minLength: 1
+          },
+          maxItems: 10,
+          description: 'Short bullet summary of the changes made.'
+        },
+        rationale: {
+          type: 'string',
+          minLength: 1,
+          description: 'Short explanation for the revisions.'
+        }
+      },
+      required: ['revisedQualificationPrompt', 'changeSummary', 'rationale'],
+      additionalProperties: false
+    }
+  }
+} as const;
 
 export interface QualificationResult {
   qualified: boolean;
@@ -345,6 +457,7 @@ export class OpenRouterClient {
       const completion = await this.client.chat.completions.create({
         model,
         temperature: 0.2,
+        response_format: clarificationResponseFormat,
         messages: [{ role: 'user', content: buildClarificationPrompt(criteria) }]
       });
 
@@ -365,6 +478,7 @@ export class OpenRouterClient {
       const completion = await this.client.chat.completions.create({
         model,
         temperature: 0.4,
+        response_format: specResponseFormat,
         messages: [{ role: 'user', content: buildSpecPrompt(criteria, answers) }]
       });
 
@@ -428,9 +542,7 @@ export class OpenRouterClient {
         temperature: input.modelSettings.temperature,
         top_p: input.modelSettings.topP,
         max_tokens: Math.max(600, input.modelSettings.maxTokens),
-        response_format: {
-          type: 'json_object'
-        },
+        response_format: consolidatePromptResponseFormat,
         messages: [
           { role: 'system', content: systemMessage },
           { role: 'user', content: userMessage }

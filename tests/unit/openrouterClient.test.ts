@@ -337,6 +337,169 @@ describe('OpenRouter JSON parsing behavior', () => {
     });
   });
 
+  it('uses structured outputs for consolidation requests', async () => {
+    const client = new OpenRouterClient('test-key');
+
+    const createMock = jest.fn().mockResolvedValue({
+      choices: [
+        {
+          finish_reason: 'stop',
+          message: {
+            content: '{"revisedQualificationPrompt":"Updated prompt text","changeSummary":["Tightened scope"],"rationale":"Generalized the invalid feedback"}'
+          }
+        }
+      ],
+      usage: {
+        prompt_tokens: 30,
+        completion_tokens: 45
+      }
+    });
+
+    (client as unknown as { client: { chat: { completions: { create: typeof createMock } } } }).client = {
+      chat: {
+        completions: {
+          create: createMock
+        }
+      }
+    };
+
+    const result = await client.consolidateQualificationPrompt({
+      model: 'test-model',
+      modelSettings: {
+        temperature: 0.2,
+        maxTokens: 300,
+        topP: 0.9
+      },
+      currentQualificationPrompt: 'Current prompt text',
+      feedbackItems: [
+        {
+          id: 'r1',
+          type: 'post',
+          subreddit: 'startup',
+          title: 'Need GTM help',
+          body: 'Looking for distribution advice',
+          qualificationReason: 'fit',
+          userIsValid: false,
+          userReason: 'No buying intent'
+        }
+      ]
+    });
+
+    expect(createMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        response_format: expect.objectContaining({
+          type: 'json_schema',
+          json_schema: expect.objectContaining({
+            name: 'consolidate_qualification_prompt',
+            strict: true
+          })
+        }),
+        max_tokens: 600
+      })
+    );
+
+    expect(result).toEqual({
+      revisedQualificationPrompt: 'Updated prompt text',
+      changeSummary: ['Tightened scope'],
+      rationale: 'Generalized the invalid feedback',
+      promptTokens: 30,
+      completionTokens: 45
+    });
+  });
+
+  it('uses structured outputs for clarification questions', async () => {
+    const client = new OpenRouterClient('test-key');
+
+    const createMock = jest.fn().mockResolvedValue({
+      choices: [
+        {
+          message: {
+            content: '{"questions":[{"id":"q1","question":"What is the product?"}]}'
+          }
+        }
+      ],
+      usage: {
+        prompt_tokens: 11,
+        completion_tokens: 7
+      }
+    });
+
+    (client as unknown as { client: { chat: { completions: { create: typeof createMock } } } }).client = {
+      chat: {
+        completions: {
+          create: createMock
+        }
+      }
+    };
+
+    const result = await client.generateClarificationQuestions('Need more context', 'test-model');
+
+    expect(createMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        response_format: expect.objectContaining({
+          type: 'json_schema',
+          json_schema: expect.objectContaining({
+            name: 'clarification_questions',
+            strict: true
+          })
+        })
+      })
+    );
+    expect(result).toEqual([{ id: 'q1', question: 'What is the product?' }]);
+  });
+
+  it('uses structured outputs for job spec generation', async () => {
+    const client = new OpenRouterClient('test-key');
+
+    const createMock = jest.fn().mockResolvedValue({
+      choices: [
+        {
+          message: {
+            content:
+              '{"name":"Startup Show-and-Tell","slug":"startup-show-and-tell","description":"Identify startup show-and-tell posts","qualificationPrompt":"Qualify show-and-tell startup posts","suggestedSubreddits":["startup","entrepreneur"]}'
+          }
+        }
+      ],
+      usage: {
+        prompt_tokens: 22,
+        completion_tokens: 15
+      }
+    });
+
+    (client as unknown as { client: { chat: { completions: { create: typeof createMock } } } }).client = {
+      chat: {
+        completions: {
+          create: createMock
+        }
+      }
+    };
+
+    const result = await client.generateJobSpec(
+      'Need a job for startup project showcase posts',
+      [{ question: 'What should count?', answer: 'Completed projects only' }],
+      'test-model'
+    );
+
+    expect(createMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        response_format: expect.objectContaining({
+          type: 'json_schema',
+          json_schema: expect.objectContaining({
+            name: 'job_spec',
+            strict: true
+          })
+        })
+      })
+    );
+    expect(result).toEqual({
+      name: 'Startup Show-and-Tell',
+      slug: 'startup-show-and-tell',
+      description: 'Identify startup show-and-tell posts',
+      qualificationPrompt: 'Qualify show-and-tell startup posts',
+      suggestedSubreddits: ['startup', 'entrepreneur']
+    });
+  });
+
   it('caches model tool support lookups', async () => {
     const fetchMock = jest.fn().mockResolvedValue({
       ok: true,
