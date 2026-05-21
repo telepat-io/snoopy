@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.17](https://github.com/telepat-io/snoopy/compare/snoopy-v0.1.16...snoopy-v0.1.17) (2026-05-21)
+
+
+### Features
+
+* implement log rotation and redaction for non-qualified scan items ([13fd41a](https://github.com/telepat-io/snoopy/commit/13fd41a4da25eca4c95ada393dc95255d8769d6b))
+
 ## [0.1.16](https://github.com/telepat-io/snoopy/compare/snoopy-v0.1.15...snoopy-v0.1.16) (2026-05-08)
 
 
