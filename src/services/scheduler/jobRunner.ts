@@ -11,6 +11,7 @@ import type { RedditComment } from '../reddit/client.js';
 import { getRecentSubredditPosts, getRedditPostComments } from '../reddit/client.js';
 import { createRunLogger } from '../logging/runLogger.js';
 import { cleanupOldLogs } from '../logging/logRotation.js';
+import { redactOldNonQualifiedBodies } from '../db/maintenance.js';
 import { toSnippet } from '../../utils/scanLogFormatting.js';
 
 interface QualifyStats {
@@ -606,6 +607,7 @@ export class JobRunner {
       logger.error(`Job ${job.name} (${job.id}) failed: ${message}`);
     } finally {
       cleanupOldLogs();
+      redactOldNonQualifiedBodies();
     }
   }
 

@@ -1,6 +1,7 @@
 export const DEFAULT_MODEL = 'deepseek/deepseek-v4-pro';
 export const DEFAULT_CRON_INTERVAL_MINUTES = 30;
 export const DEFAULT_JOB_TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
+export const DEFAULT_NON_QUALIFIED_RETENTION_DAYS = 90;
 
 export function intervalToCron(minutes: number): string {
   const m = Math.max(1, Math.floor(minutes));

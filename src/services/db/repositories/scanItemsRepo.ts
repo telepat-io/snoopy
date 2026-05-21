@@ -1010,4 +1010,84 @@ export class ScanItemsRepository {
       isTarget: row.isTarget === 1
     }));
   }
+
+  redactNonQualifiedOlderThan(days: number): { redacted: number; threadNodesDeleted: number } {
+    const batchSize = 1000;
+    let totalRedacted = 0;
+    let totalThreadNodesDeleted = 0;
+
+    const redactBatch = this.db.transaction((batchIds: string[]): { redacted: number; threadNodesDeleted: number } => {
+      let threadNodesDeleted = 0;
+
+      for (const scanItemId of batchIds) {
+        const deleteResult = this.db
+          .prepare('DELETE FROM comment_thread_nodes WHERE scan_item_id = ?')
+          .run(scanItemId);
+        threadNodesDeleted += Number(deleteResult.changes);
+      }
+
+      const redactResult = this.db
+        .prepare(
+          `UPDATE scan_items
+           SET body = '[redacted]',
+               qualification_reason = '[redacted]'
+           WHERE id IN (${batchIds.map(() => '?').join(',')})`
+        )
+        .run(...batchIds);
+
+      return {
+        redacted: Number(redactResult.changes),
+        threadNodesDeleted
+      };
+    });
+
+    let hasMore = true;
+    while (hasMore) {
+      const ids = this.db
+        .prepare(
+          `SELECT id
+           FROM scan_items
+           WHERE qualified = 0
+             AND body IS NOT NULL
+             AND body != '[redacted]'
+             AND datetime(created_at) < datetime('now', ?)
+           LIMIT ?`
+        )
+        .all(`-${days} days`, batchSize) as Array<{ id: string }>;
+
+      if (ids.length === 0) {
+        hasMore = false;
+        break;
+      }
+
+      const batchIds = ids.map((row) => row.id);
+      const result = redactBatch(batchIds);
+      totalRedacted += result.redacted;
+      totalThreadNodesDeleted += result.threadNodesDeleted;
+
+      if (ids.length < batchSize) {
+        hasMore = false;
+      }
+    }
+
+    return {
+      redacted: totalRedacted,
+      threadNodesDeleted: totalThreadNodesDeleted
+    };
+  }
+
+  countNonQualifiedOlderThan(days: number): number {
+    const row = this.db
+      .prepare(
+        `SELECT COUNT(*) as count
+         FROM scan_items
+         WHERE qualified = 0
+           AND body IS NOT NULL
+           AND body != '[redacted]'
+           AND datetime(created_at) < datetime('now', ?)`
+      )
+      .get(`-${days} days`) as { count: number } | undefined;
+
+    return Number(row?.count ?? 0);
+  }
 }

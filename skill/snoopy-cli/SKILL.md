@@ -1,6 +1,6 @@
 ---
 name: snoopy-cli
-description: Agent-exclusive skill for installing, configuring, and automating Snoopy CLI for Reddit conversation monitoring. Covers non-interactive workflows: setup, job creation, results consumption, feedback loops, diagnostics, and MCP integration. Agents use this skill to orchestrate Reddit monitoring pipelines without assuming prior Snoopy knowledge.
+description: "Agent-exclusive skill for installing, configuring, and automating Snoopy CLI for Reddit conversation monitoring. Covers non-interactive workflows: setup, job creation, results consumption, feedback loops, diagnostics, and MCP integration. Agents use this skill to orchestrate Reddit monitoring pipelines without assuming prior Snoopy knowledge."
 ---
 
 # Snoopy CLI Skill (Agent-Exclusive)

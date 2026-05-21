@@ -1,11 +1,17 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { ensureAppDirs } from './paths.js';
+import { rotateSystemLog } from '../services/logging/loggerRotation.js';
 
 function write(level: string, message: string): void {
   const paths = ensureAppDirs();
   const line = `[${new Date().toISOString()}] [${level}] ${message}\n`;
   const file = path.join(paths.logsDir, 'snoopy.log');
+  try {
+    rotateSystemLog();
+  } catch {
+    // Rotation failure must never block logging.
+  }
   fs.appendFileSync(file, line);
 }
 

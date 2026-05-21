@@ -1,6 +1,8 @@
 import fs from 'node:fs';
 import { CronScheduler } from '../../services/scheduler/cronScheduler.js';
 import { cleanupOldLogs } from '../../services/logging/logRotation.js';
+import { rotateSystemLog } from '../../services/logging/loggerRotation.js';
+import { redactOldNonQualifiedBodies } from '../../services/db/maintenance.js';
 import { ensureAppDirs } from '../../utils/paths.js';
 import {
   ensureDaemonRunning,
@@ -21,6 +23,8 @@ let scheduler: CronScheduler | null = null;
 export function daemonRun(): void {
   ensureAppDirs();
   cleanupOldLogs();
+  rotateSystemLog();
+  redactOldNonQualifiedBodies();
   printCommandScreen('Daemon mode', 'Daemon');
   scheduler = new CronScheduler();
   scheduler.start();
