@@ -86,7 +86,7 @@ Snoopy 专为无界面自动化和智能体驱动的监控设计：
 - **机器可读输出** — `snoopy export --json --last-run` 和 `snoopy consume --json` 生成结构化数据，供下游智能体消费。
 - **持续质量反馈闭环** — 智能体可执行 `snoopy feedback review --json`，收集人工反馈后调用 `snoopy feedback submit`，最后执行 `snoopy feedback consolidate`。
 - **直接数据库访问** — SQLite 位于 `~/.snoopy/snoopy.db`（或 `$SNOOPY_ROOT_DIR/snoopy.db`），拥有完整文档化的 schema。智能体可以直接插入任务、查询结果并更新生命周期标志。
-- **环境变量** — `SNOOPY_OPENROUTER_API_KEY`、`SNOOPY_REDDIT_CLIENT_SECRET` 和 `SNOOPY_ROOT_DIR` 可移除所有交互式凭证提示。
+- **环境变量** — `TELEPAT_OPENROUTER_KEY`、`SNOOPY_REDDIT_CLIENT_SECRET` 和 `SNOOPY_ROOT_DIR` 可移除所有交互式凭证提示。
 - **Agent 文档** — [Agent Operations](https://docs.telepat.io/snoopy/guides/agent-operations) 提供完整的自动化手册，包括 SQL schema、生命周期标志和推荐工作流。
 
 ## 反馈工作流

@@ -1,7 +1,7 @@
 describe('secretStore', () => {
   beforeEach(() => {
     jest.resetModules();
-    delete process.env.SNOOPY_OPENROUTER_API_KEY;
+    delete process.env.TELEPAT_OPENROUTER_KEY;
     delete process.env.SNOOPY_REDDIT_CLIENT_SECRET;
   });
 
@@ -34,7 +34,7 @@ describe('secretStore', () => {
       throw new Error('keytar unavailable');
     });
 
-    process.env.SNOOPY_OPENROUTER_API_KEY = 'env-openrouter-key';
+    process.env.TELEPAT_OPENROUTER_KEY = 'env-openrouter-key';
     process.env.SNOOPY_REDDIT_CLIENT_SECRET = 'env-reddit-secret';
 
     const store = await import('../../src/services/security/secretStore.js');
@@ -67,7 +67,7 @@ describe('secretStore', () => {
       default: keytarMock
     }));
 
-    process.env.SNOOPY_OPENROUTER_API_KEY = 'env-openrouter-key';
+    process.env.TELEPAT_OPENROUTER_KEY = 'env-openrouter-key';
     process.env.SNOOPY_REDDIT_CLIENT_SECRET = 'env-reddit-secret';
 
     const store = await import('../../src/services/security/secretStore.js');

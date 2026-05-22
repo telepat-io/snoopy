@@ -86,7 +86,7 @@ Snoopy is built for headless automation and agent-driven monitoring:
 - **Machine-readable output** — `snoopy export --json --last-run` and `snoopy consume --json` produce structured data for downstream agents.
 - **Feedback loop for continuous quality** — Agents can run `snoopy feedback review --json`, collect human feedback, submit with `snoopy feedback submit`, and finalize with `snoopy feedback consolidate`.
 - **Direct database access** — SQLite at `~/.snoopy/snoopy.db` (or `$SNOOPY_ROOT_DIR/snoopy.db`) with a documented schema. Agents can insert jobs, query results, and update lifecycle flags directly.
-- **Environment variables** — `SNOOPY_OPENROUTER_API_KEY`, `SNOOPY_REDDIT_CLIENT_SECRET`, and `SNOOPY_ROOT_DIR` remove all interactive credential prompts.
+- **Environment variables** — `TELEPAT_OPENROUTER_KEY`, `SNOOPY_REDDIT_CLIENT_SECRET`, and `SNOOPY_ROOT_DIR` remove all interactive credential prompts.
 - **Agent docs** — [Agent Operations](https://docs.telepat.io/snoopy/guides/agent-operations) provides a complete runbook for automation, including SQL schema, lifecycle flags, and recommended workflows.
 
 ## Feedback Workflow

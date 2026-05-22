@@ -87,7 +87,7 @@ snoopy doctor
 
 | 错误 | 建议操作 |
 |---|---|
-| API 密钥缺失 | 运行 `snoopy settings` 或设置 `SNOOPY_OPENROUTER_API_KEY` |
+| API 密钥缺失 | 运行 `snoopy settings` 或设置 `TELEPAT_OPENROUTER_KEY` |
 | 守护进程未运行 | 运行 `snoopy daemon start` |
 | 任务运行失败 | 运行 `snoopy errors <jobRef>` 和 `snoopy logs <runId>` |
 | 活动运行冲突 | 等待当前运行完成或检查 `snoopy job runs <jobRef>` |

@@ -183,7 +183,7 @@ snoopy mcp
 |---------|-------------|-----|
 | 服务器立即退出 | Stdio 传输错误 | 确保在正确的 MCP 客户端上下文中运行 |
 | 智能体中不显示工具 | 服务器未注册 | 运行 `snoopy agent install <runtime>` |
-| Doctor 显示 API 密钥缺失 | 密钥未配置 | 运行 `snoopy settings` 或设置 `SNOOPY_OPENROUTER_API_KEY` |
+| Doctor 显示 API 密钥缺失 | 密钥未配置 | 运行 `snoopy settings` 或设置 `TELEPAT_OPENROUTER_KEY` |
 | 任务运行失败 | 守护进程未运行 | 运行 `snoopy daemon start` |
 
 ## 相关页面

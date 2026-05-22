@@ -56,7 +56,7 @@ export async function openSettings(): Promise<void> {
   if (!keytarAvailable && (finalResult.apiKey || finalResult.redditCredentials?.clientSecret)) {
     printWarning('Keychain storage is unavailable. Secret values entered in settings were not saved.');
     printInfo('Use environment variables instead:');
-    printInfo('  SNOOPY_OPENROUTER_API_KEY');
+    printInfo('  TELEPAT_OPENROUTER_KEY');
     printInfo('  SNOOPY_REDDIT_CLIENT_SECRET');
   }
 

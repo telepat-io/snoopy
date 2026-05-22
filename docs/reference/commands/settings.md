@@ -38,7 +38,7 @@ Secret storage behavior:
 
 - If keychain storage is available, secret edits from `snoopy settings` are persisted.
 - If keychain storage is unavailable, Snoopy reads secrets from environment variables instead:
-  - `SNOOPY_OPENROUTER_API_KEY`
+  - `TELEPAT_OPENROUTER_KEY`
   - `SNOOPY_REDDIT_CLIENT_SECRET`
 - In that unavailable case, entering secret values in the settings UI does not persist them.
 

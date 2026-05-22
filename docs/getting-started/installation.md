@@ -48,7 +48,7 @@ Navigate to **OpenRouter API Key**, paste your key, then save.
 Storage behavior:
 - Snoopy stores secrets in your OS keychain when available.
 - If keychain storage is unavailable, configure secrets via environment variables:
-	- `SNOOPY_OPENROUTER_API_KEY`
+	- `TELEPAT_OPENROUTER_KEY`
 	- `SNOOPY_REDDIT_CLIENT_SECRET`
 
 If the key is missing, `snoopy job add` prompts for it during first-time setup when keychain storage is available.

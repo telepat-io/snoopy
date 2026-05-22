@@ -58,7 +58,7 @@ SNOOPY_ROOT_DIR=/custom/path snoopy doctor
 
 Snoopy uses [OpenRouter](https://openrouter.ai) to qualify Reddit posts and comments against your job prompts. Without an API key, job runs will fail.
 
-**How it is stored:** The key is saved to the system keychain (macOS Keychain, Linux Secret Service, Windows Credential Manager) via `keytar` when available. If keychain storage is unavailable, provide the key via `SNOOPY_OPENROUTER_API_KEY`.
+**How it is stored:** The key is saved to the system keychain (macOS Keychain, Linux Secret Service, Windows Credential Manager) via `keytar` when available. If keychain storage is unavailable, provide the key via `TELEPAT_OPENROUTER_KEY`.
 
 **Set the key interactively:**
 
@@ -69,7 +69,7 @@ snoopy settings
 Navigate to **OpenRouter API Key**, enter your key, and save.
 
 The key is also prompted automatically the first time you run `snoopy job add` when keychain storage is available.
-If keychain storage is unavailable, set `SNOOPY_OPENROUTER_API_KEY` before running `snoopy job add`.
+If keychain storage is unavailable, set `TELEPAT_OPENROUTER_KEY` before running `snoopy job add`.
 
 **Verify the key is configured:**
 
@@ -118,7 +118,7 @@ snoopy job add     # Then create a job
 In environments without keychain support:
 
 ```bash
-export SNOOPY_OPENROUTER_API_KEY=<your-openrouter-key>
+export TELEPAT_OPENROUTER_KEY=<your-openrouter-key>
 export SNOOPY_REDDIT_CLIENT_SECRET=<optional-reddit-client-secret>
 snoopy job add
 ```

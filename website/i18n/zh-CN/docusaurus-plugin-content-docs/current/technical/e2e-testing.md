@@ -34,7 +34,7 @@ npm run e2e:smoke
 
 运行冒烟测试前：
 
-- OpenRouter API 密钥已通过 `snoopy settings`（密钥链可用时）或 `SNOOPY_OPENROUTER_API_KEY` 环境变量配置
+- OpenRouter API 密钥已通过 `snoopy settings`（密钥链可用时）或 `TELEPAT_OPENROUTER_KEY` 环境变量配置
 - 可选：在未认证的 Reddit JSON 访问被阻止的环境中配置 Reddit OAuth 回退凭据
 
 快速检查：
@@ -101,7 +101,7 @@ snoopy delete <jobRef>
 如果冒烟测试失败：
 
 1. 运行 `snoopy doctor`。
-2. 在 `settings` 或 `SNOOPY_OPENROUTER_API_KEY` 中验证 OpenRouter API 密钥。
+2. 在 `settings` 或 `TELEPAT_OPENROUTER_KEY` 中验证 OpenRouter API 密钥。
 3. 如果环境中 Reddit 访问被拒绝，在 `settings` 中配置 Reddit OAuth 回退凭据。
 4. 如涉及守护进程，检查其状态（`daemon status`）。
 5. 查看 `<root>/logs/snoopy.log` 中的日志。

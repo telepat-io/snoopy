@@ -12,7 +12,7 @@ function runDoctor(rootDir: string): string {
       ...process.env,
       SNOOPY_E2E_ROOT_DIR: rootDir,
       // Suppress keychain prompts on macOS
-      SNOOPY_OPENROUTER_API_KEY: process.env.SNOOPY_OPENROUTER_API_KEY ?? 'test-key'
+      TELEPAT_OPENROUTER_KEY: process.env.TELEPAT_OPENROUTER_KEY ?? 'test-key'
     },
     encoding: 'utf8',
     stdio: ['pipe', 'pipe', 'pipe']

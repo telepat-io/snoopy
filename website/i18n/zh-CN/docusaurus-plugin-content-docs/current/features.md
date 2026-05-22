@@ -105,7 +105,7 @@ snoopy analytics <jobRef> --days 30
 - **直接 SQLite 访问** — 智能体可以直接对 `~/.snoopy/snoopy.db` 插入任务、查询结果和更新生命周期标志
 - **非交互模式** — 直接传递任务引用，实现零提示执行
 - **机器可读输出** — `--json` 标志适用于 export、consume 和 analytics
-- **环境变量配置** — `SNOOPY_OPENROUTER_API_KEY`、`SNOOPY_REDDIT_CLIENT_SECRET`、`SNOOPY_ROOT_DIR`
+- **环境变量配置** — `TELEPAT_OPENROUTER_KEY`、`SNOOPY_REDDIT_CLIENT_SECRET`、`SNOOPY_ROOT_DIR`
 
 ---
 

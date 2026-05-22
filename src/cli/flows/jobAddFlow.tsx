@@ -217,7 +217,7 @@ export function JobAddFlow({
         <Panel title="Step 2: Authentication">
           <Text color={uiTheme.ink.warning}>Keychain storage is unavailable on this system.</Text>
           <Text>Set your API key with environment variable:</Text>
-          <Text color={uiTheme.ink.accent}>SNOOPY_OPENROUTER_API_KEY=&lt;your-key&gt;</Text>
+          <Text color={uiTheme.ink.accent}>TELEPAT_OPENROUTER_KEY=&lt;your-key&gt;</Text>
           <Text color={uiTheme.ink.textMuted}>After setting it, run snoopy job add again.</Text>
           <Text color={uiTheme.ink.textMuted}>Exiting...</Text>
         </Panel>

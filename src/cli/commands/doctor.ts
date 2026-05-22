@@ -100,7 +100,7 @@ export async function runDoctor(): Promise<void> {
     if (keytarAvailable) {
       printMuted('  → Run: snoopy settings  to configure your OpenRouter API key');
     } else {
-      printMuted('  → Export SNOOPY_OPENROUTER_API_KEY to configure your OpenRouter API key');
+      printMuted('  → Export TELEPAT_OPENROUTER_KEY to configure your OpenRouter API key');
     }
   }
 

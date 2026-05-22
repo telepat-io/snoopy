@@ -56,7 +56,7 @@ SNOOPY_ROOT_DIR=/custom/path snoopy doctor
 
 Snoopy 使用 [OpenRouter](https://openrouter.ai) 根据您的任务提示词对 Reddit 帖子和评论进行资格判定。没有 API Key，任务运行将失败。
 
-**存储方式：** Key 通过 `keytar` 保存到系统钥匙串（macOS Keychain、Linux Secret Service、Windows Credential Manager）。如果钥匙串存储不可用，请通过 `SNOOPY_OPENROUTER_API_KEY` 环境变量提供 Key。
+**存储方式：** Key 通过 `keytar` 保存到系统钥匙串（macOS Keychain、Linux Secret Service、Windows Credential Manager）。如果钥匙串存储不可用，请通过 `TELEPAT_OPENROUTER_KEY` 环境变量提供 Key。
 
 **交互式设置 Key：**
 
@@ -67,7 +67,7 @@ snoopy settings
 导航到 **OpenRouter API Key**，输入您的 Key 并保存。
 
 当钥匙串存储可用时，首次运行 `snoopy job add` 也会自动提示输入 Key。
-如果钥匙串存储不可用，请在运行 `snoopy job add` 之前设置 `SNOOPY_OPENROUTER_API_KEY`。
+如果钥匙串存储不可用，请在运行 `snoopy job add` 之前设置 `TELEPAT_OPENROUTER_KEY`。
 
 **验证 Key 已配置：**
 
@@ -116,7 +116,7 @@ snoopy job add     # 然后创建任务
 在不支持钥匙串的环境中：
 
 ```bash
-export SNOOPY_OPENROUTER_API_KEY=<your-openrouter-key>
+export TELEPAT_OPENROUTER_KEY=<your-openrouter-key>
 export SNOOPY_REDDIT_CLIENT_SECRET=<optional-reddit-client-secret>
 snoopy job add
 ```

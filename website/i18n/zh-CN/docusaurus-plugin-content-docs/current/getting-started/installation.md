@@ -46,7 +46,7 @@ snoopy settings
 存储行为：
 - 当操作系统密钥链可用时，Snoopy 将密钥存储在密钥链中。
 - 如果密钥链存储不可用，通过环境变量配置密钥：
-	- `SNOOPY_OPENROUTER_API_KEY`
+	- `TELEPAT_OPENROUTER_KEY`
 	- `SNOOPY_REDDIT_CLIENT_SECRET`
 
 如果密钥缺失，在密钥链存储可用的情况下，`snoopy job add` 会在首次设置时提示输入。

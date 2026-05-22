@@ -70,7 +70,7 @@ If keychain_available:
 Else (headless/container):
   → Recommend env var (required for headless)
   → Ask user for OpenRouter API key
-  → Instruct user to export: SNOOPY_OPENROUTER_API_KEY
+  → Instruct user to export: TELEPAT_OPENROUTER_KEY
 ```
 
 **Step 2c: Store Credentials**
@@ -89,7 +89,7 @@ snoopy doctor  # Check "API key configured: yes"
 
 ```bash
 # Instruct user
-export SNOOPY_OPENROUTER_API_KEY=sk-or-...
+export TELEPAT_OPENROUTER_KEY=sk-or-...
 
 # Verify success
 snoopy doctor  # Check "API key configured: yes"

@@ -25,7 +25,7 @@ Snoopy 对 OpenRouter API 密钥和 Reddit OAuth 客户端密钥使用相同的�
 回退路径：
 
 - 环境变量
-	- `SNOOPY_OPENROUTER_API_KEY`
+	- `TELEPAT_OPENROUTER_KEY`
 	- `SNOOPY_REDDIT_CLIENT_SECRET`
 
 默认根目录：

@@ -197,7 +197,7 @@ export function SettingsFlow({
   if (mode === 'menu') {
     const storageStatus = keytarAvailable
       ? 'Keychain storage available for secret fields.'
-      : 'Keychain storage unavailable. Use SNOOPY_OPENROUTER_API_KEY and SNOOPY_REDDIT_CLIENT_SECRET.';
+      : 'Keychain storage unavailable. Use TELEPAT_OPENROUTER_KEY and SNOOPY_REDDIT_CLIENT_SECRET.';
 
     return (
       <SettingsFrame

@@ -27,7 +27,7 @@ Primary path:
 Fallback path:
 
 - environment variables
-	- `SNOOPY_OPENROUTER_API_KEY`
+	- `TELEPAT_OPENROUTER_KEY`
 	- `SNOOPY_REDDIT_CLIENT_SECRET`
 
 Default root directory:

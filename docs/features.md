@@ -105,7 +105,7 @@ Know exactly what each monitoring job costs to run over time.
 - **Direct SQLite access** — Agents can insert jobs, query results, and update lifecycle flags directly against `~/.snoopy/snoopy.db`
 - **Non-interactive mode** — Pass job refs directly for zero-prompt execution
 - **Machine-readable output** — `--json` flag on export, consume, and analytics
-- **Environment variable config** — `SNOOPY_OPENROUTER_API_KEY`, `SNOOPY_REDDIT_CLIENT_SECRET`, `SNOOPY_ROOT_DIR`
+- **Environment variable config** — `TELEPAT_OPENROUTER_KEY`, `SNOOPY_REDDIT_CLIENT_SECRET`, `SNOOPY_ROOT_DIR`
 
 ---
 

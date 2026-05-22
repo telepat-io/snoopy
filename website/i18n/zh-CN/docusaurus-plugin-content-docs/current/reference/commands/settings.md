@@ -36,7 +36,7 @@ snoopy settings
 
 - 如果 keychain 存储可用，通过 `snoopy settings` 编辑的密钥将被持久化。
 - 如果 keychain 存储不可用，Snoopy 改为从环境变量读取密钥：
-  - `SNOOPY_OPENROUTER_API_KEY`
+  - `TELEPAT_OPENROUTER_KEY`
   - `SNOOPY_REDDIT_CLIENT_SECRET`
 - 在不可用的情况下，在设置界面输入密钥值不会持久化它们。
 

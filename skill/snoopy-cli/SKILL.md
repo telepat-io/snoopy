@@ -83,7 +83,7 @@ snoopy doctor  # Verify "API key configured: yes"
 
 If keychain unavailable:
 ```bash
-export SNOOPY_OPENROUTER_API_KEY=sk-or-...
+export TELEPAT_OPENROUTER_KEY=sk-or-...
 snoopy doctor  # Verify "API key configured: yes"
 ```
 
@@ -245,7 +245,7 @@ snoopy settings set openrouter_api_key <KEY>
 snoopy doctor  # Verify "API key configured: yes"
 
 # Step 2b: If keychain NOT available, use env var (containers/headless)
-export SNOOPY_OPENROUTER_API_KEY=<KEY>
+export TELEPAT_OPENROUTER_KEY=<KEY>
 snoopy doctor  # Verify "API key configured: yes"
 
 # Step 3: Verify success
@@ -822,7 +822,7 @@ All Snoopy commands support non-interactive flags for agent use:
 Settings resolution order (highest to lowest):
 
 1. Command-line flags (--json, --limit, etc.)
-2. Environment variables (`SNOOPY_OPENROUTER_API_KEY`, `SNOOPY_ROOT_DIR`)
+2. Environment variables (`TELEPAT_OPENROUTER_KEY`, `SNOOPY_ROOT_DIR`)
 3. Settings database (`~/.snoopy/snoopy.db`)
 4. Built-in defaults (model: `deepseek/deepseek-v4-pro`, interval: 30 min, timeout: 10 min)
 
@@ -872,7 +872,7 @@ For export/consume, output is a raw JSON array:
 **Mitigation:** Detect with `snoopy doctor`. If keychain unavailable (or on CI/Docker), use environment variable:
 
 ```bash
-export SNOOPY_OPENROUTER_API_KEY=sk-or-...
+export TELEPAT_OPENROUTER_KEY=sk-or-...
 snoopy doctor  # Verify success
 ```
 
@@ -961,7 +961,7 @@ snoopy doctor  # Verify success
 | `snoopy feedback submit` fails | Missing `--reason` for invalid verdict | Include `--reason "..."` when using `--invalid` |
 | `snoopy feedback consolidate` doesn't improve prompt | Insufficient validated feedback | Run another review → submit → consolidate cycle |
 | `snoopy export --json` output is invalid | Parsing error on agent side | Verify JSON with `jq` tool; report if malformed |
-| `snoopy settings set` fails (keychain error) | Keychain unavailable | Fall back to env var: `export SNOOPY_OPENROUTER_API_KEY=...` |
+| `snoopy settings set` fails (keychain error) | Keychain unavailable | Fall back to env var: `export TELEPAT_OPENROUTER_KEY=...` |
 | Startup registration failed | Platform not supported | Inform user; daemon still works manually |
 | Token truncation in LLM response | Model response too long | Workflow retries automatically; check logs if persistent |
 

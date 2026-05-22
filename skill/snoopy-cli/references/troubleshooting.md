@@ -28,7 +28,7 @@ Failures specific to non-interactive agent workflows (MCP tools and CLI flags).
 
 **Causes:**
 - Keychain not available (headless server, container, remote environment)
-- Environment variable `SNOOPY_OPENROUTER_API_KEY` not set
+- Environment variable `TELEPAT_OPENROUTER_KEY` not set
 - API key stored in keychain but agent can't access macOS Keychain from sandboxed context
 
 **Recovery (Agent Logic):**
@@ -37,21 +37,21 @@ Failures specific to non-interactive agent workflows (MCP tools and CLI flags).
 If doctor.checks["API key configured"] == "fail":
   1. Attempt env var fallback:
      Ask user: "Provide OpenRouter API key: "
-     export SNOOPY_OPENROUTER_API_KEY=<user_value>
+     export TELEPAT_OPENROUTER_KEY=<user_value>
   
   2. Verify with doctor:
      snoopy doctor
      
   3. If still fails:
      Inform: "Headless environment detected. 
-              Set SNOOPY_OPENROUTER_API_KEY in your container/CI env."
+              Set TELEPAT_OPENROUTER_KEY in your container/CI env."
 ```
 
 **User Fix (Headless/Container):**
 
 ```bash
 # Export API key in container/CI environment
-export SNOOPY_OPENROUTER_API_KEY=sk-or-...
+export TELEPAT_OPENROUTER_KEY=sk-or-...
 
 # Verify
 snoopy doctor
@@ -74,7 +74,7 @@ snoopy doctor
 ```
 If doctor.checks["Keychain available"] in ["warn", "fail"]:
   1. Inform user: "Keychain not accessible from agent context.
-                   Set SNOOPY_OPENROUTER_API_KEY environment variable."
+                   Set TELEPAT_OPENROUTER_KEY environment variable."
   2. Guide user to store API key as env var in agent config
 ```
 
@@ -86,7 +86,7 @@ For sandboxed agent frameworks (Claude Desktop, Cursor, etc.), manually configur
 ```json
 {
   "environment": {
-    "SNOOPY_OPENROUTER_API_KEY": "sk-or-..."
+    "TELEPAT_OPENROUTER_KEY": "sk-or-..."
   }
 }
 ```
@@ -95,7 +95,7 @@ For sandboxed agent frameworks (Claude Desktop, Cursor, etc.), manually configur
 ```json
 {
   "environment": {
-    "SNOOPY_OPENROUTER_API_KEY": "sk-or-..."
+    "TELEPAT_OPENROUTER_KEY": "sk-or-..."
   }
 }
 ```
@@ -305,7 +305,7 @@ General health check failures.
 snoopy settings
 
 # Non-interactive (containers, CI)
-export SNOOPY_OPENROUTER_API_KEY=sk-or-...
+export TELEPAT_OPENROUTER_KEY=sk-or-...
 ```
 
 ### Database not reachable
@@ -675,7 +675,7 @@ exit 0
 snoopy settings
 
 # Non-interactive (containers, CI)
-export SNOOPY_OPENROUTER_API_KEY=sk-or-...
+export TELEPAT_OPENROUTER_KEY=sk-or-...
 ```
 
 ### Database not reachable

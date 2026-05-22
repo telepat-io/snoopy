@@ -183,7 +183,7 @@ Common errors:
 |---------|-------------|-----|
 | Server exits immediately | Stdio transport error | Ensure running in proper MCP client context |
 | Tools not appearing in agent | Server not registered | Run `snoopy agent install <runtime>` |
-| Doctor shows API key missing | Key not configured | Run `snoopy settings` or set `SNOOPY_OPENROUTER_API_KEY` |
+| Doctor shows API key missing | Key not configured | Run `snoopy settings` or set `TELEPAT_OPENROUTER_KEY` |
 | Job run fails | Daemon not running | Run `snoopy daemon start` |
 
 ## Related pages

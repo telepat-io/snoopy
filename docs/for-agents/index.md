@@ -87,7 +87,7 @@ A successful response confirms: database is reachable, API key is configured, da
 
 | Error | Recommended action |
 |---|---|
-| API key missing | Run `snoopy settings` or set `SNOOPY_OPENROUTER_API_KEY` |
+| API key missing | Run `snoopy settings` or set `TELEPAT_OPENROUTER_KEY` |
 | Daemon not running | Run `snoopy daemon start` |
 | Job run failed | Run `snoopy errors <jobRef>` and `snoopy logs <runId>` |
 | Active run conflict | Wait for current run to finish or check `snoopy job runs <jobRef>` |
