@@ -1,0 +1,30 @@
+{
+  "version.label": {
+    "message": "Next",
+    "description": "The label for version current"
+  },
+  "sidebar.docsSidebar.category.Getting Started": {
+    "message": "Erste Schritte",
+    "description": "The label for category 'Getting Started' in sidebar 'docsSidebar'"
+  },
+  "sidebar.docsSidebar.category.Guides": {
+    "message": "Anleitungen",
+    "description": "The label for category 'Guides' in sidebar 'docsSidebar'"
+  },
+  "sidebar.docsSidebar.category.Reference": {
+    "message": "Referenz",
+    "description": "The label for category 'Reference' in sidebar 'docsSidebar'"
+  },
+  "sidebar.docsSidebar.category.Technical": {
+    "message": "Technik",
+    "description": "The label for category 'Technical' in sidebar 'docsSidebar'"
+  },
+  "sidebar.docsSidebar.category.Contributing": {
+    "message": "Beitragen",
+    "description": "The label for category 'Contributing' in sidebar 'docsSidebar'"
+  },
+  "sidebar.docsSidebar.category.For Agents": {
+    "message": "Für KI-Assistenten",
+    "description": "The label for category 'For Agents' in sidebar 'docsSidebar'"
+  }
+}

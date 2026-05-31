@@ -16,7 +16,12 @@ const config = {
   deploymentBranch: process.env.GH_PAGES_BRANCH || 'gh-pages',
   i18n: {
     defaultLocale: 'en',
-    locales: ['en', 'zh-CN']
+    locales: ['en', 'zh-CN', 'de'],
+    localeConfigs: {
+      en: { label: 'English' },
+      'zh-CN': { label: '简体中文' },
+      de: { label: 'Deutsch' }
+    }
   },
   trailingSlash: false,
   onBrokenLinks: 'throw',
