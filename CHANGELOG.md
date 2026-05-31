@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.18](https://github.com/telepat-io/snoopy/compare/snoopy-v0.1.17...snoopy-v0.1.18) (2026-05-31)
+
+
+### Features
+
+* standardize env var to TELEPAT_OPENROUTER_KEY ([c24f93a](https://github.com/telepat-io/snoopy/commit/c24f93a9cea7060fe40aa771ef7b7f81ac32c5c2))
+
 ## [0.1.17](https://github.com/telepat-io/snoopy/compare/snoopy-v0.1.16...snoopy-v0.1.17) (2026-05-21)
 
 
